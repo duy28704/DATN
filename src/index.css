@@ -1,0 +1,306 @@
+/* NEXUS Tech - Premium Modern Dark Design System */
+
+:root {
+  --bg-primary: #050505;
+  --bg-secondary: #0c0c0e;
+  --bg-card: #121215;
+  --bg-card-hover: #16161a;
+  
+  --accent-red: #ff003c;
+  --accent-red-hover: #cc0030;
+  --accent-red-glow: rgba(255, 0, 60, 0.45);
+  --accent-red-dim: rgba(255, 0, 60, 0.15);
+  
+  --text-primary: #ffffff;
+  --text-secondary: #a0a0ab;
+  --text-muted: #6e6e73;
+  
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-color-hover: rgba(255, 0, 60, 0.3);
+  
+  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+  
+  --transition-smooth: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: all 0.15s ease;
+}
+
+/* Reset and Globals */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+a {
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: var(--transition-fast);
+}
+
+a:hover {
+  color: var(--accent-red);
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: #222;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-red);
+}
+
+/* Layout */
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Premium Utilities */
+.glass-panel {
+  background: rgba(12, 12, 14, 0.75);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid var(--border-color);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #ffffff 30%, #ff003c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.glow-btn {
+  background-color: var(--accent-red);
+  color: var(--text-primary);
+  border: none;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.8rem 2rem;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition-smooth);
+}
+
+.glow-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--accent-red-glow);
+  filter: blur(12px);
+  opacity: 0;
+  transition: var(--transition-smooth);
+  z-index: -1;
+}
+
+.glow-btn:hover {
+  background-color: var(--accent-red-hover);
+  transform: translateY(-2px);
+  color: var(--text-primary);
+  box-shadow: 0 0 20px var(--accent-red-glow);
+}
+
+.glow-btn:active {
+  transform: translateY(1px);
+}
+
+.outline-btn {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.8rem 2rem;
+  border-radius: 4px;
+  transition: var(--transition-smooth);
+}
+
+.outline-btn:hover {
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+  background-color: rgba(255, 0, 60, 0.03);
+}
+
+/* Custom Product Card Effects */
+.tech-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: var(--transition-smooth);
+}
+
+.tech-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--accent-red);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 0, 60, 0.15);
+}
+
+.tech-card-img-wrapper {
+  background-color: #0d0d0f;
+  aspect-ratio: 1/1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 1.5rem;
+}
+
+.tech-card-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: var(--transition-smooth);
+}
+
+.tech-card:hover .tech-card-img {
+  transform: scale(1.08);
+}
+
+.tech-card-tag {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  background-color: var(--accent-red);
+  color: var(--text-primary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+  letter-spacing: 0.05em;
+  z-index: 10;
+}
+
+/* Input Styles */
+.tech-input {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  transition: var(--transition-fast);
+}
+
+.tech-input:focus {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: var(--accent-red);
+  box-shadow: 0 0 0 3px rgba(255, 0, 60, 0.15);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.tech-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Hero Section Styles */
+.hero-container {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  padding: 4rem 0;
+  background: radial-gradient(circle at 70% 50%, rgba(255, 0, 60, 0.08) 0%, rgba(5, 5, 5, 0) 60%);
+}
+
+.hero-tagline {
+  color: var(--accent-red);
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.hero-title {
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+}
+
+.hero-description {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+  max-width: 550px;
+}
+
+.category-pill {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 8px 18px;
+  border-radius: 30px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+}
+
+.category-pill.active {
+  background-color: var(--accent-red);
+  border-color: var(--accent-red);
+  color: var(--text-primary);
+}
+
+.category-pill:hover:not(.active) {
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+}
+
+/* Utility Animations */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 10px var(--accent-red));
+  }
+}
+
+.pulse-glow-element {
+  animation: pulse-glow 3s infinite ease-in-out;
+}
