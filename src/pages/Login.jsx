@@ -1,23 +1,113 @@
 import { useState, useContext, useEffect } from 'react'
 import { AuthContext } from '../context/AuthContext'
 import SEO from '../components/SEO'
-import { ShieldAlert, CheckCircle, Mail, Lock, User, LogOut, Calendar, Package } from 'lucide-react'
+import { 
+  ShieldAlert, 
+  CheckCircle, 
+  Mail, 
+  Lock, 
+  User, 
+  LogOut, 
+  Calendar, 
+  Package, 
+  Edit3, 
+  MapPin, 
+  CreditCard, 
+  ChevronDown, 
+  ChevronUp, 
+  Loader2, 
+  Truck, 
+  Smartphone,
+  Info
+} from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { apiService } from '../services/api'
 
 const Login = ({ setCurrentPage }) => {
-  const { user, error, loading, login, register, logout, setError } = useContext(AuthContext)
+  const { user, error, loading, login, register, updateUserProfile, logout, setError } = useContext(AuthContext)
   const [isLoginMode, setIsLoginMode] = useState(true)
   const [formData, setFormData] = useState({ name: '', email: '', password: '' })
   const [successMsg, setSuccessMsg] = useState('')
+
+  // Dashboard Tabs
+  const [activeTab, setActiveTab] = useState('profile') // 'profile', 'orders', 'installments'
+  
+  // Tab 1: Edit Profile states
+  const [editMode, setEditMode] = useState(false)
+  const [profileData, setProfileData] = useState({ name: '', phone: '', address: '', dob: '', gender: '' })
+  const [profileSuccess, setProfileSuccess] = useState('')
+  const [profileError, setProfileError] = useState('')
+
+  // Tab 2: Orders states
+  const [orders, setOrders] = useState([])
+  const [ordersLoading, setOrdersLoading] = useState(false)
+  const [expandedOrder, setExpandedOrder] = useState(null)
+
+  // Tab 3: Installment requests states
+  const [installments, setInstallments] = useState([])
+  const [installmentsLoading, setInstallmentsLoading] = useState(false)
 
   // Clear errors on mode switch
   useEffect(() => {
     setError('')
   }, [isLoginMode, setError])
 
+  // Populate profile fields when user changes
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        name: user.name || '',
+        phone: user.phone || '',
+        address: user.address || '',
+        dob: user.dob || '',
+        gender: user.gender || 'Nam'
+      })
+    }
+  }, [user])
+
+  // Fetch Orders and Installments data on tab activation
+  useEffect(() => {
+    if (!user) return
+
+    const loadOrdersData = async () => {
+      setOrdersLoading(true)
+      try {
+        const history = await apiService.orders.getHistory(user.email)
+        setOrders(history)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setOrdersLoading(false)
+      }
+    }
+
+    const loadInstallmentsData = async () => {
+      setInstallmentsLoading(true)
+      try {
+        const reqs = await apiService.installments.getRequests(user.email)
+        setInstallments(reqs)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setInstallmentsLoading(false)
+      }
+    }
+
+    if (activeTab === 'orders') {
+      loadOrdersData()
+    } else if (activeTab === 'installments') {
+      loadInstallmentsData()
+    }
+  }, [activeTab, user])
+
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleProfileChange = (e) => {
+    const { name, value } = e.target
+    setProfileData(prev => ({ ...prev, [name]: value }))
   }
 
   const handleSubmit = async (e) => {
@@ -43,6 +133,51 @@ const Login = ({ setCurrentPage }) => {
     }
   }
 
+  const handleProfileSubmit = async (e) => {
+    e.preventDefault()
+    setProfileError('')
+    setProfileSuccess('')
+    
+    const ok = await updateUserProfile(profileData)
+    if (ok) {
+      setProfileSuccess('Cập nhật thông tin cá nhân thành công!')
+      setEditMode(false)
+      setTimeout(() => setProfileSuccess(''), 4000)
+    } else {
+      setProfileError('Có lỗi xảy ra khi cập nhật thông tin.')
+    }
+  }
+
+  const toggleOrder = (orderId) => {
+    setExpandedOrder(expandedOrder === orderId ? null : orderId)
+  }
+
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case 'Đã giao':
+        return 'bg-success bg-opacity-10 text-success border border-success border-opacity-25'
+      case 'Đang vận chuyển':
+        return 'bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25'
+      case 'Chờ xác nhận':
+      case 'Chờ duyệt':
+        return 'bg-info bg-opacity-10 text-info border border-info border-opacity-25'
+      case 'Đã phê duyệt':
+        return 'bg-success bg-opacity-10 text-success border border-success border-opacity-25'
+      default:
+        return 'bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25'
+    }
+  }
+
+  const translatePayment = (method) => {
+    const methods = {
+      cod: 'Thanh toán khi nhận hàng (COD)',
+      visa: 'Thẻ Quốc tế Visa/Mastercard/JCB',
+      atm: 'Thẻ ATM Nội địa / Internet Banking',
+      momo: 'Ví điện tử MoMo'
+    }
+    return methods[method] || method
+  }
+
   return (
     <>
       <SEO
@@ -51,68 +186,461 @@ const Login = ({ setCurrentPage }) => {
         keywords="đăng nhập nexus, tài khoản công nghệ, đăng ký tài khoản thương mại điện tử"
       />
 
-      <div className="container py-5 px-4 px-md-5 d-flex align-items-center justify-content-center" style={{ minHeight: '70vh' }}>
+      <div className="container py-5 px-4 px-md-5">
         <AnimatePresence mode="wait">
           {user ? (
-            /* Logged in state dashboard view */
+            /* Logged in state - Dashboard view */
             <motion.div
               key="dashboard"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-100 p-4 rounded text-start"
-              style={{ maxWidth: '640px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              className="w-100 rounded text-start"
+              style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
             >
-              <h1 className="fs-3 text-white display-font mb-4 pb-2" style={{ borderBottom: '1px solid var(--border-color)' }}>
-                Tài Khoản Khách Hàng
-              </h1>
-
-              <div className="row g-4">
-                <div className="col-12 col-md-5 text-center text-md-start">
-                  <div className="d-inline-flex bg-danger bg-opacity-10 p-3 rounded-circle text-danger mb-3">
-                    <User size={48} />
+              {/* Dashboard Header Banner */}
+              <div className="p-4 p-md-5 rounded-top d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4" style={{ background: 'linear-gradient(135deg, rgba(255,0,60,0.08) 0%, rgba(5,5,5,0) 100%)', borderBottom: '1px solid var(--border-color)' }}>
+                <div className="d-flex align-items-center gap-3">
+                  <div className="p-1 rounded-circle border border-danger border-opacity-50" style={{ width: '68px', height: '68px', overflow: 'hidden' }}>
+                    <img 
+                      src={user.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150'} 
+                      alt="Avatar" 
+                      className="img-fluid rounded-circle w-100 h-100" 
+                      style={{ objectFit: 'cover' }}
+                    />
                   </div>
-                  <h3 className="fs-5 text-white display-font mb-1">{user.name}</h3>
-                  <p className="text-secondary fs-7 mb-3">{user.email}</p>
-                  
-                  <div className="d-flex align-items-center gap-1 text-secondary fs-8 mb-4">
-                    <Calendar size={14} />
-                    <span>Tham gia: {user.joinedDate}</span>
+                  <div>
+                    <h1 className="fs-4 text-white display-font mb-1">{user.name}</h1>
+                    <p className="text-secondary fs-7 mb-0 d-flex align-items-center gap-2">
+                      <Mail size={12} /> {user.email}
+                    </p>
                   </div>
-
+                </div>
+                
+                <div className="d-flex align-items-center gap-3">
+                  <div className="text-md-end text-secondary fs-8">
+                    <div className="d-flex align-items-center gap-1">
+                      <Calendar size={12} />
+                      <span>Ngày tham gia: {user.joinedDate}</span>
+                    </div>
+                  </div>
                   <button 
                     className="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 px-3 py-2"
                     onClick={logout}
                   >
-                    <LogOut size={16} /> Đăng xuất
+                    <LogOut size={14} /> Đăng xuất
                   </button>
                 </div>
+              </div>
 
-                {/* Mock order tracking */}
-                <div className="col-12 col-md-7" style={{ borderLeft: '1px solid var(--border-color)' }}>
-                  <h3 className="fs-6 text-uppercase text-danger tracking-wider mb-3 display-font">
-                    Lịch Sử Đơn Hàng
-                  </h3>
-                  <div className="d-flex flex-column gap-3">
-                    <div className="p-3 rounded bg-black d-flex justify-content-between align-items-center" style={{ border: '1px solid rgba(255,255,255,0.03)' }}>
-                      <div>
-                        <span className="d-flex align-items-center gap-1 text-white fw-medium fs-7 mb-1">
-                          <Package size={14} className="text-danger" /> Mã đơn: #NX-92841
-                        </span>
-                        <span className="text-secondary fs-8" style={{ fontSize: '0.75rem' }}>Đã giao ngày: 15/05/2026</span>
-                      </div>
-                      <span className="badge bg-success fs-8" style={{ fontSize: '0.7rem' }}>Thành công</span>
-                    </div>
-                    <div className="p-3 rounded bg-black d-flex justify-content-between align-items-center" style={{ border: '1px solid rgba(255,255,255,0.03)' }}>
-                      <div>
-                        <span className="d-flex align-items-center gap-1 text-white fw-medium fs-7 mb-1">
-                          <Package size={14} className="text-danger" /> Mã đơn: #NX-94205
-                        </span>
-                        <span className="text-secondary fs-8" style={{ fontSize: '0.75rem' }}>Đặt mua ngày: 30/05/2026</span>
-                      </div>
-                      <span className="badge bg-danger fs-8" style={{ fontSize: '0.7rem' }}>Đang vận chuyển</span>
-                    </div>
+              {/* Layout Content: Tab system */}
+              <div className="row g-0">
+                {/* Side Tab Menu */}
+                <div className="col-12 col-md-3 border-end" style={{ borderColor: 'var(--border-color)' }}>
+                  <div className="d-flex flex-row flex-md-column p-2 gap-1 overflow-auto">
+                    <button
+                      className={`btn w-100 py-3 text-start fs-7 d-flex align-items-center gap-2 border-0 rounded ${activeTab === 'profile' ? 'bg-danger text-white' : 'text-secondary bg-transparent hover-red'}`}
+                      onClick={() => setActiveTab('profile')}
+                    >
+                      <User size={16} /> Hồ sơ cá nhân
+                    </button>
+                    <button
+                      className={`btn w-100 py-3 text-start fs-7 d-flex align-items-center gap-2 border-0 rounded ${activeTab === 'orders' ? 'bg-danger text-white' : 'text-secondary bg-transparent hover-red'}`}
+                      onClick={() => setActiveTab('orders')}
+                    >
+                      <Package size={16} /> Lịch sử đơn hàng
+                    </button>
+                    <button
+                      className={`btn w-100 py-3 text-start fs-7 d-flex align-items-center gap-2 border-0 rounded ${activeTab === 'installments' ? 'bg-danger text-white' : 'text-secondary bg-transparent hover-red'}`}
+                      onClick={() => setActiveTab('installments')}
+                    >
+                      <CreditCard size={16} /> Hồ sơ trả góp
+                    </button>
                   </div>
+                </div>
+
+                {/* Main Tab Panel */}
+                <div className="col-12 col-md-9 p-4 p-md-5">
+                  <AnimatePresence mode="wait">
+                    {/* Tab 1: Profile Information details & edit */}
+                    {activeTab === 'profile' && (
+                      <motion.div
+                        key="tab-profile"
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -10 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <div className="d-flex justify-content-between align-items-center mb-4">
+                          <h2 className="fs-5 text-white display-font mb-0">THÔNG TIN TÀI KHOẢN</h2>
+                          {!editMode && (
+                            <button 
+                              className="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 px-3 py-2"
+                              onClick={() => setEditMode(true)}
+                            >
+                              <Edit3 size={14} /> Chỉnh sửa
+                            </button>
+                          )}
+                        </div>
+
+                        {profileSuccess && (
+                          <div className="alert alert-success d-flex align-items-center gap-2 fs-7 py-2 px-3 border-0 bg-success bg-opacity-10 text-success mb-4">
+                            <CheckCircle size={16} />
+                            <span>{profileSuccess}</span>
+                          </div>
+                        )}
+
+                        {profileError && (
+                          <div className="alert alert-danger d-flex align-items-center gap-2 fs-7 py-2 px-3 border-0 bg-danger bg-opacity-10 text-danger mb-4">
+                            <ShieldAlert size={16} />
+                            <span>{profileError}</span>
+                          </div>
+                        )}
+
+                        {editMode ? (
+                          <form onSubmit={handleProfileSubmit} className="d-flex flex-column gap-4">
+                            <div className="row g-3">
+                              <div className="col-12 col-sm-6">
+                                <label className="form-label text-secondary fs-7 mb-1">Họ và Tên</label>
+                                <input
+                                  type="text"
+                                  required
+                                  name="name"
+                                  value={profileData.name}
+                                  onChange={handleProfileChange}
+                                  className="form-control tech-input w-100"
+                                />
+                              </div>
+                              <div className="col-12 col-sm-6">
+                                <label className="form-label text-secondary fs-7 mb-1">Số điện thoại</label>
+                                <input
+                                  type="tel"
+                                  name="phone"
+                                  value={profileData.phone}
+                                  onChange={handleProfileChange}
+                                  className="form-control tech-input w-100"
+                                  placeholder="Nhập SĐT nhận hàng"
+                                />
+                              </div>
+                              <div className="col-12 col-sm-6">
+                                <label className="form-label text-secondary fs-7 mb-1">Ngày sinh</label>
+                                <input
+                                  type="date"
+                                  name="dob"
+                                  value={profileData.dob}
+                                  onChange={handleProfileChange}
+                                  className="form-control tech-input w-100"
+                                />
+                              </div>
+                              <div className="col-12 col-sm-6">
+                                <label className="form-label text-secondary fs-7 mb-1">Giới tính</label>
+                                <select
+                                  name="gender"
+                                  value={profileData.gender}
+                                  onChange={handleProfileChange}
+                                  className="form-select tech-input w-100"
+                                >
+                                  <option value="Nam">Nam</option>
+                                  <option value="Nữ">Nữ</option>
+                                  <option value="Khác">Khác</option>
+                                </select>
+                              </div>
+                              <div className="col-12">
+                                <label className="form-label text-secondary fs-7 mb-1">Địa chỉ mặc định</label>
+                                <input
+                                  type="text"
+                                  name="address"
+                                  value={profileData.address}
+                                  onChange={handleProfileChange}
+                                  className="form-control tech-input w-100"
+                                  placeholder="Nhập địa chỉ giao hàng mặc định"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="d-flex gap-2 justify-content-end">
+                              <button 
+                                type="button" 
+                                className="btn btn-outline-secondary px-4 py-2 fs-7"
+                                onClick={() => { setEditMode(false); setError(''); }}
+                                style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
+                              >
+                                Hủy bỏ
+                              </button>
+                              <button 
+                                type="submit" 
+                                className="btn btn-danger px-4 py-2 glow-btn fs-7"
+                                disabled={loading}
+                              >
+                                {loading ? <Loader2 size={16} className="spinner-border spinner-border-sm border-0" /> : 'Lưu thay đổi'}
+                              </button>
+                            </div>
+                          </form>
+                        ) : (
+                          <div className="d-flex flex-column gap-3">
+                            <div className="p-3 rounded bg-black d-flex flex-column gap-3" style={{ border: '1px solid rgba(255,255,255,0.02)' }}>
+                              <div className="row g-2 align-items-center">
+                                <div className="col-4 col-sm-3 text-secondary fs-7">Số điện thoại:</div>
+                                <div className="col-8 col-sm-9 text-white fw-medium d-flex align-items-center gap-2 fs-7">
+                                  <Smartphone size={14} className="text-secondary" /> {user.phone || 'Chưa cập nhật'}
+                                </div>
+                              </div>
+                              <div className="row g-2 align-items-center">
+                                <div className="col-4 col-sm-3 text-secondary fs-7">Ngày sinh:</div>
+                                <div className="col-8 col-sm-9 text-white fw-medium d-flex align-items-center gap-2 fs-7">
+                                  <Calendar size={14} className="text-secondary" /> {user.dob ? new Date(user.dob).toLocaleDateString('vi-VN') : 'Chưa cập nhật'}
+                                </div>
+                              </div>
+                              <div className="row g-2 align-items-center">
+                                <div className="col-4 col-sm-3 text-secondary fs-7">Giới tính:</div>
+                                <div className="col-8 col-sm-9 text-white fw-medium fs-7">{user.gender || 'Chưa cập nhật'}</div>
+                              </div>
+                              <div className="row g-2 align-items-start">
+                                <div className="col-4 col-sm-3 text-secondary fs-7">Địa chỉ nhận hàng:</div>
+                                <div className="col-8 col-sm-9 text-white fw-medium d-flex align-items-start gap-2 fs-7">
+                                  <MapPin size={14} className="text-secondary mt-1 flex-shrink-0" /> 
+                                  <span>{user.address || 'Chưa cập nhật địa chỉ giao hàng mặc định'}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="alert alert-info d-flex align-items-start gap-2 fs-8 bg-info bg-opacity-5 border-0 text-secondary mb-0 p-3">
+                              <Info size={16} className="text-info mt-1 flex-shrink-0" />
+                              <span>Địa chỉ giao hàng này sẽ được tự động điền khi bạn tiến hành thanh toán giỏ hàng để tiết kiệm thời gian nhập liệu.</span>
+                            </div>
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+
+                    {/* Tab 2: Orders History list & expands */}
+                    {activeTab === 'orders' && (
+                      <motion.div
+                        key="tab-orders"
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -10 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <h2 className="fs-5 text-white display-font mb-4">LỊCH SỬ ĐƠN HÀNG</h2>
+
+                        {ordersLoading ? (
+                          <div className="d-flex flex-column align-items-center justify-content-center py-5 gap-3">
+                            <Loader2 size={36} className="spinner-border spinner-border-sm text-danger border-0" style={{ width: '36px', height: '36px' }} />
+                            <span className="text-secondary fs-7">Đang tải lịch sử mua hàng...</span>
+                          </div>
+                        ) : orders.length === 0 ? (
+                          <div className="text-center py-5 bg-black rounded" style={{ border: '1px solid rgba(255,255,255,0.02)' }}>
+                            <Package size={48} className="text-secondary mb-3" />
+                            <p className="text-secondary fs-7 mb-0">Bạn chưa thực hiện bất kỳ đơn hàng nào.</p>
+                          </div>
+                        ) : (
+                          <div className="d-flex flex-column gap-3">
+                            {orders.map((order) => {
+                              const isExpanded = expandedOrder === order.id
+                              return (
+                                <div 
+                                  key={order.id} 
+                                  className="rounded overflow-hidden transition-smooth"
+                                  style={{ 
+                                    backgroundColor: 'var(--bg-primary)', 
+                                    border: isExpanded ? '1px solid var(--accent-red)' : '1px solid var(--border-color)' 
+                                  }}
+                                >
+                                  {/* Order Header Summary Row */}
+                                  <div 
+                                    className="p-3 d-flex flex-wrap align-items-center justify-content-between gap-3 cursor-pointer"
+                                    onClick={() => toggleOrder(order.id)}
+                                  >
+                                    <div className="d-flex align-items-center gap-3">
+                                      <div className="p-2 bg-black rounded text-danger">
+                                        <Package size={20} />
+                                      </div>
+                                      <div>
+                                        <h4 className="fs-7 text-white display-font mb-1">MÃ ĐƠN: #{order.id}</h4>
+                                        <span className="text-secondary fs-8">Ngày đặt: {order.orderDate}</span>
+                                      </div>
+                                    </div>
+
+                                    <div className="d-flex align-items-center gap-3">
+                                      <span className="fs-7 text-white fw-bold display-font">${order.total.toLocaleString()}</span>
+                                      <span className={`badge py-2 px-3 rounded-pill fs-8 ${getStatusBadgeClass(order.status)}`}>
+                                        {order.status}
+                                      </span>
+                                      <button className="btn btn-link text-secondary p-0 border-0">
+                                        {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* Expanded Detailed View */}
+                                  <AnimatePresence>
+                                    {isExpanded && (
+                                      <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="border-top overflow-hidden"
+                                        style={{ borderColor: 'rgba(255,255,255,0.05)' }}
+                                      >
+                                        <div className="p-4 d-flex flex-column gap-4">
+                                          {/* Timeline Tracker */}
+                                          <div className="p-3 rounded bg-black" style={{ border: '1px solid rgba(255,255,255,0.02)' }}>
+                                            <p className="text-secondary fs-8 mb-3 uppercase tracking-wider">Trạng thái vận chuyển</p>
+                                            <div className="d-flex align-items-center justify-content-between position-relative py-2">
+                                              {/* Connection line background */}
+                                              <div className="position-absolute top-50 start-0 w-100 bg-secondary" style={{ height: '2px', transform: 'translateY(-50%)', zIndex: 1, opacity: 0.1 }}></div>
+                                              
+                                              {/* Colored Progress Line */}
+                                              <div 
+                                                className="position-absolute top-50 start-0 bg-danger transition-smooth" 
+                                                style={{ 
+                                                  height: '2px', 
+                                                  transform: 'translateY(-50%)', 
+                                                  zIndex: 2, 
+                                                  width: order.status === 'Đã giao' ? '100%' : order.status === 'Đang vận chuyển' ? '50%' : '0%' 
+                                                }}
+                                              ></div>
+
+                                              <div className="d-flex flex-column align-items-center gap-1 position-relative" style={{ zIndex: 3 }}>
+                                                <div className="rounded-circle d-flex align-items-center justify-content-center text-white bg-danger" style={{ width: '24px', height: '24px', fontSize: '0.7rem' }}>1</div>
+                                                <span className="text-white fw-medium fs-8">Đã đặt hàng</span>
+                                              </div>
+
+                                              <div className="d-flex flex-column align-items-center gap-1 position-relative" style={{ zIndex: 3 }}>
+                                                <div className={`rounded-circle d-flex align-items-center justify-content-center text-white ${(order.status === 'Đang vận chuyển' || order.status === 'Đã giao') ? 'bg-danger' : 'bg-dark border border-secondary'}`} style={{ width: '24px', height: '24px', fontSize: '0.7rem' }}>2</div>
+                                                <span className={`fs-8 ${(order.status === 'Đang vận chuyển' || order.status === 'Đã giao') ? 'text-white fw-medium' : 'text-secondary'}`}>Đang giao</span>
+                                              </div>
+
+                                              <div className="d-flex flex-column align-items-center gap-1 position-relative" style={{ zIndex: 3 }}>
+                                                <div className={`rounded-circle d-flex align-items-center justify-content-center text-white ${order.status === 'Đã giao' ? 'bg-danger' : 'bg-dark border border-secondary'}`} style={{ width: '24px', height: '24px', fontSize: '0.7rem' }}>3</div>
+                                                <span className={`fs-8 ${order.status === 'Đã giao' ? 'text-white fw-medium' : 'text-secondary'}`}>Đã giao</span>
+                                              </div>
+                                            </div>
+                                            <p className="text-secondary fs-8 text-center mt-3 mb-0">Hành trình: <span className="text-white fw-medium">{order.deliveryDate}</span></p>
+                                          </div>
+
+                                          {/* Order Delivery and Payment Info */}
+                                          <div className="row g-3 fs-8 text-secondary">
+                                            <div className="col-12 col-sm-6">
+                                              <p className="text-danger fw-semibold mb-2 uppercase tracking-wider">Thông tin người nhận</p>
+                                              <p className="mb-1 text-white fw-medium">{order.customerName}</p>
+                                              <p className="mb-1">SĐT: {order.phone}</p>
+                                              <p className="mb-0 d-flex gap-1 align-items-start">
+                                                <MapPin size={12} className="mt-0.5 flex-shrink-0 text-secondary" />
+                                                <span>Địa chỉ: {order.address}</span>
+                                              </p>
+                                            </div>
+                                            <div className="col-12 col-sm-6">
+                                              <p className="text-danger fw-semibold mb-2 uppercase tracking-wider">Thanh toán</p>
+                                              <p className="mb-1">Phương thức: <span className="text-white fw-medium">{translatePayment(order.paymentMethod)}</span></p>
+                                              {order.paymentCardInfo && <p className="mb-1">Thẻ: <span className="text-white fw-medium">{order.paymentCardInfo}</span></p>}
+                                              <p className="mb-1">Tạm tính: <span className="text-white display-font">${order.subtotal.toLocaleString()}</span></p>
+                                              <p className="mb-1">Phí vận chuyển: <span className="text-white display-font">{order.shipping === 0 ? 'Miễn phí' : `$${order.shipping.toLocaleString()}`}</span></p>
+                                              <p className="mb-0 text-white">Tổng cộng: <span className="text-danger fw-bold display-font fs-7">${order.total.toLocaleString()}</span></p>
+                                            </div>
+                                          </div>
+
+                                          {/* Order Items List */}
+                                          <div className="d-flex flex-column gap-2">
+                                            <p className="text-danger fw-semibold fs-8 mb-2 uppercase tracking-wider">Sản phẩm đã mua</p>
+                                            {order.items.map((item, idx) => (
+                                              <div 
+                                                key={idx} 
+                                                className="d-flex align-items-center justify-content-between p-2 rounded bg-black bg-opacity-40"
+                                                style={{ border: '1px solid rgba(255,255,255,0.01)' }}
+                                              >
+                                                <div className="d-flex align-items-center gap-3">
+                                                  <div className="p-1 bg-black rounded" style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <img src={item.image} alt={item.name} className="img-fluid" style={{ maxHeight: '100%', objectFit: 'contain' }} />
+                                                  </div>
+                                                  <div>
+                                                    <h5 className="fs-8 text-white mb-0">{item.name}</h5>
+                                                    <span className="text-secondary" style={{ fontSize: '0.7rem' }}>Màu: {item.selectedColor}</span>
+                                                  </div>
+                                                </div>
+                                                <span className="text-white fs-8 display-font">{item.quantity} x ${item.price.toLocaleString()}</span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+
+                    {/* Tab 3: Installment consultation requests tracking */}
+                    {activeTab === 'installments' && (
+                      <motion.div
+                        key="tab-installments"
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -10 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <h2 className="fs-5 text-white display-font mb-4">HỒ SƠ ĐĂNG KÝ TRẢ GÓP</h2>
+
+                        {installmentsLoading ? (
+                          <div className="d-flex flex-column align-items-center justify-content-center py-5 gap-3">
+                            <Loader2 size={36} className="spinner-border spinner-border-sm text-danger border-0" style={{ width: '36px', height: '36px' }} />
+                            <span className="text-secondary fs-7">Đang tải hồ sơ trả góp...</span>
+                          </div>
+                        ) : installments.length === 0 ? (
+                          <div className="text-center py-5 bg-black rounded" style={{ border: '1px solid rgba(255,255,255,0.02)' }}>
+                            <CreditCard size={48} className="text-secondary mb-3" />
+                            <p className="text-secondary fs-7 mb-0">Bạn chưa gửi yêu cầu trả góp nào.</p>
+                          </div>
+                        ) : (
+                          <div className="d-flex flex-column gap-3">
+                            {installments.map((req) => (
+                              <div 
+                                key={req.id} 
+                                className="p-4 rounded bg-black text-start"
+                                style={{ border: '1px solid var(--border-color)' }}
+                              >
+                                <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 border-bottom border-secondary border-opacity-10 pb-3 mb-3">
+                                  <div>
+                                    <h4 className="fs-7 text-white display-font mb-1">MÃ HỒ SƠ: #{req.id}</h4>
+                                    <span className="text-secondary fs-8">Ngày đăng ký: {req.createdDate}</span>
+                                  </div>
+                                  <span className={`badge py-2 px-3 rounded fs-8 ${getStatusBadgeClass(req.status)}`}>
+                                    {req.status}
+                                  </span>
+                                </div>
+
+                                <div className="row g-3 fs-8 text-secondary">
+                                  <div className="col-12 col-sm-6">
+                                    <p className="text-danger fw-semibold mb-2 uppercase tracking-wider">Thông tin sản phẩm</p>
+                                    <p className="text-white fw-medium mb-1">{req.productName}</p>
+                                    <p className="mb-1">Giá bán: <span className="text-white display-font">${req.price.toLocaleString()}</span></p>
+                                    <p className="mb-0">Đăng ký tư vấn bởi: <span className="text-white fw-medium">{req.customerName} - {req.phone}</span></p>
+                                  </div>
+
+                                  <div className="col-12 col-sm-6" style={{ borderLeft: '1px solid rgba(255,255,255,0.03)' }}>
+                                    <p className="text-danger fw-semibold mb-2 uppercase tracking-wider">Thông tin gói tài chính</p>
+                                    <p className="mb-1">Chương trình vay: <span className="text-white">{req.packageName}</span></p>
+                                    <p className="mb-1">Ngân hàng liên kết: <span className="text-white fw-medium">{req.bankName}</span></p>
+                                    <p className="mb-1">Kỳ hạn chọn vay: <span className="text-white">{req.loanTerm} tháng</span></p>
+                                    <p className="mb-0 text-white">Số tiền trả hàng tháng: <span className="text-danger fw-bold display-font fs-7">${req.monthlyEstimate.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span></p>
+                                  </div>
+                                </div>
+                                
+                                <div className="mt-3 p-2 bg-dark bg-opacity-40 rounded fs-8 text-secondary d-flex align-items-center gap-2">
+                                  <Info size={14} className="text-danger" />
+                                  <span>Thời gian đề xuất liên hệ: <strong className="text-white">{req.preferredContactTime === 'morning' ? 'Buổi sáng (8h-12h)' : req.preferredContactTime === 'afternoon' ? 'Buổi chiều (13h30-17h30)' : 'Buổi tối (18h-21h)'}</strong>.</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
             </motion.div>

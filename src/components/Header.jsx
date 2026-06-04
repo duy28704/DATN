@@ -48,13 +48,31 @@ const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
             Trang Chủ
           </a>
           <a 
-            href="#shop" 
-            className={`fw-medium text-uppercase text-decoration-none fs-7 ${currentPage.startsWith('shop') ? 'text-white' : 'text-secondary'}`}
-            style={{ fontSize: '0.85rem', letterSpacing: '0.05em', borderBottom: currentPage.startsWith('shop') ? '2px solid var(--accent-red)' : '2px solid transparent', paddingBottom: '4px' }}
-            onClick={(e) => { e.preventDefault(); handleNav('shop'); }}
-          >
-            Sản Phẩm
-          </a>
+              href="#shop" 
+              className={`fw-medium text-uppercase text-decoration-none fs-7 ${currentPage.startsWith('shop') ? 'text-white' : 'text-secondary'}`}
+              style={{ fontSize: '0.85rem', letterSpacing: '0.05em', borderBottom: currentPage.startsWith('shop') ? '2px solid var(--accent-red)' : '2px solid transparent', paddingBottom: '4px' }}
+              onClick={(e) => { e.preventDefault(); handleNav('shop'); }}
+            >
+              Sản Phẩm
+            </a>
+            {/* Installments link */}
+            <a 
+              href="#installments" 
+              className={`fw-medium text-uppercase text-decoration-none fs-7 ${currentPage === 'installments' ? 'text-white' : 'text-secondary'}`}
+              style={{ fontSize: '0.85rem', letterSpacing: '0.05em', borderBottom: currentPage === 'installments' ? '2px solid var(--accent-red)' : '2px solid transparent', paddingBottom: '4px' }}
+              onClick={(e) => { e.preventDefault(); handleNav('installments'); }}
+            >
+              Trả góp
+            </a>
+            {/* Compare link */}
+            <a 
+              href="#compare" 
+              className={`fw-medium text-uppercase text-decoration-none fs-7 ${currentPage === 'compare' ? 'text-white' : 'text-secondary'}`}
+              style={{ fontSize: '0.85rem', letterSpacing: '0.05em', borderBottom: currentPage === 'compare' ? '2px solid var(--accent-red)' : '2px solid transparent', paddingBottom: '4px' }}
+              onClick={(e) => { e.preventDefault(); handleNav('compare'); }}
+            >
+              So sánh
+            </a>
           <a 
             href="#about" 
             className="fw-medium text-uppercase text-decoration-none fs-7 text-secondary"
@@ -178,12 +196,28 @@ const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
               Trang Chủ
             </a>
             <a 
-              href="#shop" 
-              className={`fs-5 fw-medium text-decoration-none ${currentPage.startsWith('shop') ? 'text-white' : 'text-secondary'}`}
-              onClick={(e) => { e.preventDefault(); handleNav('shop'); }}
-            >
-              Sản Phẩm
-            </a>
+            href="#shop" 
+            className={`fs-5 fw-medium text-decoration-none ${currentPage.startsWith('shop') ? 'text-white' : 'text-secondary'}`}
+            onClick={(e) => { e.preventDefault(); handleNav('shop'); }}
+          >
+            Sản Phẩm
+          </a>
+          {/* Installments link */}
+          <a 
+            href="#installments" 
+            className={`fs-5 fw-medium text-decoration-none ${currentPage === 'installments' ? 'text-white' : 'text-secondary'}`}
+            onClick={(e) => { e.preventDefault(); handleNav('installments'); }}
+          >
+            Trả góp
+          </a>
+          {/* Compare link */}
+          <a 
+            href="#compare" 
+            className={`fs-5 fw-medium text-decoration-none ${currentPage === 'compare' ? 'text-white' : 'text-secondary'}`}
+            onClick={(e) => { e.preventDefault(); handleNav('compare'); }}
+          >
+            So sánh
+          </a>
             <a 
               href="#about" 
               className="fs-5 fw-medium text-decoration-none text-secondary"

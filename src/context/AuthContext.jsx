@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useState } from 'react'
+import { apiService } from '../services/api'
 
 export const AuthContext = createContext()
 
@@ -19,23 +20,14 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     setLoading(true)
     setError('')
-    
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 800))
-    
-    // Simplistic mockup credentials verification
-    if (email && password.length >= 6) {
-      const mockUser = {
-        name: email.split('@')[0].toUpperCase(),
-        email: email,
-        joinedDate: new Date().toLocaleDateString('vi-VN')
-      }
-      setUser(mockUser)
-      localStorage.setItem('nexus_user', JSON.stringify(mockUser))
+    try {
+      const fetchedUser = await apiService.auth.login(email, password)
+      setUser(fetchedUser)
+      localStorage.setItem('nexus_user', JSON.stringify(fetchedUser))
       setLoading(false)
       return true
-    } else {
-      setError('Email hoặc mật khẩu không hợp lệ (mật khẩu tối thiểu 6 ký tự).')
+    } catch (err) {
+      setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.')
       setLoading(false)
       return false
     }
@@ -44,21 +36,31 @@ export const AuthProvider = ({ children }) => {
   const register = async (name, email, password) => {
     setLoading(true)
     setError('')
-    
-    await new Promise((resolve) => setTimeout(resolve, 800))
-    
-    if (name && email && password.length >= 6) {
-      const mockUser = {
-        name: name,
-        email: email,
-        joinedDate: new Date().toLocaleDateString('vi-VN')
-      }
-      setUser(mockUser)
-      localStorage.setItem('nexus_user', JSON.stringify(mockUser))
+    try {
+      const fetchedUser = await apiService.auth.register(name, email, password)
+      setUser(fetchedUser)
+      localStorage.setItem('nexus_user', JSON.stringify(fetchedUser))
       setLoading(false)
       return true
-    } else {
-      setError('Vui lòng nhập đầy đủ thông tin và mật khẩu dài tối thiểu 6 ký tự.')
+    } catch (err) {
+      setError(err.message || 'Đăng ký thất bại. Email có thể đã tồn tại.')
+      setLoading(false)
+      return false
+    }
+  }
+
+  const updateUserProfile = async (updatedFields) => {
+    if (!user) return false
+    setLoading(true)
+    setError('')
+    try {
+      const updatedUser = await apiService.auth.updateProfile(user.email, updatedFields)
+      setUser(updatedUser)
+      localStorage.setItem('nexus_user', JSON.stringify(updatedUser))
+      setLoading(false)
+      return true
+    } catch (err) {
+      setError(err.message || 'Cập nhật hồ sơ thất bại.')
       setLoading(false)
       return false
     }
@@ -70,8 +72,9 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, error, loading, login, register, logout, setError }}>
+    <AuthContext.Provider value={{ user, error, loading, login, register, updateUserProfile, logout, setError }}>
       {children}
     </AuthContext.Provider>
   )
 }
+

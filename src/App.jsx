@@ -6,7 +6,9 @@ import Footer from './components/Footer'
 import CartDrawer from './components/CartDrawer'
 import Home from './pages/Home'
 import Shop from './pages/Shop'
+import Installments from './pages/Installments'
 import ProductDetail from './pages/ProductDetail'
+import Compare from './pages/Compare'
 import Login from './pages/Login'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -33,6 +35,11 @@ function App() {
         setCurrentPageState(hash)
       } else if (hash.startsWith('shop')) {
         setCurrentPageState(hash)
+      } else if (hash.startsWith('compare')) {
+        // Keep any query parameters (e.g., ?ids=1,2) in hash for Compare page handling
+        setCurrentPageState(hash)
+      } else if (hash.startsWith('installments')) {
+        setCurrentPageState('installments')
       } else if (hash === 'login') {
         setCurrentPageState('login')
       } else {
@@ -76,6 +83,19 @@ function App() {
           setCurrentPage={setCurrentPage}
           onSelectProduct={setSelectedProductId}
         />
+      )
+    }
+
+    // New Installments page
+    if (currentPage === 'installments') {
+      return (
+        <Installments setCurrentPage={setCurrentPage} />
+      )
+    }
+    // New Compare page
+    if (currentPage.startsWith('compare')) {
+      return (
+        <Compare setCurrentPage={setCurrentPage} />
       )
     }
 
