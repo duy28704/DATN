@@ -45,7 +45,6 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct }) => {
 
   const handleAddToCart = () => {
     addToCart(product, quantity, selectedColor)
-    alert(`Đã thêm ${quantity} x ${product.name} (${selectedColor}) vào giỏ hàng!`)
   }
 
   // JSON-LD dynamic schema for product

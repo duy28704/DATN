@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useState, useEffect } from 'react'
+import { createContext, useState, useEffect, useContext, useCallback } from 'react'
+import { ToastContext } from './ToastContext'
 
 export const CartContext = createContext()
 
@@ -14,13 +15,15 @@ export const CartProvider = ({ children }) => {
     }
   })
 
+  // Toast context (may be null if ToastProvider not yet mounted — safe guard)
+  const toastCtx = useContext(ToastContext)
+
   useEffect(() => {
     localStorage.setItem('nexus_cart', JSON.stringify(cartItems))
   }, [cartItems])
 
-  const addToCart = (product, quantity = 1, selectedColor = 'Standard') => {
+  const addToCart = useCallback((product, quantity = 1, selectedColor = 'Standard') => {
     setCartItems((prevItems) => {
-      // Find if item already exists in cart with same product and color
       const existingItemIndex = prevItems.findIndex(
         (item) => item.id === product.id && item.selectedColor === selectedColor
       )
@@ -33,7 +36,18 @@ export const CartProvider = ({ children }) => {
         return [...prevItems, { ...product, quantity, selectedColor }]
       }
     })
-  }
+
+    // Show Toast notification instead of browser alert
+    if (toastCtx?.showToast) {
+      toastCtx.showToast({
+        type: 'cart',
+        title: 'Đã thêm vào giỏ hàng',
+        message: `${product.name} — Màu: ${selectedColor}`,
+        image: product.image,
+        duration: 3500
+      })
+    }
+  }, [toastCtx])
 
   const removeFromCart = (productId, selectedColor) => {
     setCartItems((prevItems) =>
@@ -53,7 +67,7 @@ export const CartProvider = ({ children }) => {
           }
           return item
         })
-        .filter((item) => item.quantity > 0) // Remove if quantity drops to 0
+        .filter((item) => item.quantity > 0)
     })
   }
 
@@ -64,7 +78,7 @@ export const CartProvider = ({ children }) => {
   // Calculate totals
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
   const cartSubtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0)
-  const cartShipping = cartSubtotal > 500 || cartSubtotal === 0 ? 0 : 35 // Free shipping above $500
+  const cartShipping = cartSubtotal > 500 || cartSubtotal === 0 ? 0 : 35
   const cartTotal = cartSubtotal + cartShipping
 
   return (

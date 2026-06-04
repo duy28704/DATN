@@ -304,3 +304,57 @@ a:hover {
 .pulse-glow-element {
   animation: pulse-glow 3s infinite ease-in-out;
 }
+
+/* Custom Premium Notification Alert Styles */
+.nexus-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 0.9rem 1.25rem;
+  border-radius: 6px;
+  background: rgba(12, 12, 15, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  transition: var(--transition-smooth);
+}
+
+.nexus-alert-success {
+  border-color: rgba(46, 204, 113, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 10px rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+}
+
+.nexus-alert-success .alert-icon {
+  color: #2ecc71;
+  filter: drop-shadow(0 0 5px rgba(46, 204, 113, 0.4));
+  flex-shrink: 0;
+}
+
+.nexus-alert-danger {
+  border-color: rgba(255, 0, 60, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 10px rgba(255, 0, 60, 0.15);
+  color: #ff3366;
+}
+
+.nexus-alert-danger .alert-icon {
+  color: #ff003c;
+  filter: drop-shadow(0 0 5px rgba(255, 0, 60, 0.4));
+  flex-shrink: 0;
+}
+
+.nexus-alert-info {
+  border-color: rgba(52, 152, 219, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 10px rgba(52, 152, 219, 0.15);
+  color: #54a0ff;
+}
+
+.nexus-alert-info .alert-icon {
+  color: #3498db;
+  filter: drop-shadow(0 0 5px rgba(52, 152, 219, 0.4));
+  flex-shrink: 0;
+}
+

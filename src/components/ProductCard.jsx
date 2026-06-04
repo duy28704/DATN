@@ -9,8 +9,6 @@ const ProductCard = ({ product, onSelectProduct, setCurrentPage }) => {
   const handleQuickAdd = (e) => {
     e.stopPropagation() // Don't trigger card selection detail page
     addToCart(product, 1)
-    // Quick notification or feedback can be added here
-    alert(`Đã thêm ${product.name} vào giỏ hàng!`)
   }
 
   const handleCardClick = () => {

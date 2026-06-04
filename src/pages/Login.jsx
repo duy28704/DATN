@@ -21,7 +21,7 @@ import {
   Info
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { apiService } from '../services/api'
+import { apiService, validators } from '../services/api'
 
 const Login = ({ setCurrentPage }) => {
   const { user, error, loading, login, register, updateUserProfile, logout, setError } = useContext(AuthContext)
@@ -38,6 +38,10 @@ const Login = ({ setCurrentPage }) => {
   const [profileSuccess, setProfileSuccess] = useState('')
   const [profileError, setProfileError] = useState('')
 
+  // Field-specific validation errors
+  const [fieldErrors, setFieldErrors] = useState({ name: '', email: '', password: '' })
+  const [profileFieldErrors, setProfileFieldErrors] = useState({ name: '', phone: '', dob: '', address: '' })
+
   // Tab 2: Orders states
   const [orders, setOrders] = useState([])
   const [ordersLoading, setOrdersLoading] = useState(false)
@@ -50,6 +54,7 @@ const Login = ({ setCurrentPage }) => {
   // Clear errors on mode switch
   useEffect(() => {
     setError('')
+    setFieldErrors({ name: '', email: '', password: '' })
   }, [isLoginMode, setError])
 
   // Populate profile fields when user changes
@@ -103,15 +108,49 @@ const Login = ({ setCurrentPage }) => {
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+    setFieldErrors(prev => ({ ...prev, [name]: '' }))
   }
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target
     setProfileData(prev => ({ ...prev, [name]: value }))
+    setProfileFieldErrors(prev => ({ ...prev, [name]: '' }))
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setError('')
+    setSuccessMsg('')
+
+    // Client-side validations
+    let hasErr = false
+    const errs = { name: '', email: '', password: '' }
+
+    const emailVal = validators.email(formData.email)
+    if (emailVal) {
+      errs.email = emailVal
+      hasErr = true
+    }
+
+    const pwdVal = validators.password(formData.password)
+    if (pwdVal) {
+      errs.password = pwdVal
+      hasErr = true
+    }
+
+    if (!isLoginMode) {
+      const nameVal = validators.name(formData.name)
+      if (nameVal) {
+        errs.name = nameVal
+        hasErr = true
+      }
+    }
+
+    if (hasErr) {
+      setFieldErrors(errs)
+      return
+    }
+
     if (isLoginMode) {
       const ok = await login(formData.email, formData.password)
       if (ok) {
@@ -137,6 +176,40 @@ const Login = ({ setCurrentPage }) => {
     e.preventDefault()
     setProfileError('')
     setProfileSuccess('')
+    setProfileFieldErrors({ name: '', phone: '', dob: '', address: '' })
+
+    // Validate fields
+    let hasErr = false
+    const errs = { name: '', phone: '', dob: '', address: '' }
+
+    const nameVal = validators.name(profileData.name)
+    if (nameVal) {
+      errs.name = nameVal
+      hasErr = true
+    }
+
+    const phoneVal = validators.phone(profileData.phone)
+    if (phoneVal) {
+      errs.phone = phoneVal
+      hasErr = true
+    }
+
+    const dobVal = validators.dob(profileData.dob)
+    if (dobVal) {
+      errs.dob = dobVal
+      hasErr = true
+    }
+
+    const addrVal = validators.address(profileData.address)
+    if (addrVal) {
+      errs.address = addrVal
+      hasErr = true
+    }
+
+    if (hasErr) {
+      setProfileFieldErrors(errs)
+      return
+    }
     
     const ok = await updateUserProfile(profileData)
     if (ok) {
@@ -187,6 +260,13 @@ const Login = ({ setCurrentPage }) => {
       />
 
       <div className="container py-5 px-4 px-md-5">
+        <div className="alert alert-info text-start d-flex align-items-center gap-2 mb-4 p-3 border-0 bg-info bg-opacity-5 text-secondary fs-8">
+          <Info size={16} className="text-info flex-shrink-0" />
+          <span>
+            <strong>Tài khoản mẫu có sẵn trong Database:</strong> Đăng nhập Email: <strong className="text-white">test@nexus.com</strong>, Mật khẩu: <strong className="text-white">Password123</strong> hoặc Đăng ký tài khoản mới (sẽ được mã hóa mật khẩu & lưu trực tiếp vào Mock DB).
+          </span>
+        </div>
+
         <AnimatePresence mode="wait">
           {user ? (
             /* Logged in state - Dashboard view */
@@ -308,8 +388,9 @@ const Login = ({ setCurrentPage }) => {
                                   name="name"
                                   value={profileData.name}
                                   onChange={handleProfileChange}
-                                  className="form-control tech-input w-100"
+                                  className={`form-control tech-input w-100 ${profileFieldErrors.name ? 'is-invalid border-danger' : ''}`}
                                 />
+                                {profileFieldErrors.name && <span className="text-danger fs-8 mt-1 d-block">{profileFieldErrors.name}</span>}
                               </div>
                               <div className="col-12 col-sm-6">
                                 <label className="form-label text-secondary fs-7 mb-1">Số điện thoại</label>
@@ -318,9 +399,10 @@ const Login = ({ setCurrentPage }) => {
                                   name="phone"
                                   value={profileData.phone}
                                   onChange={handleProfileChange}
-                                  className="form-control tech-input w-100"
+                                  className={`form-control tech-input w-100 ${profileFieldErrors.phone ? 'is-invalid border-danger' : ''}`}
                                   placeholder="Nhập SĐT nhận hàng"
                                 />
+                                {profileFieldErrors.phone && <span className="text-danger fs-8 mt-1 d-block">{profileFieldErrors.phone}</span>}
                               </div>
                               <div className="col-12 col-sm-6">
                                 <label className="form-label text-secondary fs-7 mb-1">Ngày sinh</label>
@@ -329,8 +411,9 @@ const Login = ({ setCurrentPage }) => {
                                   name="dob"
                                   value={profileData.dob}
                                   onChange={handleProfileChange}
-                                  className="form-control tech-input w-100"
+                                  className={`form-control tech-input w-100 ${profileFieldErrors.dob ? 'is-invalid border-danger' : ''}`}
                                 />
+                                {profileFieldErrors.dob && <span className="text-danger fs-8 mt-1 d-block">{profileFieldErrors.dob}</span>}
                               </div>
                               <div className="col-12 col-sm-6">
                                 <label className="form-label text-secondary fs-7 mb-1">Giới tính</label>
@@ -352,9 +435,10 @@ const Login = ({ setCurrentPage }) => {
                                   name="address"
                                   value={profileData.address}
                                   onChange={handleProfileChange}
-                                  className="form-control tech-input w-100"
+                                  className={`form-control tech-input w-100 ${profileFieldErrors.address ? 'is-invalid border-danger' : ''}`}
                                   placeholder="Nhập địa chỉ giao hàng mặc định"
                                 />
+                                {profileFieldErrors.address && <span className="text-danger fs-8 mt-1 d-block">{profileFieldErrors.address}</span>}
                               </div>
                             </div>
 
@@ -362,7 +446,7 @@ const Login = ({ setCurrentPage }) => {
                               <button 
                                 type="button" 
                                 className="btn btn-outline-secondary px-4 py-2 fs-7"
-                                onClick={() => { setEditMode(false); setError(''); }}
+                                onClick={() => { setEditMode(false); setProfileFieldErrors({ name: '', phone: '', dob: '', address: '' }); }}
                                 style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
                               >
                                 Hủy bỏ
@@ -550,7 +634,7 @@ const Login = ({ setCurrentPage }) => {
                                                 style={{ border: '1px solid rgba(255,255,255,0.01)' }}
                                               >
                                                 <div className="d-flex align-items-center gap-3">
-                                                  <div className="p-1 bg-black rounded" style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                  <div className="p-1 bg-black rounded" style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justify: 'center' }}>
                                                     <img src={item.image} alt={item.name} className="img-fluid" style={{ maxHeight: '100%', objectFit: 'contain' }} />
                                                   </div>
                                                   <div>
@@ -690,10 +774,11 @@ const Login = ({ setCurrentPage }) => {
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
-                        className="form-control tech-input ps-5"
+                        className={`form-control tech-input ps-5 ${fieldErrors.name ? 'is-invalid border-danger' : ''}`}
                         placeholder="Nhập tên của bạn"
                       />
                     </div>
+                    {fieldErrors.name && <span className="text-danger fs-8 mt-1 d-block">{fieldErrors.name}</span>}
                   </div>
                 )}
 
@@ -707,10 +792,11 @@ const Login = ({ setCurrentPage }) => {
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="form-control tech-input ps-5"
+                      className={`form-control tech-input ps-5 ${fieldErrors.email ? 'is-invalid border-danger' : ''}`}
                       placeholder="email@vidu.com"
                     />
                   </div>
+                  {fieldErrors.email && <span className="text-danger fs-8 mt-1 d-block">{fieldErrors.email}</span>}
                 </div>
 
                 <div>
@@ -723,10 +809,11 @@ const Login = ({ setCurrentPage }) => {
                       name="password"
                       value={formData.password}
                       onChange={handleInputChange}
-                      className="form-control tech-input ps-5"
-                      placeholder="Tối thiểu 6 ký tự"
+                      className={`form-control tech-input ps-5 ${fieldErrors.password ? 'is-invalid border-danger' : ''}`}
+                      placeholder="Tối thiểu 6 ký tự (1 chữ + 1 số)"
                     />
                   </div>
+                  {fieldErrors.password && <span className="text-danger fs-8 mt-1 d-block">{fieldErrors.password}</span>}
                 </div>
 
                 <button 

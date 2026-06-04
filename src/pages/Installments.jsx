@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CreditCard, CheckCircle, ChevronDown, ChevronUp, Landmark, ShieldAlert, Phone, User, Mail, Calendar, Calculator } from 'lucide-react';
 import { products } from '../data/products';
 import { AuthContext } from '../context/AuthContext';
-import { apiService } from '../services/api';
+import { apiService, validators } from '../services/api';
 
 const Installments = ({ setCurrentPage }) => {
   const { user } = useContext(AuthContext);
@@ -23,6 +23,9 @@ const Installments = ({ setCurrentPage }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [formError, setFormError] = useState('');
+
+  // Field validation errors
+  const [fieldErrors, setFieldErrors] = useState({ name: '', phone: '', email: '' });
 
   const banks = [
     { id: 'tcb', name: 'Techcombank', rate: 5.9, logo: 'TCB', color: '#E01E26' },
@@ -159,12 +162,36 @@ const Installments = ({ setCurrentPage }) => {
 
   const handleCounselSubmit = async (e) => {
     e.preventDefault();
-    if (!formName || !formPhone || !formEmail) {
-      setFormError('Vui lòng nhập đầy đủ Tên, SĐT và Email.');
+    setFormError('');
+    setFieldErrors({ name: '', phone: '', email: '' });
+
+    // Validate fields
+    let hasErr = false;
+    const errs = { name: '', phone: '', email: '' };
+
+    const nameVal = validators.name(formName);
+    if (nameVal) {
+      errs.name = nameVal;
+      hasErr = true;
+    }
+
+    const phoneVal = validators.phone(formPhone);
+    if (phoneVal) {
+      errs.phone = phoneVal;
+      hasErr = true;
+    }
+
+    const emailVal = validators.email(formEmail);
+    if (emailVal) {
+      errs.email = emailVal;
+      hasErr = true;
+    }
+
+    if (hasErr) {
+      setFieldErrors(errs);
       return;
     }
-    
-    setFormError('');
+
     setIsSubmitting(true);
 
     try {
@@ -436,12 +463,13 @@ const Installments = ({ setCurrentPage }) => {
                       <input 
                         type="text" 
                         required 
-                        className="form-control tech-input ps-5 py-2 fs-7" 
+                        className={`form-control tech-input ps-5 py-2 fs-7 ${fieldErrors.name ? 'is-invalid border-danger' : ''}`}
                         placeholder="Họ tên của bạn"
                         value={formName}
-                        onChange={e => setFormName(e.target.value)}
+                        onChange={e => { setFormName(e.target.value); setFieldErrors(prev => ({ ...prev, name: '' })) }}
                       />
                     </div>
+                    {fieldErrors.name && <span className="text-danger fs-8 mt-1 d-block">{fieldErrors.name}</span>}
                   </div>
 
                   <div className="row g-2">
@@ -452,12 +480,13 @@ const Installments = ({ setCurrentPage }) => {
                         <input 
                           type="tel" 
                           required 
-                          className="form-control tech-input ps-5 py-2 fs-7" 
+                          className={`form-control tech-input ps-5 py-2 fs-7 ${fieldErrors.phone ? 'is-invalid border-danger' : ''}`}
                           placeholder="Số điện thoại"
                           value={formPhone}
-                          onChange={e => setFormPhone(e.target.value)}
+                          onChange={e => { setFormPhone(e.target.value); setFieldErrors(prev => ({ ...prev, phone: '' })) }}
                         />
                       </div>
+                      {fieldErrors.phone && <span className="text-danger fs-8 mt-1 d-block">{fieldErrors.phone}</span>}
                     </div>
                     <div className="col-12 col-sm-6">
                       <label className="form-label text-secondary fs-8 mb-1">Email</label>
@@ -466,12 +495,13 @@ const Installments = ({ setCurrentPage }) => {
                         <input 
                           type="email" 
                           required 
-                          className="form-control tech-input ps-5 py-2 fs-7" 
+                          className={`form-control tech-input ps-5 py-2 fs-7 ${fieldErrors.email ? 'is-invalid border-danger' : ''}`}
                           placeholder="Địa chỉ Email"
                           value={formEmail}
-                          onChange={e => setFormEmail(e.target.value)}
+                          onChange={e => { setFormEmail(e.target.value); setFieldErrors(prev => ({ ...prev, email: '' })) }}
                         />
                       </div>
+                      {fieldErrors.email && <span className="text-danger fs-8 mt-1 d-block">{fieldErrors.email}</span>}
                     </div>
                   </div>
 

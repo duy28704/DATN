@@ -1,7 +1,8 @@
 import { useContext, useState, useEffect } from 'react'
 import { CartContext } from '../context/CartContext'
 import { AuthContext } from '../context/AuthContext'
-import { apiService } from '../services/api'
+import { apiService, validators } from '../services/api'
+import { useToast } from '../context/ToastContext'
 import { X, Plus, Minus, Trash2, ShieldCheck, ShoppingBag, ArrowRight, Truck, CreditCard, Landmark, QrCode, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -17,6 +18,7 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage }) => {
   } = useContext(CartContext)
 
   const { user } = useContext(AuthContext)
+  const { showToast } = useToast()
 
   const [checkoutStep, setCheckoutStep] = useState('cart') // 'cart', 'checkout', 'success'
   const [formData, setFormData] = useState({ name: '', phone: '', address: '', note: '' })
@@ -25,6 +27,10 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage }) => {
   const [selectedBank, setSelectedBank] = useState('VCB')
   const [isOrdering, setIsOrdering] = useState(false)
   const [placedOrder, setPlacedOrder] = useState(null)
+
+  // Field validation errors
+  const [checkoutErrors, setCheckoutErrors] = useState({ name: '', phone: '', address: '' })
+  const [cardErrors, setCardErrors] = useState({ number: '', name: '', expiry: '', cvc: '' })
 
   // Auto pre-fill checkout details if user is logged in
   useEffect(() => {
@@ -41,16 +47,75 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage }) => {
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+    setCheckoutErrors((prev) => ({ ...prev, [name]: '' }))
   }
 
   const handleCardInputChange = (e) => {
     const { name, value } = e.target
     setCardData((prev) => ({ ...prev, [name]: value }))
+    setCardErrors((prev) => ({ ...prev, [name]: '' }))
   }
 
   const handleOrderSubmit = async (e) => {
     e.preventDefault()
-    if (!formData.name || !formData.phone || !formData.address) return
+    setCheckoutErrors({ name: '', phone: '', address: '' })
+    setCardErrors({ number: '', name: '', expiry: '', cvc: '' })
+
+    let hasErr = false
+    const infoErrs = { name: '', phone: '', address: '' }
+    const paymentErrs = { number: '', name: '', expiry: '', cvc: '' }
+
+    // Validate delivery fields
+    const nameVal = validators.name(formData.name)
+    if (nameVal) {
+      infoErrs.name = nameVal
+      hasErr = true
+    }
+
+    const phoneVal = validators.phone(formData.phone)
+    if (phoneVal) {
+      infoErrs.phone = phoneVal
+      hasErr = true
+    }
+
+    const addrVal = validators.address(formData.address)
+    if (addrVal) {
+      infoErrs.address = addrVal
+      hasErr = true
+    }
+
+    // Validate Visa details if selected
+    if (paymentMethod === 'visa') {
+      const cardNumVal = validators.cardNumber(cardData.number)
+      if (cardNumVal) {
+        paymentErrs.number = cardNumVal
+        hasErr = true
+      }
+
+      const cardHolderVal = validators.name(cardData.name)
+      if (cardHolderVal) {
+        paymentErrs.name = cardHolderVal
+        hasErr = true
+      }
+
+      const cardExpiryVal = validators.cardExpiry(cardData.expiry)
+      if (cardExpiryVal) {
+        paymentErrs.expiry = cardExpiryVal
+        hasErr = true
+      }
+
+      const cardCvcVal = validators.cardCVC(cardData.cvc)
+      if (cardCvcVal) {
+        paymentErrs.cvc = cardCvcVal
+        hasErr = true
+      }
+    }
+
+    if (hasErr) {
+      setCheckoutErrors(infoErrs)
+      setCardErrors(paymentErrs)
+      return
+    }
 
     setIsOrdering(true)
 
@@ -63,6 +128,7 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage }) => {
       note: formData.note,
       paymentMethod: paymentMethod,
       paymentCardInfo: paymentMethod === 'visa' ? `•••• •••• •••• ${cardData.number.slice(-4) || '4242'}` : null,
+      cardDetails: paymentMethod === 'visa' ? cardData : null,
       items: cartItems.map(item => ({
         id: item.id,
         name: item.name,
@@ -81,7 +147,7 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage }) => {
       setPlacedOrder(resultOrder)
       setCheckoutStep('success')
     } catch (err) {
-      alert(err.message || 'Có lỗi xảy ra khi tạo đơn hàng.')
+      showToast({ type: 'error', title: 'Lỗi đặt hàng', message: err.message || 'Có lỗi xảy ra khi tạo đơn hàng.' })
     } finally {
       setIsOrdering(false)
     }
@@ -94,6 +160,8 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage }) => {
     setPaymentMethod('cod')
     setCardData({ number: '', name: '', expiry: '', cvc: '' })
     setPlacedOrder(null)
+    setCheckoutErrors({ name: '', phone: '', address: '' })
+    setCardErrors({ number: '', name: '', expiry: '', cvc: '' })
     onClose()
   }
 
@@ -248,9 +316,10 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage }) => {
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className="form-control tech-input py-2 fs-7 w-100"
+                      className={`form-control tech-input py-2 fs-7 w-100 ${checkoutErrors.name ? 'is-invalid border-danger' : ''}`}
                       placeholder="Họ và tên"
                     />
+                    {checkoutErrors.name && <span className="text-danger fs-8 mt-1 d-block">{checkoutErrors.name}</span>}
                   </div>
                   <div>
                     <label className="form-label text-secondary fs-8 mb-1">Số Điện Thoại</label>
@@ -260,9 +329,10 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage }) => {
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
-                      className="form-control tech-input py-2 fs-7 w-100"
+                      className={`form-control tech-input py-2 fs-7 w-100 ${checkoutErrors.phone ? 'is-invalid border-danger' : ''}`}
                       placeholder="Số điện thoại liên hệ"
                     />
+                    {checkoutErrors.phone && <span className="text-danger fs-8 mt-1 d-block">{checkoutErrors.phone}</span>}
                   </div>
                   <div>
                     <label className="form-label text-secondary fs-8 mb-1">Địa Chỉ Nhận Hàng</label>
@@ -272,9 +342,10 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage }) => {
                       name="address"
                       value={formData.address}
                       onChange={handleInputChange}
-                      className="form-control tech-input py-2 fs-7 w-100"
+                      className={`form-control tech-input py-2 fs-7 w-100 ${checkoutErrors.address ? 'is-invalid border-danger' : ''}`}
                       placeholder="Số nhà, tên đường, quận/tỉnh"
                     />
+                    {checkoutErrors.address && <span className="text-danger fs-8 mt-1 d-block">{checkoutErrors.address}</span>}
                   </div>
                   <div>
                     <label className="form-label text-secondary fs-8 mb-1">Ghi chú (Tùy chọn)</label>
@@ -368,10 +439,11 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage }) => {
                               name="number"
                               value={cardData.number}
                               onChange={handleCardInputChange}
-                              placeholder="Số thẻ (16 chữ số)" 
-                              className="form-control tech-input py-1 fs-8"
-                              maxLength="16"
+                              placeholder="Số thẻ Visa (16 chữ số)" 
+                              className={`form-control tech-input py-1 fs-8 ${cardErrors.number ? 'is-invalid border-danger' : ''}`}
+                              maxLength="19"
                             />
+                            {cardErrors.number && <span className="text-danger fs-8 mt-1 d-block">{cardErrors.number}</span>}
                           </div>
                           <div className="col-12">
                             <input 
@@ -380,9 +452,10 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage }) => {
                               name="name"
                               value={cardData.name}
                               onChange={handleCardInputChange}
-                              placeholder="Tên in trên thẻ (Không dấu)" 
-                              className="form-control tech-input py-1 fs-8 text-uppercase"
+                              placeholder="Tên in trên thẻ (Ví dụ: NGUYEN VAN A)" 
+                              className={`form-control tech-input py-1 fs-8 text-uppercase ${cardErrors.name ? 'is-invalid border-danger' : ''}`}
                             />
+                            {cardErrors.name && <span className="text-danger fs-8 mt-1 d-block">{cardErrors.name}</span>}
                           </div>
                           <div className="col-6">
                             <input 
@@ -392,9 +465,10 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage }) => {
                               value={cardData.expiry}
                               onChange={handleCardInputChange}
                               placeholder="Hạn dùng (MM/YY)" 
-                              className="form-control tech-input py-1 fs-8"
+                              className={`form-control tech-input py-1 fs-8 ${cardErrors.expiry ? 'is-invalid border-danger' : ''}`}
                               maxLength="5"
                             />
+                            {cardErrors.expiry && <span className="text-danger fs-8 mt-1 d-block">{cardErrors.expiry}</span>}
                           </div>
                           <div className="col-6">
                             <input 
@@ -403,10 +477,11 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage }) => {
                               name="cvc"
                               value={cardData.cvc}
                               onChange={handleCardInputChange}
-                              placeholder="CVC/CVV" 
-                              className="form-control tech-input py-1 fs-8"
+                              placeholder="Mã bảo mật CVC/CVV" 
+                              className={`form-control tech-input py-1 fs-8 ${cardErrors.cvc ? 'is-invalid border-danger' : ''}`}
                               maxLength="3"
                             />
+                            {cardErrors.cvc && <span className="text-danger fs-8 mt-1 d-block">{cardErrors.cvc}</span>}
                           </div>
                         </div>
                       </div>

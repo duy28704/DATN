@@ -1,12 +1,14 @@
 import { useContext, useState } from 'react'
 import { CartContext } from '../context/CartContext'
 import { AuthContext } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 import { ShoppingBag, User, Search, Menu, X, LogOut } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
   const { cartCount } = useContext(CartContext)
   const { user, logout } = useContext(AuthContext)
+  const { showToast } = useToast()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -77,7 +79,7 @@ const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
             href="#about" 
             className="fw-medium text-uppercase text-decoration-none fs-7 text-secondary"
             style={{ fontSize: '0.85rem', letterSpacing: '0.05em', paddingBottom: '4px' }}
-            onClick={(e) => { e.preventDefault(); alert('Trang giới thiệu sẽ được cập nhật sớm!'); }}
+            onClick={(e) => { e.preventDefault(); showToast({ type: 'info', title: 'Sắp ra mắt', message: 'Trang Về Chúng Tôi sẽ được cập nhật sớm nhất!' }) }}
           >
             Về Chúng Tôi
           </a>
@@ -221,7 +223,7 @@ const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
             <a 
               href="#about" 
               className="fs-5 fw-medium text-decoration-none text-secondary"
-              onClick={(e) => { e.preventDefault(); alert('Trang giới thiệu sẽ được cập nhật sớm!'); }}
+              onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); showToast({ type: 'info', title: 'Sắp ra mắt', message: 'Trang Về Chúng Tôi sẽ được cập nhật sớm nhất!' }) }}
             >
               Về Chúng Tôi
             </a>
