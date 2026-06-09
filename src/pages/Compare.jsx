@@ -1,13 +1,11 @@
-import { useEffect, useState } from 'react';
-import { products } from '../data/products';
+import { useEffect, useState, useContext } from 'react';
+import { ProductContext } from '../context/ProductContext';
 import { motion } from 'framer-motion';
 import { Check, X } from 'lucide-react';
 import SEO from '../components/SEO';
 
-
-
 const Compare = ({ setCurrentPage }) => {
-  
+  const { products } = useContext(ProductContext);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const maxCompare = 3;
 
@@ -16,12 +14,12 @@ const Compare = ({ setCurrentPage }) => {
     const hash = window.location.hash;
     const query = new URLSearchParams(hash.replace('#compare?', ''));
     const ids = query.get('ids');
-    if (ids) {
+    if (ids && products && products.length > 0) {
       const idArray = ids.split(',').filter(Boolean);
       const found = products.filter(p => idArray.includes(p.id.toString()));
       setSelectedProducts(found);
     }
-  }, []);
+  }, [products]);
 
   const addProduct = (product) => {
     const newList = [...selectedProducts, product];
@@ -57,7 +55,7 @@ const Compare = ({ setCurrentPage }) => {
                 </div>
               ) : (
                 <select className="form-select bg-dark text-white" onChange={(e) => {
-                  const prod = products.find(p => p.id.toString() === e.target.value);
+                  const prod = products.find(p => String(p.id) === e.target.value);
                   if (prod) addProduct(prod);
                 }} defaultValue="">
                   <option value="" disabled>Chọn sản phẩm</option>

@@ -1,5 +1,5 @@
 import { useState, useContext } from 'react'
-import { products } from '../data/products'
+import { ProductContext } from '../context/ProductContext'
 import { CartContext } from '../context/CartContext'
 import ProductCard from '../components/ProductCard'
 import SEO from '../components/SEO'
@@ -8,8 +8,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 const ProductDetail = ({ productId, setCurrentPage, onSelectProduct }) => {
   const { addToCart } = useContext(CartContext)
+  const { products } = useContext(ProductContext)
   
-  const product = products.find(p => p.id === productId)
+  const product = products.find(p => String(p.id) === String(productId))
   const [quantity, setQuantity] = useState(1)
   
   const getDefaultColor = (p) => {
@@ -35,7 +36,7 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct }) => {
 
   // Related products (same category or others, exclude current)
   const relatedProducts = products
-    .filter(p => p.category === product.category && p.id !== product.id)
+    .filter(p => p.category === product.category && String(p.id) !== String(product.id))
     .slice(0, 3)
 
   const handleQtyChange = (val) => {

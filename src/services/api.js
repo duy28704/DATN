@@ -4,7 +4,7 @@
  * To point to your real backend, modify the BASE_URL below and uncomment the real fetch implementations.
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://api.nexus-tech.example.com';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 // Helper to simulate network latency for the mock version
 const delay = (ms = 600) => new Promise(resolve => setTimeout(resolve, ms));
@@ -89,58 +89,28 @@ export const validators = {
   }
 };
 
-// Mock Database wrapper using localStorage for persistent UI demo
-const getMockDb = () => {
-  let usersRaw = localStorage.getItem('nexus_db_users');
-  let users = [];
-  if (!usersRaw) {
-    // Seed default users inside mock database
-    users = [
-      {
-        name: 'DEV TESTER',
-        email: 'test@nexus.com',
-        password: 'Password123',
-        phone: '0912345678',
-        address: '123 Đường Cách Mạng Tháng 8, Quận 1, TP. Hồ Chí Minh',
-        dob: '1995-05-15',
-        gender: 'Nam',
-        avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
-        joinedDate: '01/01/2026'
-      },
-      {
-        name: 'VINFAST FAN',
-        email: 'vinfast@nexus.com',
-        password: 'Vinfast2026',
-        phone: '0987654321',
-        address: '456 Đường Lạc Long Quân, Quận Tây Hồ, Hà Nội',
-        dob: '1990-10-20',
-        gender: 'Nữ',
-        avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150',
-        joinedDate: '15/02/2026'
-      }
-    ];
-    localStorage.setItem('nexus_db_users', JSON.stringify(users));
-  } else {
-    users = JSON.parse(usersRaw);
+// Helper to get authentication headers with JWT token
+const getAuthHeaders = () => {
+  const userJson = localStorage.getItem('nexus_user');
+  if (!userJson) return { 'Content-Type': 'application/json' };
+  try {
+    const user = JSON.parse(userJson);
+    if (user && user.accessToken) {
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${user.accessToken}`
+      };
+    }
+  } catch (e) {
+    console.error('[API] Error parsing user token from localStorage', e);
   }
-
-  const orders = JSON.parse(localStorage.getItem('nexus_db_orders') || '[]');
-  const installmentRequests = JSON.parse(localStorage.getItem('nexus_db_installments') || '[]');
-  return { users, orders, installmentRequests };
-};
-
-const saveMockDb = (db) => {
-  localStorage.setItem('nexus_db_users', JSON.stringify(db.users));
-  localStorage.setItem('nexus_db_orders', JSON.stringify(db.orders));
-  localStorage.setItem('nexus_db_installments', JSON.stringify(db.installmentRequests));
+  return { 'Content-Type': 'application/json' };
 };
 
 export const apiService = {
-  // --- AUTHENTICATION API ---
   auth: {
     login: async (email, password) => {
-      console.log(`[API] calling ${BASE_URL}/auth/login for ${email}`);
-      await delay(800);
+      console.log(`[API] calling ${BASE_URL}/api/v1/auth/login for ${email}`);
 
       // Validate email format
       const emailErr = validators.email(email);
@@ -150,23 +120,24 @@ export const apiService = {
       const pwdErr = validators.password(password);
       if (pwdErr) throw new Error(pwdErr);
 
-      const db = getMockDb();
-      const user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
-      
-      if (!user) {
-        throw new Error('Tài khoản không tồn tại trên hệ thống. Vui lòng đăng ký tài khoản mới.');
+      const response = await fetch(`${BASE_URL}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
       }
 
-      if (user.password !== password) {
-        throw new Error('Mật khẩu đăng nhập không chính xác. Vui lòng kiểm tra lại.');
-      }
-
-      return user;
+      return resJson.data;
     },
 
     register: async (name, email, password) => {
-      console.log(`[API] calling ${BASE_URL}/auth/register for ${email}`);
-      await delay(800);
+      console.log(`[API] calling ${BASE_URL}/api/v1/auth/register for ${email}`);
 
       // Detail fields validation
       const nameErr = validators.name(name);
@@ -178,32 +149,24 @@ export const apiService = {
       const pwdErr = validators.password(password);
       if (pwdErr) throw new Error(pwdErr);
 
-      const db = getMockDb();
-      const exists = db.users.some(u => u.email.toLowerCase() === email.toLowerCase());
-      if (exists) {
-        throw new Error('Địa chỉ email này đã tồn tại trên hệ thống.');
+      const response = await fetch(`${BASE_URL}/api/v1/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, email, password })
+      });
+
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Đăng ký thất bại. Email có thể đã tồn tại.');
       }
 
-      const newUser = {
-        name,
-        email: email.toLowerCase(),
-        password, // Save password in mock DB
-        phone: '',
-        address: '',
-        dob: '',
-        gender: 'Khác',
-        avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
-        joinedDate: new Date().toLocaleDateString('vi-VN')
-      };
-
-      db.users.push(newUser);
-      saveMockDb(db);
-      return newUser;
+      return resJson.data;
     },
 
     updateProfile: async (email, updatedFields) => {
-      console.log(`[API] calling ${BASE_URL}/auth/profile/update for ${email}`);
-      await delay(700);
+      console.log(`[API] calling ${BASE_URL}/api/v1/auth/profile/update for ${email}`);
 
       // Profile updates validation
       if (updatedFields.name !== undefined) {
@@ -223,23 +186,154 @@ export const apiService = {
         if (err) throw new Error(`Ngày sinh: ${err}`);
       }
 
-      const db = getMockDb();
-      const userIndex = db.users.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
-      if (userIndex === -1) {
-        throw new Error('Không tìm thấy tài khoản người dùng.');
+      const response = await fetch(`${BASE_URL}/api/v1/auth/profile/update`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(updatedFields)
+      });
+
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Cập nhật hồ sơ thất bại.');
       }
 
-      db.users[userIndex] = { ...db.users[userIndex], ...updatedFields };
-      saveMockDb(db);
-      return db.users[userIndex];
+      return resJson.data;
+    },
+
+    logout: async () => {
+      console.log(`[API] calling ${BASE_URL}/api/v1/auth/logout`);
+
+      const response = await fetch(`${BASE_URL}/api/v1/auth/logout`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Đăng xuất thất bại.');
+      }
+      return resJson;
+    }
+  },
+
+  // --- PRODUCTS API ---
+  products: {
+    getAll: async () => {
+      console.log(`[API] calling ${BASE_URL}/api/v1/products`);
+      const response = await fetch(`${BASE_URL}/api/v1/products`);
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi lấy danh sách sản phẩm');
+      }
+      return resJson.data;
+    },
+    getById: async (id) => {
+      console.log(`[API] calling ${BASE_URL}/api/v1/products/${id}`);
+      const response = await fetch(`${BASE_URL}/api/v1/products/${id}`);
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi lấy chi tiết sản phẩm');
+      }
+      return resJson.data;
+    },
+    create: async (productData) => {
+      console.log(`[API] calling POST ${BASE_URL}/api/v1/products`);
+      const response = await fetch(`${BASE_URL}/api/v1/products`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(productData)
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi tạo sản phẩm mới');
+      }
+      return resJson.data;
+    },
+    update: async (id, productData) => {
+      console.log(`[API] calling PUT ${BASE_URL}/api/v1/products/${id}`);
+      const response = await fetch(`${BASE_URL}/api/v1/products/${id}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(productData)
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi cập nhật sản phẩm');
+      }
+      return resJson.data;
+    },
+    delete: async (id, hard = false) => {
+      console.log(`[API] calling DELETE ${BASE_URL}/api/v1/products/${id}?hard=${hard}`);
+      const response = await fetch(`${BASE_URL}/api/v1/products/${id}?hard=${hard}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi xóa sản phẩm');
+      }
+      return resJson.data;
+    }
+  },
+
+  // --- USERS API ---
+  users: {
+    getAll: async () => {
+      console.log(`[API] calling GET ${BASE_URL}/api/v1/users`);
+      const response = await fetch(`${BASE_URL}/api/v1/users`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi lấy danh sách người dùng');
+      }
+      return resJson.data;
+    },
+    create: async (userData) => {
+      console.log(`[API] calling POST ${BASE_URL}/api/v1/users`);
+      const response = await fetch(`${BASE_URL}/api/v1/users`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(userData)
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi tạo người dùng mới');
+      }
+      return resJson.data;
+    },
+    update: async (id, userData) => {
+      console.log(`[API] calling PUT ${BASE_URL}/api/v1/users/${id}`);
+      const response = await fetch(`${BASE_URL}/api/v1/users/${id}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(userData)
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi cập nhật thông tin người dùng');
+      }
+      return resJson.data;
+    },
+    delete: async (id) => {
+      console.log(`[API] calling DELETE ${BASE_URL}/api/v1/users/${id}`);
+      const response = await fetch(`${BASE_URL}/api/v1/users/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi xóa người dùng');
+      }
+      return resJson.data;
     }
   },
 
   // --- ORDERS API ---
   orders: {
     checkout: async (orderData) => {
-      console.log(`[API] calling ${BASE_URL}/orders/checkout`, orderData);
-      await delay(1000);
+      console.log(`[API] calling ${BASE_URL}/api/v1/orders/checkout`, orderData);
 
       // Validate delivery fields
       const nameErr = validators.name(orderData.customerName);
@@ -270,77 +364,61 @@ export const apiService = {
         if (cardCVCErr) throw new Error(`Mã CVC: ${cardCVCErr}`);
       }
 
-      const db = getMockDb();
-      const newOrder = {
-        id: `NX-${Math.floor(10000 + Math.random() * 90000)}`,
-        orderDate: new Date().toLocaleDateString('vi-VN'),
-        deliveryDate: 'Ước tính 2-3 ngày',
-        status: 'Chờ xác nhận', // 'Chờ xác nhận', 'Đang vận chuyển', 'Đã giao'
-        ...orderData
+      // Convert items to JSON string for backend itemsJson property
+      const preparedOrder = {
+        email: orderData.email,
+        customerName: orderData.customerName,
+        phone: orderData.phone,
+        address: orderData.address,
+        paymentMethod: orderData.paymentMethod,
+        paymentCardInfo: orderData.paymentMethod === 'visa' 
+          ? `•••• •••• •••• ${orderData.cardDetails.number.replace(/\s+/g, '').slice(-4)}` 
+          : null,
+        subtotal: orderData.subtotal,
+        shipping: orderData.shipping,
+        total: orderData.total,
+        itemsJson: JSON.stringify(orderData.items)
       };
 
-      db.orders.unshift(newOrder); // Add to beginning of history
-      saveMockDb(db);
-      return newOrder;
+      const response = await fetch(`${BASE_URL}/api/v1/orders/checkout`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(preparedOrder)
+      });
+
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Thanh toán thất bại.');
+      }
+      return resJson.data;
     },
 
     getHistory: async (email) => {
-      console.log(`[API] calling ${BASE_URL}/orders/history for ${email}`);
-      await delay(500);
+      console.log(`[API] calling ${BASE_URL}/api/v1/orders/history for ${email}`);
 
-      const db = getMockDb();
-      
-      // Seed default orders if history is completely empty
-      if (db.orders.length === 0) {
-        db.orders = [
-          {
-            id: 'NX-94205',
-            orderDate: '30/05/2026',
-            deliveryDate: 'Đã giao ngày 02/06/2026',
-            status: 'Đã giao',
-            email: email,
-            customerName: 'DEV TESTER',
-            phone: '0912345678',
-            address: '123 Đường Cách Mạng Tháng 8, Quận 1, TP. Hồ Chí Minh',
-            paymentMethod: 'visa',
-            paymentCardInfo: '•••• •••• •••• 4242',
-            items: [
-              { id: 'nexus-watch-04', name: 'NEXUS Chrono Active', price: 279, quantity: 1, selectedColor: 'Standard', image: 'https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?q=80&w=200' }
-            ],
-            subtotal: 279,
-            shipping: 35,
-            total: 314
-          },
-          {
-            id: 'NX-92841',
-            orderDate: '15/05/2026',
-            deliveryDate: 'Đã giao ngày 18/05/2026',
-            status: 'Đã giao',
-            email: email,
-            customerName: 'DEV TESTER',
-            phone: '0912345678',
-            address: '123 Đường Cách Mạng Tháng 8, Quận 1, TP. Hồ Chí Minh',
-            paymentMethod: 'cod',
-            items: [
-              { id: 'nexus-audio-02', name: 'NEXUS Soundscape ANC', price: 349, quantity: 1, selectedColor: 'Red Stealth', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=200' }
-            ],
-            subtotal: 349,
-            shipping: 0,
-            total: 349
-          }
-        ];
-        saveMockDb(db);
+      const response = await fetch(`${BASE_URL}/api/v1/orders/history?email=${encodeURIComponent(email)}`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+      });
+
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi lấy lịch sử mua hàng.');
       }
-
-      return db.orders.filter(o => o.email.toLowerCase() === email.toLowerCase());
+      
+      // Parse itemsJson back to items array for frontend compatibility
+      const orders = resJson.data || [];
+      return orders.map(order => ({
+        ...order,
+        items: order.itemsJson ? JSON.parse(order.itemsJson) : []
+      }));
     }
   },
 
   // --- INSTALLMENTS API (VINFAST STYLE) ---
   installments: {
     submitRequest: async (requestData) => {
-      console.log(`[API] calling ${BASE_URL}/installments/submit-request`, requestData);
-      await delay(1000);
+      console.log(`[API] calling ${BASE_URL}/api/v1/installments/submit-request`, requestData);
 
       // Validate consultation fields
       const nameErr = validators.name(requestData.customerName);
@@ -361,25 +439,48 @@ export const apiService = {
         throw new Error('Kỳ hạn vay trả góp không được hỗ trợ.');
       }
 
-      const db = getMockDb();
-      const newRequest = {
-        id: `INS-${Math.floor(10000 + Math.random() * 90000)}`,
-        createdDate: new Date().toLocaleDateString('vi-VN'),
-        status: 'Chờ duyệt', // 'Chờ duyệt', 'Đang thẩm định', 'Đã phê duyệt'
-        ...requestData
+      const preparedRequest = {
+        email: requestData.email,
+        customerName: requestData.customerName,
+        phone: requestData.phone,
+        productId: String(requestData.productId),
+        productName: requestData.productName,
+        productPrice: parseFloat(requestData.price) || 0,
+        productImage: requestData.productImage,
+        downPaymentPct: requestData.downPaymentPct,
+        downPaymentAmount: (requestData.downPaymentPct / 100) * (parseFloat(requestData.price) || 0),
+        loanAmount: (1 - requestData.downPaymentPct / 100) * (parseFloat(requestData.price) || 0),
+        loanTerm: requestData.loanTerm,
+        monthlyPayment: requestData.monthlyEstimate,
+        status: 'Chờ duyệt'
       };
 
-      db.installmentRequests.unshift(newRequest);
-      saveMockDb(db);
-      return newRequest;
+      const response = await fetch(`${BASE_URL}/api/v1/installments/submit-request`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(preparedRequest)
+      });
+
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Đăng ký trả góp thất bại.');
+      }
+      return resJson.data;
     },
 
     getRequests: async (email) => {
-      console.log(`[API] calling ${BASE_URL}/installments/requests for ${email}`);
-      await delay(500);
+      console.log(`[API] calling ${BASE_URL}/api/v1/installments/requests for ${email}`);
 
-      const db = getMockDb();
-      return db.installmentRequests.filter(r => r.email.toLowerCase() === email.toLowerCase());
+      const response = await fetch(`${BASE_URL}/api/v1/installments/requests?email=${encodeURIComponent(email)}`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+      });
+
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi lấy danh sách trả góp.');
+      }
+      return resJson.data;
     }
   }
 };

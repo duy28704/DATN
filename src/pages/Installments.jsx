@@ -1,14 +1,21 @@
 import { useState, useContext, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CreditCard, CheckCircle, ChevronDown, ChevronUp, Landmark, ShieldAlert, Phone, User, Mail, Calendar, Calculator } from 'lucide-react';
-import { products } from '../data/products';
+import { ProductContext } from '../context/ProductContext';
 import { AuthContext } from '../context/AuthContext';
 import { apiService, validators } from '../services/api';
 
 const Installments = ({ setCurrentPage }) => {
   const { user } = useContext(AuthContext);
+  const { products } = useContext(ProductContext);
 
-  const [selectedProduct, setSelectedProduct] = useState(products[0]);
+  const [selectedProduct, setSelectedProduct] = useState(() => products[0] || null);
+
+  useEffect(() => {
+    if (products && products.length > 0 && !selectedProduct) {
+      setSelectedProduct(products[0]);
+    }
+  }, [products, selectedProduct]);
   const [selectedPackage, setSelectedPackage] = useState('niendim'); // 'niendim' (Annuity), 'giamdan' (Declining), 'rate0' (0% Interest)
   const [downPaymentPct, setDownPaymentPct] = useState(30);
   const [termMonths, setTermMonths] = useState(12);
@@ -70,7 +77,7 @@ const Installments = ({ setCurrentPage }) => {
 
   // Product Selection handler
   const handleProductChange = (e) => {
-    const prod = products.find(p => p.id === e.target.value);
+    const prod = products.find(p => String(p.id) === String(e.target.value));
     if (prod) setSelectedProduct(prod);
   };
 
@@ -202,6 +209,7 @@ const Installments = ({ setCurrentPage }) => {
         productName: selectedProduct.name,
         productId: selectedProduct.id,
         price: selectedProduct.price,
+        productImage: selectedProduct.image,
         downPaymentPct,
         loanTerm: termMonths,
         bankName: selectedBank?.name || '',
@@ -246,7 +254,7 @@ const Installments = ({ setCurrentPage }) => {
               <label className="form-label text-secondary fs-7 uppercase tracking-wider mb-2">1. Chọn sản phẩm công nghệ</label>
               <select 
                 className="form-select tech-input w-100" 
-                value={selectedProduct.id} 
+                value={selectedProduct?.id || ''} 
                 onChange={handleProductChange}
                 style={{ height: '50px' }}
               >
@@ -288,7 +296,7 @@ const Installments = ({ setCurrentPage }) => {
               <div className="d-flex justify-content-between mb-2">
                 <label className="form-label text-secondary fs-7 uppercase tracking-wider mb-0">3. Số tiền trả trước ({downPaymentPct}%)</label>
                 <span className="text-danger fw-bold display-font">
-                  ${((downPaymentPct / 100) * selectedProduct.price).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  ${((downPaymentPct / 100) * (selectedProduct?.price || 0)).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                 </span>
               </div>
               <input 

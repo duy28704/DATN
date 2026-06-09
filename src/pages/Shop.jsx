@@ -1,11 +1,12 @@
-import { useState, useMemo } from 'react'
-import { products, categories } from '../data/products'
+import { useState, useMemo, useContext } from 'react'
+import { ProductContext } from '../context/ProductContext'
 import ProductCard from '../components/ProductCard'
 import SEO from '../components/SEO'
 import { Filter, RotateCcw, LayoutGrid } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
+  const { products, categories } = useContext(ProductContext)
   const [sortOption, setSortOption] = useState('featured')
 
   // Parse parameters directly in render

@@ -157,7 +157,12 @@ const Login = ({ setCurrentPage }) => {
         setSuccessMsg('Đăng nhập thành công! Đang chuyển hướng...')
         setTimeout(() => {
           setSuccessMsg('')
-          setCurrentPage('home')
+          const saved = JSON.parse(localStorage.getItem('nexus_user'))
+          if (saved && (saved.role === 'ADMIN' || saved.role === 'STAFF')) {
+            setCurrentPage('dashboard')
+          } else {
+            setCurrentPage('shop')
+          }
         }, 1200)
       }
     } else {
@@ -166,7 +171,12 @@ const Login = ({ setCurrentPage }) => {
         setSuccessMsg('Đăng ký tài khoản thành công! Đang chuyển hướng...')
         setTimeout(() => {
           setSuccessMsg('')
-          setCurrentPage('home')
+          const saved = JSON.parse(localStorage.getItem('nexus_user'))
+          if (saved && (saved.role === 'ADMIN' || saved.role === 'STAFF')) {
+            setCurrentPage('dashboard')
+          } else {
+            setCurrentPage('shop')
+          }
         }, 1200)
       }
     }

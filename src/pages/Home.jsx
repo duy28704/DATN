@@ -1,4 +1,5 @@
-import { products } from '../data/products'
+import { useContext } from 'react'
+import { ProductContext } from '../context/ProductContext'
 import ProductCard from '../components/ProductCard'
 import SEO from '../components/SEO'
 import { ShieldCheck, Truck, Headphones, ChevronRight, Cpu, Zap, Radio } from 'lucide-react'
@@ -6,6 +7,7 @@ import { motion } from 'framer-motion'
 import bannerImg from '../assets/hero_banner.png'
 
 const Home = ({ setCurrentPage, onSelectProduct }) => {
+  const { products } = useContext(ProductContext)
   // Show 3 featured items
   const featuredProducts = products.slice(0, 3)
 

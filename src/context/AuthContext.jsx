@@ -66,7 +66,12 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await apiService.auth.logout()
+    } catch (err) {
+      console.error('[API] Logout call failed:', err)
+    }
     setUser(null)
     localStorage.removeItem('nexus_user')
   }

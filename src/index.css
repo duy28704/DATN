@@ -354,7 +354,311 @@ a:hover {
 
 .nexus-alert-info .alert-icon {
   color: #3498db;
-  filter: drop-shadow(0 0 5px rgba(52, 152, 219, 0.4));
+  filter: drop-shadow(0 0 5px rgba(52, 152, 219, 0.45));
   flex-shrink: 0;
 }
 
+/* ==========================================================================
+   NiceAdmin Dashboard Template Styles
+   ========================================================================== */
+.admin-dashboard-layout {
+  background-color: #f6f9ff;
+  color: #444444;
+  min-height: 100vh;
+}
+
+.admin-dashboard-layout a {
+  color: #012970;
+  text-decoration: none;
+}
+
+.admin-dashboard-layout a:hover {
+  color: #4154f1;
+}
+
+/* Header */
+.header {
+  transition: all 0.5s;
+  z-index: 997;
+  height: 60px;
+  box-shadow: 0px 2px 20px rgba(1, 41, 112, 0.1);
+  background-color: #fff;
+  padding-left: 20px;
+}
+
+.header .logo {
+  line-height: 1;
+  text-decoration: none;
+}
+
+.header .logo img {
+  max-height: 26px;
+  margin-right: 6px;
+}
+
+.header .logo span {
+  font-size: 24px;
+  font-weight: 700;
+  color: #012970;
+  font-family: var(--font-display);
+}
+
+.toggle-sidebar-btn {
+  font-size: 26px;
+  padding-left: 10px;
+  cursor: pointer;
+  color: #012970;
+  display: inline-flex;
+  align-items: center;
+}
+
+.header-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.header-nav .nav-profile img {
+  max-height: 36px;
+  width: 36px;
+  object-fit: cover;
+}
+
+/* Sidebar */
+.sidebar {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  bottom: 0;
+  width: 300px;
+  z-index: 996;
+  transition: all 0.5s;
+  padding: 20px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #aab7cf transparent;
+  box-shadow: 0px 0px 20px rgba(1, 41, 112, 0.1);
+  background-color: #fff;
+}
+
+.sidebar-nav {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.sidebar-nav li {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.sidebar-nav .nav-item {
+  margin-bottom: 5px;
+}
+
+.sidebar-nav .nav-heading {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #899bbd;
+  font-weight: 600;
+  margin: 10px 0 5px 15px;
+}
+
+.sidebar-nav .nav-link {
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: #4154f1;
+  transition: 0.3s;
+  background: #f6f9ff;
+  padding: 10px 15px;
+  border-radius: 4px;
+  text-decoration: none;
+}
+
+.sidebar-nav .nav-link i {
+  font-size: 16px;
+  margin-right: 10px;
+  color: #4154f1;
+}
+
+.sidebar-nav .nav-link.collapsed {
+  color: #012970;
+  background: #fff;
+}
+
+.sidebar-nav .nav-link.collapsed i {
+  color: #899bbd;
+}
+
+.sidebar-nav .nav-link:hover {
+  color: #4154f1;
+  background: #f6f9ff;
+}
+
+.sidebar-nav .nav-link:hover i {
+  color: #4154f1;
+}
+
+.sidebar-nav .nav-content {
+  padding: 5px 0 0 0;
+  margin: 0;
+  list-style: none;
+}
+
+.sidebar-nav .nav-content a {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #012970;
+  transition: 0.3s;
+  padding: 10px 0 10px 40px;
+  text-decoration: none;
+}
+
+.sidebar-nav .nav-content a i {
+  font-size: 6px;
+  margin-right: 8px;
+}
+
+.sidebar-nav .nav-content a:hover {
+  color: #4154f1;
+}
+
+/* Main content for dashboard */
+main.main {
+  padding: 20px 30px;
+  transition: all 0.5s;
+}
+
+@media (min-width: 1200px) {
+  main.main, .footer {
+    margin-left: 300px;
+  }
+}
+
+@media (max-width: 1199px) {
+  .sidebar {
+    left: -300px;
+  }
+}
+
+body.toggle-sidebar .sidebar {
+  left: 0;
+}
+
+@media (min-width: 1200px) {
+  body.toggle-sidebar .sidebar {
+    left: -300px;
+  }
+  body.toggle-sidebar main.main, body.toggle-sidebar .footer {
+    margin-left: 0;
+  }
+}
+
+/* Cards in Dashboard */
+.admin-dashboard-layout .card {
+  margin-bottom: 30px;
+  border: none;
+  border-radius: 5px;
+  box-shadow: 0px 0 30px rgba(1, 41, 112, 0.1);
+  background: #fff;
+}
+
+.admin-dashboard-layout .card-header {
+  border-color: #f6f9ff;
+  padding: 15px;
+  background: #fff;
+  color: #012970;
+}
+
+.admin-dashboard-layout .card-title {
+  padding: 20px 0 15px 0;
+  font-size: 18px;
+  font-weight: 500;
+  color: #012970;
+  font-family: var(--font-display);
+}
+
+.admin-dashboard-layout .card-title span {
+  color: #899bbd;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.admin-dashboard-layout .card-body {
+  padding: 0 20px 20px 20px;
+}
+
+/* Dashboard footer overrides */
+.footer {
+  padding: 20px 0;
+  font-size: 14px;
+  transition: all 0.5s;
+  border-top: 1px solid #e0e3ec;
+  background-color: #fff;
+}
+
+.footer .copyright {
+  text-align: center;
+  color: #012970;
+}
+
+/* Dashboard Layout adaptation to keep body light when in dashboard mode */
+.admin-dashboard-layout {
+  min-height: 100vh;
+  background-color: #f6f9ff;
+  color: #444444;
+  font-family: "Open Sans", sans-serif;
+  text-align: left;
+}
+.admin-dashboard-layout * {
+  color: #444444;
+}
+.admin-dashboard-layout a {
+  color: #012970 !important;
+}
+.admin-dashboard-layout a:hover {
+  color: #4154f1 !important;
+}
+.admin-dashboard-layout h1, 
+.admin-dashboard-layout h2, 
+.admin-dashboard-layout h3, 
+.admin-dashboard-layout h4, 
+.admin-dashboard-layout h5, 
+.admin-dashboard-layout h6 {
+  color: #012970 !important;
+  font-family: "Nunito", sans-serif;
+}
+/* Ensure the dashboard main container has the correct background */
+.admin-dashboard-layout .main {
+  background-color: #f6f9ff !important;
+  min-height: calc(100vh - 120px);
+}
+.admin-dashboard-layout .card-title {
+  color: #012970 !important;
+}
+.admin-dashboard-layout .card-title span {
+  color: #899bbd !important;
+}
+.admin-dashboard-layout .activity-content {
+  color: #444444 !important;
+}
+.admin-dashboard-layout .activity-content a {
+  color: #4154f1 !important;
+}
+.admin-dashboard-layout .pagetitle h1 {
+  color: #012970 !important;
+}
+.admin-dashboard-layout .sidebar-nav .nav-link {
+  color: #4154f1 !important;
+}
+.admin-dashboard-layout .sidebar-nav .nav-link.collapsed {
+  color: #012970 !important;
+}
+.admin-dashboard-layout .sidebar-nav .nav-link.collapsed i {
+  color: #899bbd !important;
+}
