@@ -270,13 +270,6 @@ const Login = ({ setCurrentPage }) => {
       />
 
       <div className="container py-5 px-4 px-md-5">
-        <div className="alert alert-info text-start d-flex align-items-center gap-2 mb-4 p-3 border-0 bg-info bg-opacity-5 text-secondary fs-8">
-          <Info size={16} className="text-info flex-shrink-0" />
-          <span>
-            <strong>Tài khoản mẫu có sẵn trong Database:</strong> Đăng nhập Email: <strong className="text-white">test@nexus.com</strong>, Mật khẩu: <strong className="text-white">Password123</strong> hoặc Đăng ký tài khoản mới (sẽ được mã hóa mật khẩu & lưu trực tiếp vào Mock DB).
-          </span>
-        </div>
-
         <AnimatePresence mode="wait">
           {user ? (
             /* Logged in state - Dashboard view */

@@ -1,12 +1,19 @@
 import { createContext, useState, useEffect } from 'react'
 import { apiService } from '../services/api'
-import { products as fallbackProducts, categories as fallbackCategories } from '../data/products'
 
 export const ProductContext = createContext()
 
+const CATEGORIES = [
+  { id: 'all', name: 'Tất cả' },
+  { id: 'wearables', name: 'Thiết bị Đeo' },
+  { id: 'audio', name: 'Âm thanh' },
+  { id: 'computing', name: 'Máy tính' },
+  { id: 'input', name: 'Thiết bị ngoại vi' }
+]
+
 export const ProductProvider = ({ children }) => {
   const [products, setProducts] = useState([])
-  const [categories, setCategories] = useState(fallbackCategories)
+  const [categories, setCategories] = useState(CATEGORIES)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -33,13 +40,13 @@ export const ProductProvider = ({ children }) => {
         setProducts(transformed)
         setError(null)
       } else {
-        // Empty DB, fallback
-        setProducts(fallbackProducts)
+        setProducts([])
+        setError(null)
       }
     } catch (err) {
-      console.warn('[ProductContext] Error loading products from database, falling back to local dataset:', err)
-      setError('Sử dụng dữ liệu cục bộ dự phòng (offline mode).')
-      setProducts(fallbackProducts)
+      console.error('[ProductContext] Error loading products from database:', err)
+      setError('Lỗi khi tải danh sách sản phẩm từ máy chủ.')
+      setProducts([])
     } finally {
       setLoading(false)
     }
@@ -55,3 +62,4 @@ export const ProductProvider = ({ children }) => {
     </ProductContext.Provider>
   )
 }
+
