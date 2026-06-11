@@ -112,13 +112,8 @@ export const apiService = {
     login: async (email, password) => {
       console.log(`[API] calling ${BASE_URL}/api/v1/auth/login for ${email}`);
 
-      // Validate email format
-      const emailErr = validators.email(email);
-      if (emailErr) throw new Error(emailErr);
-
-      // Validate password format
-      const pwdErr = validators.password(password);
-      if (pwdErr) throw new Error(pwdErr);
+      if (!email) throw new Error('Email hoặc Tên đăng nhập không được để trống.');
+      if (!password) throw new Error('Mật khẩu không được để trống.');
 
       const response = await fetch(`${BASE_URL}/api/v1/auth/login`, {
         method: 'POST',

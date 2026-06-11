@@ -126,19 +126,28 @@ const Login = ({ setCurrentPage }) => {
     let hasErr = false
     const errs = { name: '', email: '', password: '' }
 
-    const emailVal = validators.email(formData.email)
-    if (emailVal) {
-      errs.email = emailVal
-      hasErr = true
-    }
+    if (isLoginMode) {
+      if (!formData.email) {
+        errs.email = 'Email hoặc Tên đăng nhập không được để trống'
+        hasErr = true
+      }
+      if (!formData.password) {
+        errs.password = 'Mật khẩu không được để trống'
+        hasErr = true
+      }
+    } else {
+      const emailVal = validators.email(formData.email)
+      if (emailVal) {
+        errs.email = emailVal
+        hasErr = true
+      }
 
-    const pwdVal = validators.password(formData.password)
-    if (pwdVal) {
-      errs.password = pwdVal
-      hasErr = true
-    }
+      const pwdVal = validators.password(formData.password)
+      if (pwdVal) {
+        errs.password = pwdVal
+        hasErr = true
+      }
 
-    if (!isLoginMode) {
       const nameVal = validators.name(formData.name)
       if (nameVal) {
         errs.name = nameVal
