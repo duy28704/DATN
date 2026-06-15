@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
-import { Loader2, RotateCcw, Trash2, ShieldAlert, Search, AlertCircle } from 'lucide-react';
+import { Loader2, RotateCcw, Trash2, ShieldAlert, Search, AlertCircle, Eye, X } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
 function ManageTrash() {
   const { showToast, confirm } = useToast();
   const [deletedProducts, setDeletedProducts] = useState([]);
+  const [detailProduct, setDetailProduct] = useState(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -199,6 +201,13 @@ function ManageTrash() {
                             <td className="text-end">
                               <div className="d-flex justify-content-end gap-2">
                                 <button
+                                  className="btn btn-sm btn-outline-info d-flex align-items-center gap-1"
+                                  onClick={() => { setDetailProduct(p); setActiveImageIndex(0); }}
+                                  title="Xem chi tiết"
+                                >
+                                  <Eye size={14} /> Chi tiết
+                                </button>
+                                <button
                                   className="btn btn-sm btn-outline-success d-flex align-items-center gap-1"
                                   onClick={() => handleRestore(p.id, p.name)}
                                   title="Khôi phục sản phẩm"
@@ -226,6 +235,140 @@ function ManageTrash() {
         </div>
       </section>
       
+      {/* Product Detail Modal */}
+      {detailProduct && (
+        <div className="modal-overlay d-flex align-items-center justify-content-center position-fixed top-0 start-0 w-100 h-100" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }}>
+          <div className="card w-100 m-3 shadow" style={{ maxWidth: '750px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', background: '#1e1e24', color: '#fff' }}>
+            <div className="card-header d-flex justify-content-between align-items-center bg-white-5 border-bottom py-3" style={{ background: 'rgba(255,255,255,0.03)' }}>
+              <h5 className="mb-0 fw-bold d-flex align-items-center gap-2">
+                <span className="badge bg-primary fs-7">{detailProduct.brand}</span>
+                {detailProduct.name}
+              </h5>
+              <button className="btn btn-link p-0 text-muted" onClick={() => setDetailProduct(null)}><X size={20} /></button>
+            </div>
+            <div className="card-body p-4" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
+              <div className="row g-4">
+                {/* Images Section */}
+                <div className="col-md-5">
+                  <h6 className="fw-bold mb-3 text-primary">Hình ảnh sản phẩm</h6>
+                  <div className="d-flex flex-column gap-3">
+                    <div className="p-3 rounded bg-light border d-flex align-items-center justify-content-center" style={{ height: '220px' }}>
+                      <img
+                        src={detailProduct.images ? detailProduct.images.split(',')[activeImageIndex] : '/assets/nexus-keyboard.png'}
+                        alt={detailProduct.name}
+                        style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                      />
+                    </div>
+                    {/* Thumbnail list */}
+                    {detailProduct.images && detailProduct.images.split(',').length > 1 && (
+                      <div className="d-flex gap-2 overflow-x-auto pb-2">
+                        {detailProduct.images.split(',').map((imgUrl, idx) => (
+                          <div 
+                            key={idx} 
+                            onClick={() => setActiveImageIndex(idx)}
+                            className="p-1 rounded bg-light border d-flex align-items-center justify-content-center" 
+                            style={{ 
+                              width: '50px', 
+                              height: '50px', 
+                              flexShrink: 0, 
+                              cursor: 'pointer',
+                              border: activeImageIndex === idx ? '2px solid #4154f1' : '1px solid #dee2e6'
+                            }}
+                          >
+                            <img src={imgUrl} alt="" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Specs Section */}
+                <div className="col-md-7">
+                  <h6 className="fw-bold mb-3 text-primary">Thông tin cơ bản</h6>
+                  <table className="table table-sm table-dark table-borderless fs-7 mb-4">
+                    <tbody>
+                      <tr>
+                        <td className="text-muted w-25">ID:</td>
+                        <td>{detailProduct.id}</td>
+                      </tr>
+                      <tr>
+                        <td className="text-muted">Danh mục:</td>
+                        <td>{detailProduct.category}</td>
+                      </tr>
+                      <tr>
+                        <td className="text-muted">Giá bán:</td>
+                        <td className="text-danger fw-bold">
+                          {detailProduct.price ? parseFloat(detailProduct.price).toLocaleString('vi-VN') + ' ₫' : 'Chưa cập nhật'}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="text-muted">Đánh giá:</td>
+                        <td>★ {detailProduct.rating || '5.0'} ({detailProduct.reviewCount || 0} lượt đánh giá)</td>
+                      </tr>
+                      <tr>
+                        <td className="text-muted">Mô tả ngắn:</td>
+                        <td>{detailProduct.shortDescription || '—'}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <h6 className="fw-bold mb-3 text-primary">Thông số kỹ thuật chi tiết</h6>
+                  <div style={{ maxHeight: '250px', overflowY: 'auto' }}>
+                    {(() => {
+                      const specFields = [
+                        { label: 'Vi xử lý (CPU)', value: detailProduct.cpuTechnology },
+                        { label: 'Nhân/Luồng', value: detailProduct.cpuCores && detailProduct.cpuThreads ? `${detailProduct.cpuCores} nhân, ${detailProduct.cpuThreads} luồng` : null },
+                        { label: 'Tốc độ CPU', value: detailProduct.cpuSpeed },
+                        { label: 'Bộ nhớ RAM', value: detailProduct.ram ? `${detailProduct.ram} ${detailProduct.ramType || ''} ${detailProduct.ramBusSpeed || ''}`.trim() : null },
+                        { label: 'Card đồ họa (GPU)', value: detailProduct.gpuCard },
+                        { label: 'Ổ cứng (Storage)', value: detailProduct.storage },
+                        { label: 'Màn hình', value: detailProduct.screenSize ? `${detailProduct.screenSize} inch ${detailProduct.screenResolution || ''} ${detailProduct.panel || ''}`.trim() : null },
+                        { label: 'Tần số quét', value: detailProduct.refreshRate },
+                        { label: 'Dung lượng pin', value: detailProduct.battery },
+                        { label: 'Hệ điều hành', value: detailProduct.operatingSystem },
+                        { label: 'Kích thước & Trọng lượng', value: detailProduct.dimensionsWeight },
+                        { label: 'Thời điểm ra mắt', value: detailProduct.releaseTime }
+                      ];
+
+                      const activeSpecs = specFields.filter(f => f.value !== null && f.value !== undefined && f.value !== '');
+
+                      if (activeSpecs.length === 0) {
+                        return detailProduct.description ? (
+                          <div className="p-3 rounded bg-dark border border-secondary fs-7" style={{ whiteSpace: 'pre-wrap' }}>
+                            {detailProduct.description}
+                          </div>
+                        ) : (
+                          <div className="text-muted fs-7">Chưa cập nhật thông số kỹ thuật.</div>
+                        );
+                      }
+
+                      return (
+                        <table className="table table-sm table-dark table-striped table-bordered fs-7 mb-0">
+                          <tbody>
+                            {activeSpecs.map((spec, idx) => (
+                              <tr key={idx}>
+                                <td className="text-muted w-40" style={{ fontSize: '0.78rem' }}>{spec.label}</td>
+                                <td style={{ fontSize: '0.78rem' }}>{spec.value}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="card-footer d-flex justify-content-end bg-light-5 py-3 border-top px-4" style={{ background: 'rgba(255,255,255,0.02)' }}>
+              <button type="button" className="btn btn-outline-secondary px-4 py-2 fs-7" onClick={() => setDetailProduct(null)}>
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Dynamic CSS animations */}
       <style>{`
         .table-danger-light {
