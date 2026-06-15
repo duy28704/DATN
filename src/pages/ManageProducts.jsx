@@ -4,6 +4,8 @@ import { Loader2, Plus, Edit, Trash2, ShieldAlert, Search, X, FileSpreadsheet, E
 import { useToast } from '../context/ToastContext';
 import ReactPaginate from 'react-paginate';
 
+const ReactPaginateComponent = ReactPaginate.default || ReactPaginate;
+
 function ManageProducts() {
   const { showToast, confirm } = useToast();
   const [products, setProducts] = useState([]);
@@ -459,7 +461,7 @@ function ManageProducts() {
                 <div className="text-muted fs-7">
                   Hiển thị <strong>{indexOfFirstProduct + 1}</strong> đến <strong>{Math.min(indexOfLastProduct, sortedProducts.length)}</strong> trong tổng số <strong>{sortedProducts.length}</strong> sản phẩm
                 </div>
-                <ReactPaginate
+                <ReactPaginateComponent
                   previousLabel="Trước"
                   nextLabel="Sau"
                   pageCount={totalPages}

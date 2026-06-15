@@ -4,6 +4,8 @@ import { Loader2, RotateCcw, Trash2, ShieldAlert, Search, AlertCircle, Eye, X } 
 import { useToast } from '../context/ToastContext';
 import ReactPaginate from 'react-paginate';
 
+const ReactPaginateComponent = ReactPaginate.default || ReactPaginate;
+
 function ManageTrash() {
   const { showToast, confirm } = useToast();
   const [deletedProducts, setDeletedProducts] = useState([]);
@@ -369,7 +371,7 @@ function ManageTrash() {
                 <div className="text-muted fs-7">
                   Hiển thị <strong>{indexOfFirstProduct + 1}</strong> đến <strong>{Math.min(indexOfLastProduct, sortedProducts.length)}</strong> trong tổng số <strong>{sortedProducts.length}</strong> sản phẩm
                 </div>
-                <ReactPaginate
+                <ReactPaginateComponent
                   previousLabel="Trước"
                   nextLabel="Sau"
                   pageCount={totalPages}
