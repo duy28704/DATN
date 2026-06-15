@@ -12,6 +12,16 @@ function ManageTrash() {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Pagination State
+  const [currentPageNum, setCurrentPageNum] = useState(1);
+  const itemsPerPage = 8;
+
+  // Filter States
+  const [filterBrand, setFilterBrand] = useState('All');
+  const [filterCategory, setFilterCategory] = useState('All');
+  const [filterPrice, setFilterPrice] = useState('All');
+  const [sortBy, setSortBy] = useState('none');
+
   const loadDeletedProducts = async () => {
     setLoading(true);
     setError('');
@@ -28,6 +38,10 @@ function ManageTrash() {
   useEffect(() => {
     loadDeletedProducts();
   }, []);
+
+  useEffect(() => {
+    setCurrentPageNum(1);
+  }, [searchQuery, filterBrand, filterCategory, filterPrice, sortBy]);
 
   const handleRestore = async (id, name) => {
     const confirmed = await confirm({
@@ -85,11 +99,41 @@ function ManageTrash() {
     }
   };
 
-  const filteredProducts = deletedProducts.filter(p =>
-    p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.brand?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.category?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredProducts = deletedProducts.filter(p => {
+    // 1. Text Search Filter
+    const matchesSearch = p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.brand?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.category?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // 2. Brand Filter
+    const matchesBrand = filterBrand === 'All' || p.brand === filterBrand;
+    
+    // 3. Category Filter
+    const matchesCategory = filterCategory === 'All' || p.category === filterCategory;
+    
+    // 4. Price Filter
+    const priceVal = parseFloat(p.price) || 0;
+    let matchesPrice = true;
+    if (filterPrice === 'under500') matchesPrice = priceVal < 500;
+    else if (filterPrice === '500to1000') matchesPrice = priceVal >= 500 && priceVal <= 1000;
+    else if (filterPrice === '1000to1500') matchesPrice = priceVal >= 1000 && priceVal <= 1500;
+    else if (filterPrice === 'over1500') matchesPrice = priceVal > 1500;
+
+    return matchesSearch && matchesBrand && matchesCategory && matchesPrice;
+  });
+
+  // Apply Sorting
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    if (sortBy === 'priceAsc') return (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0);
+    if (sortBy === 'priceDesc') return (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0);
+    if (sortBy === 'newest') return b.id - a.id;
+    return 0;
+  });
+
+  const totalPages = Math.ceil(sortedProducts.length / itemsPerPage);
+  const indexOfLastProduct = currentPageNum * itemsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
+  const currentProducts = sortedProducts.slice(indexOfFirstProduct, indexOfLastProduct);
 
   return (
     <main id="main" className="main">
@@ -109,20 +153,106 @@ function ManageTrash() {
       <section className="section">
         <div className="card">
           <div className="card-body pt-3">
-            <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-              <div className="d-flex position-relative" style={{ maxWidth: '360px', width: '100%' }}>
-                <Search className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" size={16} />
-                <input
-                  type="text"
-                  placeholder="Tìm sản phẩm đã xóa..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="form-control ps-5"
-                  style={{ borderRadius: '20px' }}
-                />
+            <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+              <div className="d-flex gap-2 flex-wrap align-items-center flex-grow-1">
+                {/* Search Box */}
+                <div className="position-relative" style={{ minWidth: '240px', maxWidth: '360px', width: '100%' }}>
+                  <Search className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" size={16} />
+                  <input
+                    type="text"
+                    placeholder="Tìm sản phẩm đã xóa..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="form-control ps-5"
+                    style={{ borderRadius: '8px' }}
+                  />
+                </div>
+
+                {/* Brand Filter */}
+                <div style={{ minWidth: '130px' }}>
+                  <select 
+                    className="form-select"
+                    value={filterBrand}
+                    onChange={(e) => setFilterBrand(e.target.value)}
+                    style={{ borderRadius: '8px' }}
+                  >
+                    <option value="All">Tất cả hãng</option>
+                    <option value="NEXUS">NEXUS</option>
+                    <option value="ASUS">ASUS</option>
+                    <option value="MSI">MSI</option>
+                    <option value="ACER">ACER</option>
+                    <option value="LENOVO">LENOVO</option>
+                    <option value="DELL">DELL</option>
+                    <option value="HP">HP</option>
+                    <option value="APPLE">APPLE</option>
+                  </select>
+                </div>
+
+                {/* Category Filter */}
+                <div style={{ minWidth: '130px' }}>
+                  <select 
+                    className="form-select"
+                    value={filterCategory}
+                    onChange={(e) => setFilterCategory(e.target.value)}
+                    style={{ borderRadius: '8px' }}
+                  >
+                    <option value="All">Tất cả danh mục</option>
+                    <option value="computing">Máy tính (Computing)</option>
+                    <option value="wearables">Đồ đeo (Wearables)</option>
+                    <option value="audio">Âm thanh (Audio)</option>
+                    <option value="input">Phụ kiện nhập (Input)</option>
+                  </select>
+                </div>
+
+                {/* Price Filter */}
+                <div style={{ minWidth: '130px' }}>
+                  <select 
+                    className="form-select"
+                    value={filterPrice}
+                    onChange={(e) => setFilterPrice(e.target.value)}
+                    style={{ borderRadius: '8px' }}
+                  >
+                    <option value="All">Tất cả mức giá</option>
+                    <option value="under500">Dưới $500</option>
+                    <option value="500to1000">$500 - $1000</option>
+                    <option value="1000to1500">$1000 - $1500</option>
+                    <option value="over1500">Trên $1500</option>
+                  </select>
+                </div>
+
+                {/* Sorting */}
+                <div style={{ minWidth: '130px' }}>
+                  <select 
+                    className="form-select"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    style={{ borderRadius: '8px' }}
+                  >
+                    <option value="none">Sắp xếp</option>
+                    <option value="priceAsc">Giá tăng dần</option>
+                    <option value="priceDesc">Giá giảm dần</option>
+                    <option value="newest">Mới nhất</option>
+                  </select>
+                </div>
+
+                {/* Reset Filters Link */}
+                {(searchQuery || filterBrand !== 'All' || filterCategory !== 'All' || filterPrice !== 'All' || sortBy !== 'none') && (
+                  <button 
+                    className="btn btn-link btn-sm text-decoration-none text-muted"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setFilterBrand('All');
+                      setFilterCategory('All');
+                      setFilterPrice('All');
+                      setSortBy('none');
+                    }}
+                  >
+                    Xóa bộ lọc
+                  </button>
+                )}
               </div>
-              <div className="text-muted fs-7">
-                Sản phẩm trong thùng rác sẽ được tự động xóa vĩnh viễn sau <strong>30 ngày</strong>.
+              <div className="text-muted fs-7 text-end flex-shrink-0">
+                Sản phẩm sẽ tự động xóa sau <strong>30 ngày</strong>.
               </div>
             </div>
 
@@ -152,12 +282,12 @@ function ManageTrash() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredProducts.length === 0 ? (
+                    {currentProducts.length === 0 ? (
                       <tr>
                         <td colSpan="8" className="text-center py-4 text-muted">Thùng rác trống.</td>
                       </tr>
                     ) : (
-                      filteredProducts.map((p) => {
+                      currentProducts.map((p) => {
                         const daysLeft = getDaysRemaining(p.deletedAt);
                         const isNearingDeletion = daysLeft <= 3;
 
@@ -231,6 +361,34 @@ function ManageTrash() {
                 </table>
               </div>
             )}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <nav className="d-flex justify-content-between align-items-center mt-3 px-3">
+                <div className="text-muted fs-7">
+                  Hiển thị <strong>{indexOfFirstProduct + 1}</strong> đến <strong>{Math.min(indexOfLastProduct, sortedProducts.length)}</strong> trong tổng số <strong>{sortedProducts.length}</strong> sản phẩm
+                </div>
+                <ul className="pagination mb-0">
+                  <li className={`page-item ${currentPageNum === 1 ? 'disabled' : ''}`}>
+                    <button className="page-link" onClick={() => setCurrentPageNum(prev => Math.max(prev - 1, 1))}>
+                      Trước
+                    </button>
+                  </li>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+                    <li key={pageNum} className={`page-item ${currentPageNum === pageNum ? 'active' : ''}`}>
+                      <button className="page-link" onClick={() => setCurrentPageNum(pageNum)}>
+                        {pageNum}
+                      </button>
+                    </li>
+                  ))}
+                  <li className={`page-item ${currentPageNum === totalPages ? 'disabled' : ''}`}>
+                    <button className="page-link" onClick={() => setCurrentPageNum(prev => Math.min(prev + 1, totalPages))}>
+                      Sau
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            )}
           </div>
         </div>
       </section>
@@ -238,9 +396,9 @@ function ManageTrash() {
       {/* Product Detail Modal */}
       {detailProduct && (
         <div className="modal-overlay d-flex align-items-center justify-content-center position-fixed top-0 start-0 w-100 h-100" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }}>
-          <div className="card w-100 m-3 shadow" style={{ maxWidth: '750px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', background: '#1e1e24', color: '#fff' }}>
-            <div className="card-header d-flex justify-content-between align-items-center bg-white-5 border-bottom py-3" style={{ background: 'rgba(255,255,255,0.03)' }}>
-              <h5 className="mb-0 fw-bold d-flex align-items-center gap-2">
+          <div className="card w-100 m-3 shadow" style={{ maxWidth: '750px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)', background: '#ffffff', color: '#212529' }}>
+            <div className="card-header d-flex justify-content-between align-items-center bg-light border-bottom py-3" style={{ background: '#f8f9fa' }}>
+              <h5 className="mb-0 fw-bold d-flex align-items-center gap-2 text-dark">
                 <span className="badge bg-primary fs-7">{detailProduct.brand}</span>
                 {detailProduct.name}
               </h5>
@@ -250,7 +408,7 @@ function ManageTrash() {
               <div className="row g-4">
                 {/* Images Section */}
                 <div className="col-md-5">
-                  <h6 className="fw-bold mb-3 text-primary">Hình ảnh sản phẩm</h6>
+                  <h6 className="fw-bold mb-3 text-primary border-bottom pb-2">Hình ảnh sản phẩm</h6>
                   <div className="d-flex flex-column gap-3">
                     <div className="p-3 rounded bg-light border d-flex align-items-center justify-content-center" style={{ height: '220px' }}>
                       <img
@@ -285,57 +443,81 @@ function ManageTrash() {
 
                 {/* Specs Section */}
                 <div className="col-md-7">
-                  <h6 className="fw-bold mb-3 text-primary">Thông tin cơ bản</h6>
-                  <table className="table table-sm table-dark table-borderless fs-7 mb-4">
+                  <h6 className="fw-bold mb-3 text-primary border-bottom pb-2">Thông tin cơ bản</h6>
+                  <table className="table table-sm table-striped table-bordered fs-7 mb-4 text-dark">
                     <tbody>
                       <tr>
-                        <td className="text-muted w-25">ID:</td>
-                        <td>{detailProduct.id}</td>
+                        <td className="text-secondary fw-semibold w-30">ID sản phẩm</td>
+                        <td className="text-dark">{detailProduct.id}</td>
                       </tr>
                       <tr>
-                        <td className="text-muted">Danh mục:</td>
-                        <td>{detailProduct.category}</td>
+                        <td className="text-secondary fw-semibold">Danh mục</td>
+                        <td className="text-dark">{detailProduct.category}</td>
                       </tr>
                       <tr>
-                        <td className="text-muted">Giá bán:</td>
+                        <td className="text-secondary fw-semibold">Giá bán lẻ</td>
                         <td className="text-danger fw-bold">
                           {detailProduct.price ? parseFloat(detailProduct.price).toLocaleString('vi-VN') + ' ₫' : 'Chưa cập nhật'}
                         </td>
                       </tr>
                       <tr>
-                        <td className="text-muted">Đánh giá:</td>
-                        <td>★ {detailProduct.rating || '5.0'} ({detailProduct.reviewCount || 0} lượt đánh giá)</td>
+                        <td className="text-secondary fw-semibold">Đánh giá</td>
+                        <td className="text-dark">★ {detailProduct.rating || '5.0'} ({detailProduct.reviewCount || 0} lượt đánh giá)</td>
                       </tr>
                       <tr>
-                        <td className="text-muted">Mô tả ngắn:</td>
-                        <td>{detailProduct.shortDescription || '—'}</td>
+                        <td className="text-secondary fw-semibold">Mô tả ngắn</td>
+                        <td className="text-dark">{detailProduct.shortDescription || '—'}</td>
                       </tr>
                     </tbody>
                   </table>
 
-                  <h6 className="fw-bold mb-3 text-primary">Thông số kỹ thuật chi tiết</h6>
-                  <div style={{ maxHeight: '250px', overflowY: 'auto' }}>
+                  <h6 className="fw-bold mb-3 text-primary border-bottom pb-2">Thông số kỹ thuật chi tiết</h6>
+                  <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
                     {(() => {
                       const specFields = [
-                        { label: 'Vi xử lý (CPU)', value: detailProduct.cpuTechnology },
-                        { label: 'Nhân/Luồng', value: detailProduct.cpuCores && detailProduct.cpuThreads ? `${detailProduct.cpuCores} nhân, ${detailProduct.cpuThreads} luồng` : null },
+                        { label: 'Công nghệ CPU', value: detailProduct.cpuTechnology },
+                        { label: 'Số nhân CPU', value: detailProduct.cpuCores },
+                        { label: 'Số luồng CPU', value: detailProduct.cpuThreads },
                         { label: 'Tốc độ CPU', value: detailProduct.cpuSpeed },
-                        { label: 'Bộ nhớ RAM', value: detailProduct.ram ? `${detailProduct.ram} ${detailProduct.ramType || ''} ${detailProduct.ramBusSpeed || ''}`.trim() : null },
+                        { label: 'Bộ xử lý NPU', value: detailProduct.npu },
+                        { label: 'Hiệu năng AI CPU (TOPS)', value: detailProduct.cpuAiPerformanceTops },
                         { label: 'Card đồ họa (GPU)', value: detailProduct.gpuCard },
+                        { label: 'Số nhân GPU', value: detailProduct.gpuCores },
+                        { label: 'TGP GPU', value: detailProduct.gpuTgp },
+                        { label: 'Hiệu năng AI GPU (TOPS)', value: detailProduct.gpuAiPerformanceTops },
+                        { label: 'Dung lượng RAM', value: detailProduct.ram },
+                        { label: 'Loại RAM', value: detailProduct.ramType },
+                        { label: 'Tốc độ Bus RAM', value: detailProduct.ramBusSpeed },
+                        { label: 'Hỗ trợ RAM tối đa', value: detailProduct.maxRam },
                         { label: 'Ổ cứng (Storage)', value: detailProduct.storage },
-                        { label: 'Màn hình', value: detailProduct.screenSize ? `${detailProduct.screenSize} inch ${detailProduct.screenResolution || ''} ${detailProduct.panel || ''}`.trim() : null },
+                        { label: 'Kích thước màn hình', value: detailProduct.screenSize ? `${detailProduct.screenSize} inch` : null },
+                        { label: 'Độ phân giải màn hình', value: detailProduct.screenResolution },
+                        { label: 'Tấm nền màn hình', value: detailProduct.panel },
                         { label: 'Tần số quét', value: detailProduct.refreshRate },
-                        { label: 'Dung lượng pin', value: detailProduct.battery },
+                        { label: 'Độ bao phủ màu (Color Gamut)', value: detailProduct.colorGamut },
+                        { label: 'Màn hình cảm ứng', value: detailProduct.touchScreen },
+                        { label: 'Công nghệ màn hình', value: detailProduct.displayTechnology },
+                        { label: 'Cổng kết nối', value: detailProduct.ports },
+                        { label: 'Kết nối không dây', value: detailProduct.wireless },
+                        { label: 'Webcam', value: detailProduct.webcam },
+                        { label: 'Đèn bàn phím', value: detailProduct.keyboardBacklight },
+                        { label: 'Bảo mật', value: detailProduct.security },
+                        { label: 'Công nghệ âm thanh', value: detailProduct.audioTechnology },
+                        { label: 'Hệ thống tản nhiệt', value: detailProduct.cooling },
+                        { label: 'Tính năng khác', value: detailProduct.otherFeatures },
+                        { label: 'Dung lượng Pin', value: detailProduct.battery },
                         { label: 'Hệ điều hành', value: detailProduct.operatingSystem },
+                        { label: 'Thời điểm ra mắt', value: detailProduct.releaseTime },
                         { label: 'Kích thước & Trọng lượng', value: detailProduct.dimensionsWeight },
-                        { label: 'Thời điểm ra mắt', value: detailProduct.releaseTime }
+                        { label: 'Chất liệu chế tạo', value: detailProduct.material },
+                        { label: 'Khe cắm thẻ nhớ', value: detailProduct.memoryCardReader }
                       ];
 
                       const activeSpecs = specFields.filter(f => f.value !== null && f.value !== undefined && f.value !== '');
 
                       if (activeSpecs.length === 0) {
                         return detailProduct.description ? (
-                          <div className="p-3 rounded bg-dark border border-secondary fs-7" style={{ whiteSpace: 'pre-wrap' }}>
+                          <div className="p-3 rounded bg-light border text-dark fs-7" style={{ whiteSpace: 'pre-wrap' }}>
                             {detailProduct.description}
                           </div>
                         ) : (
@@ -344,12 +526,12 @@ function ManageTrash() {
                       }
 
                       return (
-                        <table className="table table-sm table-dark table-striped table-bordered fs-7 mb-0">
+                        <table className="table table-sm table-striped table-bordered table-hover fs-7 mb-0 text-dark">
                           <tbody>
                             {activeSpecs.map((spec, idx) => (
                               <tr key={idx}>
-                                <td className="text-muted w-40" style={{ fontSize: '0.78rem' }}>{spec.label}</td>
-                                <td style={{ fontSize: '0.78rem' }}>{spec.value}</td>
+                                <td className="text-secondary fw-semibold w-40" style={{ fontSize: '0.78rem' }}>{spec.label}</td>
+                                <td style={{ fontSize: '0.78rem', color: '#212529' }}>{spec.value}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -360,8 +542,8 @@ function ManageTrash() {
                 </div>
               </div>
             </div>
-            <div className="card-footer d-flex justify-content-end bg-light-5 py-3 border-top px-4" style={{ background: 'rgba(255,255,255,0.02)' }}>
-              <button type="button" className="btn btn-outline-secondary px-4 py-2 fs-7" onClick={() => setDetailProduct(null)}>
+            <div className="card-footer d-flex justify-content-end bg-light py-3 border-top px-4">
+              <button type="button" className="btn btn-secondary px-4 py-2 fs-7" onClick={() => setDetailProduct(null)}>
                 Đóng
               </button>
             </div>
