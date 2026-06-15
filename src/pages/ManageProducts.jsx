@@ -4,7 +4,17 @@ import { Loader2, Plus, Edit, Trash2, ShieldAlert, Search, X, FileSpreadsheet, E
 import { useToast } from '../context/ToastContext';
 import ReactPaginate from 'react-paginate';
 
-const ReactPaginateComponent = ReactPaginate.default || ReactPaginate;
+const resolveComponent = (obj) => {
+  if (!obj) return null;
+  if (typeof obj === 'function' || typeof obj === 'string') return obj;
+  if (typeof obj === 'object') {
+    if (typeof obj.default === 'function' || typeof obj.default === 'string') return obj.default;
+    if (typeof obj.default === 'object') return resolveComponent(obj.default);
+  }
+  return obj;
+};
+
+const ReactPaginateComponent = resolveComponent(ReactPaginate);
 
 function ManageProducts() {
   const { showToast, confirm } = useToast();
@@ -18,6 +28,24 @@ function ManageProducts() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [detailProduct, setDetailProduct] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  const fetchAndShowDetail = async (id) => {
+    setDetailLoading(true);
+    try {
+      const data = await apiService.products.getById(id);
+      setDetailProduct(data);
+      setActiveImageIndex(0);
+    } catch (err) {
+      showToast({
+        type: 'error',
+        title: 'Lỗi',
+        message: err.message || 'Không thể lấy thông tin chi tiết sản phẩm.'
+      });
+    } finally {
+      setDetailLoading(false);
+    }
+  };
   
   // Pagination State
   const [currentPageNum, setCurrentPageNum] = useState(1);
@@ -436,7 +464,7 @@ function ManageProducts() {
                           </td>
                           <td className="text-end">
                             <div className="d-flex justify-content-end gap-1">
-                              <button className="btn btn-sm btn-outline-info p-2" onClick={() => { setDetailProduct(p); setActiveImageIndex(0); }} title="Xem chi tiết">
+                              <button className="btn btn-sm btn-outline-info p-2" onClick={() => fetchAndShowDetail(p.id)} disabled={detailLoading} title="Xem chi tiết">
                                 <Eye size={14} />
                               </button>
                               <button className="btn btn-sm btn-outline-primary p-2" onClick={() => openEditProduct(p)}>

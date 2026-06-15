@@ -4,13 +4,41 @@ import { Loader2, RotateCcw, Trash2, ShieldAlert, Search, AlertCircle, Eye, X } 
 import { useToast } from '../context/ToastContext';
 import ReactPaginate from 'react-paginate';
 
-const ReactPaginateComponent = ReactPaginate.default || ReactPaginate;
+const resolveComponent = (obj) => {
+  if (!obj) return null;
+  if (typeof obj === 'function' || typeof obj === 'string') return obj;
+  if (typeof obj === 'object') {
+    if (typeof obj.default === 'function' || typeof obj.default === 'string') return obj.default;
+    if (typeof obj.default === 'object') return resolveComponent(obj.default);
+  }
+  return obj;
+};
+
+const ReactPaginateComponent = resolveComponent(ReactPaginate);
 
 function ManageTrash() {
   const { showToast, confirm } = useToast();
   const [deletedProducts, setDeletedProducts] = useState([]);
   const [detailProduct, setDetailProduct] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  const fetchAndShowDetail = async (id) => {
+    setDetailLoading(true);
+    try {
+      const data = await apiService.products.getById(id);
+      setDetailProduct(data);
+      setActiveImageIndex(0);
+    } catch (err) {
+      showToast({
+        type: 'error',
+        title: 'Lỗi',
+        message: err.message || 'Không thể lấy thông tin chi tiết sản phẩm.'
+      });
+    } finally {
+      setDetailLoading(false);
+    }
+  };
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -335,7 +363,8 @@ function ManageTrash() {
                               <div className="d-flex justify-content-end gap-2">
                                 <button
                                   className="btn btn-sm btn-outline-info d-flex align-items-center gap-1"
-                                  onClick={() => { setDetailProduct(p); setActiveImageIndex(0); }}
+                                  onClick={() => fetchAndShowDetail(p.id)}
+                                  disabled={detailLoading}
                                   title="Xem chi tiết"
                                 >
                                   <Eye size={14} /> Chi tiết
