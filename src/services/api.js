@@ -4,7 +4,7 @@
  * To point to your real backend, modify the BASE_URL below and uncomment the real fetch implementations.
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 // Helper to simulate network latency for the mock version
 const delay = (ms = 600) => new Promise(resolve => setTimeout(resolve, ms));
@@ -42,7 +42,7 @@ export const validators = {
     const birthDate = new Date(val);
     const today = new Date();
     if (birthDate > today) return 'Ngày sinh không thể ở tương lai';
-    
+
     let age = today.getFullYear() - birthDate.getFullYear();
     const m = today.getMonth() - birthDate.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
@@ -53,7 +53,7 @@ export const validators = {
   cardNumber: (val) => {
     const clean = val.replace(/\s+/g, '');
     if (!/^\d{16}$/.test(clean)) return 'Số thẻ tín dụng/Visa phải chứa đúng 16 chữ số';
-    
+
     // Luhn Algorithm checksum verification
     let sum = 0;
     let shouldDouble = false;
@@ -74,11 +74,11 @@ export const validators = {
     const month = parseInt(mStr, 10);
     const year = parseInt(yStr, 10);
     if (month < 1 || month > 12) return 'Tháng không hợp lệ (phải từ 01 đến 12)';
-    
+
     const today = new Date();
     const currentYear = today.getFullYear() % 100; // yy
     const currentMonth = today.getMonth() + 1;
-    
+
     if (year < currentYear || (year === currentYear && month < currentMonth)) {
       return 'Thẻ này đã hết hạn sử dụng';
     }
@@ -345,7 +345,7 @@ export const apiService = {
         if (!orderData.cardDetails) {
           throw new Error('Vui lòng cung cấp thông tin thẻ tín dụng.');
         }
-        
+
         const cardNumErr = validators.cardNumber(orderData.cardDetails.number);
         if (cardNumErr) throw new Error(`Số thẻ: ${cardNumErr}`);
 
@@ -366,8 +366,8 @@ export const apiService = {
         phone: orderData.phone,
         address: orderData.address,
         paymentMethod: orderData.paymentMethod,
-        paymentCardInfo: orderData.paymentMethod === 'visa' 
-          ? `•••• •••• •••• ${orderData.cardDetails.number.replace(/\s+/g, '').slice(-4)}` 
+        paymentCardInfo: orderData.paymentMethod === 'visa'
+          ? `•••• •••• •••• ${orderData.cardDetails.number.replace(/\s+/g, '').slice(-4)}`
           : null,
         subtotal: orderData.subtotal,
         shipping: orderData.shipping,
@@ -400,7 +400,7 @@ export const apiService = {
       if (!response.ok) {
         throw new Error(resJson.message || 'Lỗi khi lấy lịch sử mua hàng.');
       }
-      
+
       // Parse itemsJson back to items array for frontend compatibility
       const orders = resJson.data || [];
       return orders.map(order => ({

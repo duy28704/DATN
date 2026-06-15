@@ -1,4 +1,33 @@
+import { useContext } from 'react';
+import { ProductContext } from '../context/ProductContext';
+
 function Dashboard() {
+  const { products } = useContext(ProductContext);
+
+  const totalProducts = products.length;
+  
+  // Calculate average price
+  const avgPrice = totalProducts > 0 
+    ? (products.reduce((acc, p) => acc + (parseFloat(p.price) || 0), 0) / totalProducts).toFixed(2) 
+    : '0.00';
+
+  // Count by category
+  const categoryCounts = products.reduce((acc, p) => {
+    const cat = p.category || 'other';
+    acc[cat] = (acc[cat] || 0) + 1;
+    return acc;
+  }, {});
+
+  const computingCount = categoryCounts['computing'] || 0;
+  const wearablesCount = categoryCounts['wearables'] || 0;
+  const audioCount = categoryCounts['audio'] || 0;
+  const inputCount = categoryCounts['input'] || 0;
+
+  // Find most expensive product
+  const mostExpensiveProduct = products.length > 0
+    ? [...products].sort((a, b) => b.price - a.price)[0]
+    : null;
+
   return (
     <main id="main" className="main">
       <div className="pagetitle">
@@ -67,11 +96,77 @@ function Dashboard() {
               </div>
 
               <div className="col-12">
-                <div className="card">
+                <div className="card info-card">
                   <div className="card-body">
-                    <h5 className="card-title">Reports <span>/Today</span></h5>
-                    <div className="py-5 text-center text-muted fs-7">
-                      Hệ thống phân tích báo cáo thời gian thực đang chạy ngầm...
+                    <h5 className="card-title">Thống kê sản phẩm <span>| Thời gian thực</span></h5>
+                    <div className="row g-4 pt-2">
+                      <div className="col-md-4">
+                        <div className="p-3 bg-light rounded border text-center">
+                          <span className="text-muted fs-8 d-block mb-1">TỔNG SỐ SẢN PHẨM</span>
+                          <strong className="fs-3 text-dark">{totalProducts}</strong>
+                          <span className="d-block text-muted fs-9 mt-1">sản phẩm trong hệ thống</span>
+                        </div>
+                      </div>
+                      <div className="col-md-4">
+                        <div className="p-3 bg-light rounded border text-center">
+                          <span className="text-muted fs-8 d-block mb-1">GIÁ BÁN TRUNG BÌNH</span>
+                          <strong className="fs-3 text-danger">${Number(avgPrice).toLocaleString()}</strong>
+                          <span className="d-block text-muted fs-9 mt-1">trên mỗi thiết bị</span>
+                        </div>
+                      </div>
+                      <div className="col-md-4">
+                        <div className="p-3 bg-light rounded border text-center">
+                          <span className="text-muted fs-8 d-block mb-1">THIẾT BỊ ĐẮT NHẤT</span>
+                          <strong className="fs-6 text-dark d-block text-truncate" title={mostExpensiveProduct?.name || 'N/A'}>
+                            {mostExpensiveProduct ? mostExpensiveProduct.name : 'N/A'}
+                          </strong>
+                          <span className="text-danger fw-bold fs-7">${mostExpensiveProduct ? Number(mostExpensiveProduct.price).toLocaleString() : '0'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <h6 className="text-dark fw-bold mb-3 fs-7">Phân bố sản phẩm theo danh mục</h6>
+                      
+                      <div className="mb-3">
+                        <div className="d-flex justify-content-between mb-1 fs-8 text-muted">
+                          <span>Máy tính & Linh kiện</span>
+                          <span>{computingCount} sản phẩm ({totalProducts > 0 ? Math.round((computingCount/totalProducts)*100) : 0}%)</span>
+                        </div>
+                        <div className="progress" style={{ height: '8px' }}>
+                          <div className="progress-bar bg-primary" role="progressbar" style={{ width: `${totalProducts > 0 ? (computingCount/totalProducts)*100 : 0}%` }} aria-valuenow={computingCount} aria-valuemin="0" aria-valuemax={totalProducts}></div>
+                        </div>
+                      </div>
+
+                      <div className="mb-3">
+                        <div className="d-flex justify-content-between mb-1 fs-8 text-muted">
+                          <span>Thiết bị Đeo thông minh</span>
+                          <span>{wearablesCount} sản phẩm ({totalProducts > 0 ? Math.round((wearablesCount/totalProducts)*100) : 0}%)</span>
+                        </div>
+                        <div className="progress" style={{ height: '8px' }}>
+                          <div className="progress-bar bg-success" role="progressbar" style={{ width: `${totalProducts > 0 ? (wearablesCount/totalProducts)*100 : 0}%` }} aria-valuenow={wearablesCount} aria-valuemin="0" aria-valuemax={totalProducts}></div>
+                        </div>
+                      </div>
+
+                      <div className="mb-3">
+                        <div className="d-flex justify-content-between mb-1 fs-8 text-muted">
+                          <span>Thiết bị Âm thanh</span>
+                          <span>{audioCount} sản phẩm ({totalProducts > 0 ? Math.round((audioCount/totalProducts)*100) : 0}%)</span>
+                        </div>
+                        <div className="progress" style={{ height: '8px' }}>
+                          <div className="progress-bar bg-warning" role="progressbar" style={{ width: `${totalProducts > 0 ? (audioCount/totalProducts)*100 : 0}%` }} aria-valuenow={audioCount} aria-valuemin="0" aria-valuemax={totalProducts}></div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="d-flex justify-content-between mb-1 fs-8 text-muted">
+                          <span>Phụ kiện & Thiết bị nhập</span>
+                          <span>{inputCount} sản phẩm ({totalProducts > 0 ? Math.round((inputCount/totalProducts)*100) : 0}%)</span>
+                        </div>
+                        <div className="progress" style={{ height: '8px' }}>
+                          <div className="progress-bar bg-info" role="progressbar" style={{ width: `${totalProducts > 0 ? (inputCount/totalProducts)*100 : 0}%` }} aria-valuenow={inputCount} aria-valuemin="0" aria-valuemax={totalProducts}></div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

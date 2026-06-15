@@ -187,7 +187,7 @@ function Header() {
                 </li>
 
                 <li>
-                  <a  className="dropdown-item d-flex align-items-center" href="#login">
+                  <a  className="dropdown-item d-flex align-items-center" href="#dashboard/profile">
                     <i  className="bi bi-person"></i>
                     <span>My Profile</span>
                   </a>
@@ -197,7 +197,7 @@ function Header() {
                 </li>
 
                 <li>
-                  <a  className="dropdown-item d-flex align-items-center" href="#login">
+                  <a  className="dropdown-item d-flex align-items-center" href="#dashboard/settings">
                     <i  className="bi bi-gear"></i>
                     <span>Account Settings</span>
                   </a>

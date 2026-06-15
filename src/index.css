@@ -532,6 +532,7 @@ a:hover {
 main.main {
   padding: 20px 30px;
   transition: all 0.5s;
+  margin-top: 60px;
 }
 
 @media (min-width: 1200px) {

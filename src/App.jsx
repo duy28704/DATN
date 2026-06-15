@@ -16,6 +16,8 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import ManageProducts from './pages/ManageProducts'
 import ManageUsers from './pages/ManageUsers'
+import Profile from './pages/Profile'
+import Settings from './pages/Settings'
 import Headerdashboard from './components/Headerdashboard'
 import Sidebar from './components/Sidebar'
 import Footerdashboard from './components/Footerdashboard'
@@ -117,6 +119,12 @@ function AppContent() {
     }
     if (currentPage === 'dashboard/users') {
       return <ManageUsers />
+    }
+    if (currentPage === 'dashboard/profile') {
+      return <Profile />
+    }
+    if (currentPage === 'dashboard/settings') {
+      return <Settings />
     }
     return <Dashboard currentPage={currentPage} />
   }
