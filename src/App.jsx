@@ -16,6 +16,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import ManageProducts from './pages/ManageProducts'
 import ManageUsers from './pages/ManageUsers'
+import ManageTrash from './pages/ManageTrash'
 import Profile from './pages/Profile'
 import Settings from './pages/Settings'
 import Headerdashboard from './components/Headerdashboard'
@@ -116,6 +117,9 @@ function AppContent() {
   const renderDashboardContent = () => {
     if (currentPage === 'dashboard/products') {
       return <ManageProducts />
+    }
+    if (currentPage === 'dashboard/trash') {
+      return <ManageTrash />
     }
     if (currentPage === 'dashboard/users') {
       return <ManageUsers />

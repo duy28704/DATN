@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 import { Loader2, Plus, Edit, Trash2, ShieldAlert, Search, X, FileSpreadsheet } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 
 function ManageProducts() {
+  const { showToast, confirm } = useToast();
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState('');
@@ -60,14 +62,27 @@ function ManageProducts() {
         
         const overflow = result.errors.length > 10 ? `\n... và ${result.errors.length - 10} lỗi khác.` : '';
         
-        alert(`Nhập Excel hoàn tất nhưng có lỗi xảy ra!\n\nĐã nhập thành công ${result.data ? result.data.length : 0} sản phẩm.\n\nChi tiết lỗi:\n${errorList}${overflow}`);
+        showToast({
+          type: 'warning',
+          title: 'Nhập Excel có lỗi',
+          message: `Đã nhập thành công ${result.data ? result.data.length : 0} sản phẩm. Xem chi tiết lỗi ở console.`
+        });
+        console.warn(`Chi tiết lỗi nhập Excel:\n${errorList}${overflow}`);
       } else {
-        alert(`Nhập Excel thành công! Đã thêm ${result.data ? result.data.length : 0} sản phẩm mới.`);
+        showToast({
+          type: 'success',
+          title: 'Nhập Excel thành công',
+          message: `Đã nhập thành công ${result.data ? result.data.length : 0} sản phẩm mới.`
+        });
       }
       
       loadProducts();
     } catch (err) {
-      alert(err.message || 'Lỗi khi nhập sản phẩm từ Excel.');
+      showToast({
+        type: 'error',
+        title: 'Nhập Excel thất bại',
+        message: err.message || 'Lỗi khi nhập sản phẩm từ Excel.'
+      });
     } finally {
       setImporting(false);
     }
@@ -131,8 +146,10 @@ function ManageProducts() {
     try {
       if (productModalMode === 'add') {
         await apiService.products.create(payload);
+        showToast({ type: 'success', title: 'Thêm thành công', message: `Sản phẩm "${payload.name}" đã được thêm.` });
       } else {
         await apiService.products.update(selectedProduct.id, payload);
+        showToast({ type: 'success', title: 'Cập nhật thành công', message: `Đã lưu sản phẩm "${payload.name}".` });
       }
       setShowProductModal(false);
       loadProducts();
@@ -142,12 +159,17 @@ function ManageProducts() {
   };
 
   const deleteProduct = async (id) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) return;
+    const confirmed = await confirm({
+      title: 'Xác nhận xóa sản phẩm',
+      message: 'Bạn có chắc chắn muốn xóa sản phẩm này? Sản phẩm sẽ được chuyển vào Thùng rác.'
+    });
+    if (!confirmed) return;
     try {
-      await apiService.products.delete(id, true); // hard delete
+      await apiService.products.delete(id, false); // soft delete
+      showToast({ type: 'success', title: 'Xóa thành công', message: 'Sản phẩm đã được chuyển vào Thùng rác.' });
       loadProducts();
     } catch (err) {
-      alert(err.message || 'Xóa sản phẩm thất bại.');
+      showToast({ type: 'error', title: 'Xóa thất bại', message: err.message || 'Xóa sản phẩm thất bại.' });
     }
   };
 

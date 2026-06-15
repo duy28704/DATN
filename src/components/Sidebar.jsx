@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
 
 function Sidebar({ currentPage }) {
@@ -6,9 +6,20 @@ function Sidebar({ currentPage }) {
 
   const isOverview = currentPage === 'dashboard';
   const isProducts = currentPage === 'dashboard/products';
+  const isTrash = currentPage === 'dashboard/trash';
   const isUsers = currentPage === 'dashboard/users';
   const isProfile = currentPage === 'dashboard/profile';
   const isSettings = currentPage === 'dashboard/settings';
+
+  const isProductsActive = isProducts || isTrash;
+  const [isProductsOpen, setIsProductsOpen] = useState(isProductsActive);
+
+  // Auto expand if current page is product list or trash
+  useEffect(() => {
+    if (isProductsActive) {
+      setIsProductsOpen(true);
+    }
+  }, [currentPage, isProductsActive]);
 
   return (
     <aside id="sidebar" className="sidebar">
@@ -23,10 +34,29 @@ function Sidebar({ currentPage }) {
         </li>
 
         <li className="nav-item">
-          <a className={`nav-link ${isProducts ? '' : 'collapsed'}`} href="#dashboard/products">
+          <a 
+            className={`nav-link ${isProductsOpen ? '' : 'collapsed'}`} 
+            href="#" 
+            onClick={(e) => { e.preventDefault(); setIsProductsOpen(!isProductsOpen); }}
+          >
             <i className="bi bi-laptop"></i>
             <span>Quản lý sản phẩm</span>
+            <i className={`bi bi-chevron-${isProductsOpen ? 'up' : 'down'} ms-auto`} style={{ fontSize: '12px' }}></i>
           </a>
+          <ul className={`nav-content collapse ${isProductsOpen ? 'show' : ''}`} style={{ listStyle: 'none', paddingLeft: '0' }}>
+            <li>
+              <a className={isProducts ? 'active' : ''} href="#dashboard/products">
+                <i className="bi bi-circle"></i>
+                <span>Danh sách sản phẩm</span>
+              </a>
+            </li>
+            <li>
+              <a className={isTrash ? 'active' : ''} href="#dashboard/trash">
+                <i className="bi bi-circle"></i>
+                <span>Thùng rác</span>
+              </a>
+            </li>
+          </ul>
         </li>
 
         <li className="nav-item">

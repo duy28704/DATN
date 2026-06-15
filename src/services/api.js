@@ -222,6 +222,29 @@ export const apiService = {
       }
       return resJson.data;
     },
+    getDeleted: async () => {
+      console.log(`[API] calling ${BASE_URL}/api/v1/products/deleted`);
+      const response = await fetch(`${BASE_URL}/api/v1/products/deleted`, {
+        headers: getAuthHeaders()
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi tải thùng rác');
+      }
+      return resJson.data;
+    },
+    restore: async (id) => {
+      console.log(`[API] calling PUT ${BASE_URL}/api/v1/products/${id}/restore`);
+      const response = await fetch(`${BASE_URL}/api/v1/products/${id}/restore`, {
+        method: 'PUT',
+        headers: getAuthHeaders()
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi khôi phục sản phẩm');
+      }
+      return resJson.data;
+    },
     getById: async (id) => {
       console.log(`[API] calling ${BASE_URL}/api/v1/products/${id}`);
       const response = await fetch(`${BASE_URL}/api/v1/products/${id}`);

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { apiService, validators } from '../services/api';
 import { Loader2, Plus, Edit, Trash2, ShieldAlert, Search, X } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 
 function ManageUsers() {
+  const { showToast, confirm } = useToast();
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState('');
@@ -114,8 +116,10 @@ function ManageUsers() {
     try {
       if (userModalMode === 'add') {
         await apiService.users.create(userFormData);
+        showToast({ type: 'success', title: 'Thêm thành công', message: 'Đã thêm người dùng mới thành công!' });
       } else {
         await apiService.users.update(selectedUser.userId, userFormData);
+        showToast({ type: 'success', title: 'Cập nhật thành công', message: 'Cập nhật thông tin người dùng thành công!' });
       }
       setShowUserModal(false);
       loadUsers();
@@ -125,12 +129,17 @@ function ManageUsers() {
   };
 
   const deleteUser = async (id) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa người dùng này?')) return;
+    const confirmed = await confirm({
+      title: 'Xác nhận xóa người dùng',
+      message: 'Bạn có chắc chắn muốn xóa người dùng này?'
+    });
+    if (!confirmed) return;
     try {
       await apiService.users.delete(id);
+      showToast({ type: 'success', title: 'Xóa thành công', message: 'Đã xóa người dùng thành công.' });
       loadUsers();
     } catch (err) {
-      alert(err.message || 'Xóa người dùng thất bại.');
+      showToast({ type: 'error', title: 'Lỗi', message: err.message || 'Xóa người dùng thất bại.' });
     }
   };
 

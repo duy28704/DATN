@@ -528,6 +528,14 @@ a:hover {
   color: #4154f1;
 }
 
+.sidebar-nav .nav-content a.active {
+  color: #4154f1;
+}
+
+.sidebar-nav .nav-content a.active i {
+  color: #4154f1;
+}
+
 /* Main content for dashboard */
 main.main {
   padding: 20px 30px;
