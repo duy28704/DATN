@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
-import { Loader2, Plus, Edit, Trash2, ShieldAlert, Search, X } from 'lucide-react';
+import { Loader2, Plus, Edit, Trash2, ShieldAlert, Search, X, FileSpreadsheet } from 'lucide-react';
 
 function ManageProducts() {
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState('');
+  const [importing, setImporting] = useState(false);
   const [productSearch, setProductSearch] = useState('');
   const [showProductModal, setShowProductModal] = useState(false);
   const [productModalMode, setProductModalMode] = useState('add'); // 'add' or 'edit'
@@ -39,6 +40,38 @@ function ManageProducts() {
   useEffect(() => {
     loadProducts();
   }, []);
+
+  const handleExcelImport = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Reset value
+    e.target.value = '';
+
+    setImporting(true);
+    try {
+      const result = await apiService.products.importExcel(file);
+      
+      if (result.hasError) {
+        const errorList = result.errors
+          .map(err => `Dòng ${err.row}, Cột ${err.column}: ${err.message}`)
+          .slice(0, 10) // Show up to 10 errors
+          .join('\n');
+        
+        const overflow = result.errors.length > 10 ? `\n... và ${result.errors.length - 10} lỗi khác.` : '';
+        
+        alert(`Nhập Excel hoàn tất nhưng có lỗi xảy ra!\n\nĐã nhập thành công ${result.data ? result.data.length : 0} sản phẩm.\n\nChi tiết lỗi:\n${errorList}${overflow}`);
+      } else {
+        alert(`Nhập Excel thành công! Đã thêm ${result.data ? result.data.length : 0} sản phẩm mới.`);
+      }
+      
+      loadProducts();
+    } catch (err) {
+      alert(err.message || 'Lỗi khi nhập sản phẩm từ Excel.');
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const openAddProduct = () => {
     setProductFormData({
@@ -136,9 +169,31 @@ function ManageProducts() {
             </ol>
           </nav>
         </div>
-        <button className="btn btn-primary d-flex align-items-center gap-1 py-2 px-3" onClick={openAddProduct}>
-          <Plus size={16} /> Thêm sản phẩm
-        </button>
+        <div className="d-flex gap-2 align-items-center">
+          <input
+            type="file"
+            id="excel-file-input"
+            accept=".xlsx, .xls"
+            style={{ display: 'none' }}
+            onChange={handleExcelImport}
+          />
+          <button 
+            className="btn btn-outline-success d-flex align-items-center gap-1 py-2 px-3" 
+            onClick={() => document.getElementById('excel-file-input').click()}
+            disabled={importing}
+          >
+            {importing ? (
+              <Loader2 className="spinner-border border-0" style={{ width: '16px', height: '16px' }} />
+            ) : (
+              <FileSpreadsheet size={16} />
+            )}
+            {importing ? 'Đang nhập...' : 'Nhập Excel'}
+          </button>
+          
+          <button className="btn btn-primary d-flex align-items-center gap-1 py-2 px-3" onClick={openAddProduct}>
+            <Plus size={16} /> Thêm sản phẩm
+          </button>
+        </div>
       </div>
 
       <section className="section">

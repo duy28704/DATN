@@ -268,6 +268,27 @@ export const apiService = {
         throw new Error(resJson.message || 'Lỗi khi xóa sản phẩm');
       }
       return resJson.data;
+    },
+    importExcel: async (file) => {
+      console.log(`[API] calling POST ${BASE_URL}/api/v1/products/import`);
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const authHeaders = getAuthHeaders();
+      const headers = { ...authHeaders };
+      delete headers['Content-Type'];
+
+      const response = await fetch(`${BASE_URL}/api/v1/products/import`, {
+        method: 'POST',
+        headers: headers,
+        body: formData
+      });
+
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi nhập sản phẩm từ Excel.');
+      }
+      return resJson.data;
     }
   },
 
