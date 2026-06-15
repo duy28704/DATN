@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 import { Loader2, Plus, Edit, Trash2, ShieldAlert, Search, X, FileSpreadsheet, Eye } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import ReactPaginate from 'react-paginate';
 
 function ManageProducts() {
   const { showToast, confirm } = useToast();
@@ -458,25 +459,23 @@ function ManageProducts() {
                 <div className="text-muted fs-7">
                   Hiển thị <strong>{indexOfFirstProduct + 1}</strong> đến <strong>{Math.min(indexOfLastProduct, sortedProducts.length)}</strong> trong tổng số <strong>{sortedProducts.length}</strong> sản phẩm
                 </div>
-                <ul className="pagination mb-0">
-                  <li className={`page-item ${currentPageNum === 1 ? 'disabled' : ''}`}>
-                    <button className="page-link" onClick={() => setCurrentPageNum(prev => Math.max(prev - 1, 1))}>
-                      Trước
-                    </button>
-                  </li>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
-                    <li key={pageNum} className={`page-item ${currentPageNum === pageNum ? 'active' : ''}`}>
-                      <button className="page-link" onClick={() => setCurrentPageNum(pageNum)}>
-                        {pageNum}
-                      </button>
-                    </li>
-                  ))}
-                  <li className={`page-item ${currentPageNum === totalPages ? 'disabled' : ''}`}>
-                    <button className="page-link" onClick={() => setCurrentPageNum(prev => Math.min(prev + 1, totalPages))}>
-                      Sau
-                    </button>
-                  </li>
-                </ul>
+                <ReactPaginate
+                  previousLabel="Trước"
+                  nextLabel="Sau"
+                  pageCount={totalPages}
+                  onPageChange={({ selected }) => setCurrentPageNum(selected + 1)}
+                  containerClassName="pagination mb-0"
+                  pageClassName="page-item"
+                  pageLinkClassName="page-link"
+                  previousClassName="page-item"
+                  previousLinkClassName="page-link"
+                  nextClassName="page-item"
+                  nextLinkClassName="page-link"
+                  breakClassName="page-item"
+                  breakLinkClassName="page-link"
+                  activeClassName="active"
+                  forcePage={currentPageNum - 1}
+                />
               </nav>
             )}
           </div>
@@ -702,17 +701,17 @@ function ManageProducts() {
                         { label: 'Hiệu năng AI CPU (TOPS)', value: detailProduct.cpuAiPerformanceTops },
                         { label: 'Card đồ họa (GPU)', value: detailProduct.gpuCard },
                         { label: 'Số nhân GPU', value: detailProduct.gpuCores },
-                        { label: 'TGP GPU', value: detailProduct.gpuTgp },
+                        { label: 'TGP GPU', value: detailProduct.gpuTgp ? `${detailProduct.gpuTgp} W` : null },
                         { label: 'Hiệu năng AI GPU (TOPS)', value: detailProduct.gpuAiPerformanceTops },
                         { label: 'Dung lượng RAM', value: detailProduct.ram },
                         { label: 'Loại RAM', value: detailProduct.ramType },
-                        { label: 'Tốc độ Bus RAM', value: detailProduct.ramBusSpeed },
+                        { label: 'Tốc độ Bus RAM', value: detailProduct.ramBusSpeed ? `${detailProduct.ramBusSpeed} MHz` : null },
                         { label: 'Hỗ trợ RAM tối đa', value: detailProduct.maxRam },
                         { label: 'Ổ cứng (Storage)', value: detailProduct.storage },
                         { label: 'Kích thước màn hình', value: detailProduct.screenSize ? `${detailProduct.screenSize} inch` : null },
                         { label: 'Độ phân giải màn hình', value: detailProduct.screenResolution },
                         { label: 'Tấm nền màn hình', value: detailProduct.panel },
-                        { label: 'Tần số quét', value: detailProduct.refreshRate },
+                        { label: 'Tần số quét', value: detailProduct.refreshRate ? `${detailProduct.refreshRate} Hz` : null },
                         { label: 'Độ bao phủ màu (Color Gamut)', value: detailProduct.colorGamut },
                         { label: 'Màn hình cảm ứng', value: detailProduct.touchScreen },
                         { label: 'Công nghệ màn hình', value: detailProduct.displayTechnology },
@@ -732,9 +731,34 @@ function ManageProducts() {
                         { label: 'Khe cắm thẻ nhớ', value: detailProduct.memoryCardReader }
                       ];
 
-                      const activeSpecs = specFields.filter(f => f.value !== null && f.value !== undefined && f.value !== '');
+                      // Parse specsJson if exists
+                      let jsonSpecs = [];
+                      try {
+                        if (detailProduct.specsJson) {
+                          const parsed = JSON.parse(detailProduct.specsJson);
+                          if (parsed && typeof parsed === 'object') {
+                            jsonSpecs = Object.entries(parsed).map(([key, val]) => ({
+                              label: key,
+                              value: val
+                            }));
+                          }
+                        }
+                      } catch (e) {
+                        console.error("Failed to parse specsJson:", e);
+                      }
 
-                      if (activeSpecs.length === 0) {
+                      const standardSpecs = specFields.filter(f => f.value !== null && f.value !== undefined && f.value !== '');
+                      
+                      // Combine standard specs and specs from JSON
+                      const allSpecs = [...standardSpecs];
+                      jsonSpecs.forEach(jsSpec => {
+                        const exists = allSpecs.some(s => s.label.toLowerCase() === jsSpec.label.toLowerCase());
+                        if (!exists && jsSpec.value !== null && jsSpec.value !== undefined && jsSpec.value !== '') {
+                          allSpecs.push(jsSpec);
+                        }
+                      });
+
+                      if (allSpecs.length === 0) {
                         return detailProduct.description ? (
                           <div className="p-3 rounded bg-light border text-dark fs-7" style={{ whiteSpace: 'pre-wrap' }}>
                             {detailProduct.description}
@@ -747,10 +771,10 @@ function ManageProducts() {
                       return (
                         <table className="table table-sm table-striped table-bordered table-hover fs-7 mb-0 text-dark">
                           <tbody>
-                            {activeSpecs.map((spec, idx) => (
+                            {allSpecs.map((spec, idx) => (
                               <tr key={idx}>
                                 <td className="text-secondary fw-semibold w-40" style={{ fontSize: '0.78rem' }}>{spec.label}</td>
-                                <td style={{ fontSize: '0.78rem', color: '#212529' }}>{spec.value}</td>
+                                <td style={{ fontSize: '0.78rem', color: '#212529' }}>{String(spec.value)}</td>
                               </tr>
                             ))}
                           </tbody>
