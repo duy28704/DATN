@@ -16,6 +16,78 @@ const resolveComponent = (obj) => {
 
 const ReactPaginateComponent = resolveComponent(ReactPaginate);
 
+// Hàm chuyển đổi và gộp các thông số kỹ thuật chi tiết của sản phẩm.
+// Đọc các cột thông số cấu hình riêng lẻ từ cơ sở dữ liệu (như CPU, GPU, RAM,...) rồi chuyển đổi chúng 
+// thành các cặp khóa-giá trị tiếng Việt trực quan, gộp chung với các thuộc tính tùy biến từ specsJson.
+const buildSpecs = (item) => {
+  if (!item) return {}
+  let specs = {}
+  try {
+    if (item.specsJson) {
+      specs = JSON.parse(item.specsJson)
+    }
+  } catch (e) {
+    console.error("Lỗi khi phân tích cú pháp specsJson:", e)
+  }
+
+  const fieldMapping = {
+    cpuTechnology: 'Công nghệ CPU',
+    cpuCores: 'Số nhân CPU',
+    cpuThreads: 'Số luồng CPU',
+    cpuSpeed: 'Tốc độ CPU',
+    npu: 'Bộ xử lý NPU',
+    cpuAiPerformanceTops: 'Hiệu năng AI CPU (TOPS)',
+    gpuCard: 'Card đồ họa (GPU)',
+    gpuCores: 'Số nhân GPU',
+    gpuTgp: 'TGP GPU',
+    gpuAiPerformanceTops: 'Hiệu năng AI GPU (TOPS)',
+    ram: 'Dung lượng RAM',
+    ramType: 'Loại RAM',
+    ramBusSpeed: 'Tốc độ Bus RAM',
+    maxRam: 'Hỗ trợ RAM tối đa',
+    storage: 'Ổ cứng (Storage)',
+    screenSize: 'Kích thước màn hình',
+    screenResolution: 'Độ phân giải màn hình',
+    panel: 'Tấm nền màn hình',
+    refreshRate: 'Tần số quét',
+    colorGamut: 'Độ bao phủ màu',
+    touchScreen: 'Màn hình cảm ứng',
+    displayTechnology: 'Công nghệ màn hình',
+    ports: 'Cổng kết nối',
+    wireless: 'Kết nối không dây',
+    webcam: 'Webcam',
+    keyboardBacklight: 'Đèn bàn phím',
+    security: 'Bảo mật',
+    audioTechnology: 'Công nghệ âm thanh',
+    cooling: 'Hệ thống tản nhiệt',
+    otherFeatures: 'Tính năng khác',
+    battery: 'Dung lượng Pin',
+    operatingSystem: 'Hệ điều hành',
+    releaseTime: 'Thời điểm ra mắt',
+    dimensionsWeight: 'Kích thước & Trọng lượng',
+    material: 'Chất liệu chế tạo',
+    memoryCardReader: 'Khe cắm thẻ nhớ'
+  }
+
+  for (const [field, label] of Object.entries(fieldMapping)) {
+    if (item[field] !== undefined && item[field] !== null && String(item[field]).trim() !== '') {
+      let value = item[field];
+      if (field === 'ramBusSpeed' && !String(value).includes('MHz')) {
+        value = `${value} MHz`;
+      } else if (field === 'gpuTgp' && !String(value).includes('W')) {
+        value = `${value} W`;
+      } else if (field === 'screenSize' && !String(value).includes('inch')) {
+        value = `${value} inch`;
+      } else if (field === 'refreshRate' && !String(value).includes('Hz')) {
+        value = `${value} Hz`;
+      }
+      specs[label] = String(value);
+    }
+  }
+
+  return specs;
+}
+
 function ManageProducts() {
   const { showToast, confirm } = useToast();
   const [products, setProducts] = useState([]);
@@ -46,7 +118,7 @@ function ManageProducts() {
       setDetailLoading(false);
     }
   };
-  
+
   // Pagination State
   const [currentPageNum, setCurrentPageNum] = useState(1);
   const itemsPerPage = 8;
@@ -56,7 +128,7 @@ function ManageProducts() {
   const [filterCategory, setFilterCategory] = useState('All');
   const [filterPrice, setFilterPrice] = useState('All');
   const [sortBy, setSortBy] = useState('none');
-  
+
   const [productFormData, setProductFormData] = useState({
     name: '',
     price: '',
@@ -100,15 +172,15 @@ function ManageProducts() {
     setImporting(true);
     try {
       const result = await apiService.products.importExcel(file);
-      
+
       if (result.hasError) {
         const errorList = result.errors
           .map(err => `Dòng ${err.row}, Cột ${err.column}: ${err.message}`)
           .slice(0, 10) // Show up to 10 errors
           .join('\n');
-        
+
         const overflow = result.errors.length > 10 ? `\n... và ${result.errors.length - 10} lỗi khác.` : '';
-        
+
         showToast({
           type: 'warning',
           title: 'Nhập Excel có lỗi',
@@ -122,7 +194,7 @@ function ManageProducts() {
           message: `Đã nhập thành công ${result.data ? result.data.length : 0} sản phẩm mới.`
         });
       }
-      
+
       loadProducts();
     } catch (err) {
       showToast({
@@ -225,13 +297,13 @@ function ManageProducts() {
     const matchesSearch = p.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
       p.brand?.toLowerCase().includes(productSearch.toLowerCase()) ||
       p.category?.toLowerCase().includes(productSearch.toLowerCase());
-    
+
     // 2. Brand Filter
     const matchesBrand = filterBrand === 'All' || p.brand === filterBrand;
-    
+
     // 3. Category Filter
     const matchesCategory = filterCategory === 'All' || p.category === filterCategory;
-    
+
     // 4. Price Filter
     const priceVal = parseFloat(p.price) || 0;
     let matchesPrice = true;
@@ -276,8 +348,8 @@ function ManageProducts() {
             style={{ display: 'none' }}
             onChange={handleExcelImport}
           />
-          <button 
-            className="btn btn-outline-success d-flex align-items-center gap-1 py-2 px-3" 
+          <button
+            className="btn btn-outline-success d-flex align-items-center gap-1 py-2 px-3"
             onClick={() => document.getElementById('excel-file-input').click()}
             disabled={importing}
           >
@@ -288,7 +360,7 @@ function ManageProducts() {
             )}
             {importing ? 'Đang nhập...' : 'Nhập Excel'}
           </button>
-          
+
           <button className="btn btn-primary d-flex align-items-center gap-1 py-2 px-3" onClick={openAddProduct}>
             <Plus size={16} /> Thêm sản phẩm
           </button>
@@ -314,7 +386,7 @@ function ManageProducts() {
 
               {/* Brand Filter */}
               <div style={{ minWidth: '130px' }}>
-                <select 
+                <select
                   className="form-select"
                   value={filterBrand}
                   onChange={(e) => setFilterBrand(e.target.value)}
@@ -334,7 +406,7 @@ function ManageProducts() {
 
               {/* Category Filter */}
               <div style={{ minWidth: '130px' }}>
-                <select 
+                <select
                   className="form-select"
                   value={filterCategory}
                   onChange={(e) => setFilterCategory(e.target.value)}
@@ -350,7 +422,7 @@ function ManageProducts() {
 
               {/* Price Filter */}
               <div style={{ minWidth: '130px' }}>
-                <select 
+                <select
                   className="form-select"
                   value={filterPrice}
                   onChange={(e) => setFilterPrice(e.target.value)}
@@ -366,7 +438,7 @@ function ManageProducts() {
 
               {/* Sorting */}
               <div style={{ minWidth: '130px' }}>
-                <select 
+                <select
                   className="form-select"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
@@ -381,7 +453,7 @@ function ManageProducts() {
 
               {/* Reset Filters Link */}
               {(productSearch || filterBrand !== 'All' || filterCategory !== 'All' || filterPrice !== 'All' || sortBy !== 'none') && (
-                <button 
+                <button
                   className="btn btn-link btn-sm text-decoration-none text-muted"
                   onClick={() => {
                     setProductSearch('');
@@ -412,7 +484,7 @@ function ManageProducts() {
                   <thead>
                     <tr>
                       <th scope="col">ID</th>
-                      <th scope="col">Xem trước</th>
+                      <th scope="col">Ảnh</th>
                       <th scope="col">Tên sản phẩm</th>
                       <th scope="col">Hãng</th>
                       <th scope="col">Danh mục</th>
@@ -669,14 +741,14 @@ function ManageProducts() {
                     {detailProduct.images && detailProduct.images.split(',').length > 1 && (
                       <div className="d-flex gap-2 overflow-x-auto pb-2">
                         {detailProduct.images.split(',').map((imgUrl, idx) => (
-                          <div 
-                            key={idx} 
+                          <div
+                            key={idx}
                             onClick={() => setActiveImageIndex(idx)}
-                            className="p-1 rounded bg-light border d-flex align-items-center justify-content-center" 
-                            style={{ 
-                              width: '50px', 
-                              height: '50px', 
-                              flexShrink: 0, 
+                            className="p-1 rounded bg-light border d-flex align-items-center justify-content-center"
+                            style={{
+                              width: '50px',
+                              height: '50px',
+                              flexShrink: 0,
                               cursor: 'pointer',
                               border: activeImageIndex === idx ? '2px solid #4154f1' : '1px solid #dee2e6'
                             }}
@@ -722,73 +794,12 @@ function ManageProducts() {
                   <h6 className="fw-bold mb-3 text-primary border-bottom pb-2">Thông số kỹ thuật chi tiết</h6>
                   <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
                     {(() => {
-                      const specFields = [
-                        { label: 'Công nghệ CPU', value: detailProduct.cpuTechnology },
-                        { label: 'Số nhân CPU', value: detailProduct.cpuCores },
-                        { label: 'Số luồng CPU', value: detailProduct.cpuThreads },
-                        { label: 'Tốc độ CPU', value: detailProduct.cpuSpeed },
-                        { label: 'Bộ xử lý NPU', value: detailProduct.npu },
-                        { label: 'Hiệu năng AI CPU (TOPS)', value: detailProduct.cpuAiPerformanceTops },
-                        { label: 'Card đồ họa (GPU)', value: detailProduct.gpuCard },
-                        { label: 'Số nhân GPU', value: detailProduct.gpuCores },
-                        { label: 'TGP GPU', value: detailProduct.gpuTgp ? `${detailProduct.gpuTgp} W` : null },
-                        { label: 'Hiệu năng AI GPU (TOPS)', value: detailProduct.gpuAiPerformanceTops },
-                        { label: 'Dung lượng RAM', value: detailProduct.ram },
-                        { label: 'Loại RAM', value: detailProduct.ramType },
-                        { label: 'Tốc độ Bus RAM', value: detailProduct.ramBusSpeed ? `${detailProduct.ramBusSpeed} MHz` : null },
-                        { label: 'Hỗ trợ RAM tối đa', value: detailProduct.maxRam },
-                        { label: 'Ổ cứng (Storage)', value: detailProduct.storage },
-                        { label: 'Kích thước màn hình', value: detailProduct.screenSize ? `${detailProduct.screenSize} inch` : null },
-                        { label: 'Độ phân giải màn hình', value: detailProduct.screenResolution },
-                        { label: 'Tấm nền màn hình', value: detailProduct.panel },
-                        { label: 'Tần số quét', value: detailProduct.refreshRate ? `${detailProduct.refreshRate} Hz` : null },
-                        { label: 'Độ bao phủ màu (Color Gamut)', value: detailProduct.colorGamut },
-                        { label: 'Màn hình cảm ứng', value: detailProduct.touchScreen },
-                        { label: 'Công nghệ màn hình', value: detailProduct.displayTechnology },
-                        { label: 'Cổng kết nối', value: detailProduct.ports },
-                        { label: 'Kết nối không dây', value: detailProduct.wireless },
-                        { label: 'Webcam', value: detailProduct.webcam },
-                        { label: 'Đèn bàn phím', value: detailProduct.keyboardBacklight },
-                        { label: 'Bảo mật', value: detailProduct.security },
-                        { label: 'Công nghệ âm thanh', value: detailProduct.audioTechnology },
-                        { label: 'Hệ thống tản nhiệt', value: detailProduct.cooling },
-                        { label: 'Tính năng khác', value: detailProduct.otherFeatures },
-                        { label: 'Dung lượng Pin', value: detailProduct.battery },
-                        { label: 'Hệ điều hành', value: detailProduct.operatingSystem },
-                        { label: 'Thời điểm ra mắt', value: detailProduct.releaseTime },
-                        { label: 'Kích thước & Trọng lượng', value: detailProduct.dimensionsWeight },
-                        { label: 'Chất liệu chế tạo', value: detailProduct.material },
-                        { label: 'Khe cắm thẻ nhớ', value: detailProduct.memoryCardReader }
-                      ];
+                      // Sử dụng hàm buildSpecs để tự động gộp tất cả các thông số kỹ thuật chi tiết
+                      // (bao gồm cả các cột cơ sở dữ liệu riêng lẻ và thông số tùy biến từ specsJson).
+                      const specs = buildSpecs(detailProduct);
+                      const specsEntries = Object.entries(specs);
 
-                      // Parse specsJson if exists
-                      let jsonSpecs = [];
-                      try {
-                        if (detailProduct.specsJson) {
-                          const parsed = JSON.parse(detailProduct.specsJson);
-                          if (parsed && typeof parsed === 'object') {
-                            jsonSpecs = Object.entries(parsed).map(([key, val]) => ({
-                              label: key,
-                              value: val
-                            }));
-                          }
-                        }
-                      } catch (e) {
-                        console.error("Failed to parse specsJson:", e);
-                      }
-
-                      const standardSpecs = specFields.filter(f => f.value !== null && f.value !== undefined && f.value !== '');
-                      
-                      // Combine standard specs and specs from JSON
-                      const allSpecs = [...standardSpecs];
-                      jsonSpecs.forEach(jsSpec => {
-                        const exists = allSpecs.some(s => s.label.toLowerCase() === jsSpec.label.toLowerCase());
-                        if (!exists && jsSpec.value !== null && jsSpec.value !== undefined && jsSpec.value !== '') {
-                          allSpecs.push(jsSpec);
-                        }
-                      });
-
-                      if (allSpecs.length === 0) {
+                      if (specsEntries.length === 0) {
                         return detailProduct.description ? (
                           <div className="p-3 rounded bg-light border text-dark fs-7" style={{ whiteSpace: 'pre-wrap' }}>
                             {detailProduct.description}
@@ -801,10 +812,10 @@ function ManageProducts() {
                       return (
                         <table className="table table-sm table-striped table-bordered table-hover fs-7 mb-0 text-dark">
                           <tbody>
-                            {allSpecs.map((spec, idx) => (
+                            {specsEntries.map(([key, value], idx) => (
                               <tr key={idx}>
-                                <td className="text-secondary fw-semibold w-40" style={{ fontSize: '0.78rem' }}>{spec.label}</td>
-                                <td style={{ fontSize: '0.78rem', color: '#212529' }}>{String(spec.value)}</td>
+                                <td className="text-secondary fw-semibold w-40" style={{ fontSize: '0.78rem' }}>{key}</td>
+                                <td style={{ fontSize: '0.78rem', color: '#212529' }}>{String(value)}</td>
                               </tr>
                             ))}
                           </tbody>
