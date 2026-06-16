@@ -260,6 +260,14 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct }) => {
                 transition={{ duration: 0.2 }}
                 className="table-responsive"
               >
+                {/* 
+                  PHẦN HIỂN THỊ THÔNG SỐ KỸ THUẬT:
+                  Duyệt qua đối tượng `product.specs` (đã được xử lý gom nhóm và dịch nhãn tiếng Việt 
+                  từ `ProductContext.jsx`) để hiển thị dạng bảng thông tin chi tiết cấu hình (như CPU, GPU, 
+                  RAM, kích thước màn hình, độ phân giải,...). Mỗi thuộc tính là một hàng <tr> gồm:
+                  - Cột 1: Tên thông số kỹ thuật (key)
+                  - Cột 2: Giá trị chi tiết tương ứng (value)
+                */}
                 <table className="table table-dark table-striped table-bordered border-secondary" style={{ backgroundColor: 'var(--bg-card)' }}>
                   <tbody>
                     {Object.entries(product.specs).map(([key, value]) => (
