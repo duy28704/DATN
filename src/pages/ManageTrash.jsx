@@ -90,7 +90,7 @@ const buildSpecs = (item) => {
 }
 
 function ManageTrash() {
-  const { showToast, confirm } = useToast();
+  const { showToast, showConfirm } = useToast();
   const [deletedProducts, setDeletedProducts] = useState([]);
   const [detailProduct, setDetailProduct] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -148,7 +148,7 @@ function ManageTrash() {
   }, [searchQuery, filterBrand, filterCategory, filterPrice, sortBy]);
 
   const handleRestore = async (id, name) => {
-    const confirmed = await confirm({
+    const confirmed = await showConfirm({
       title: 'Khôi phục sản phẩm',
       message: `Bạn có chắc muốn khôi phục sản phẩm "${name}"?`
     });
@@ -163,7 +163,7 @@ function ManageTrash() {
   };
 
   const handlePermanentDelete = async (id, name) => {
-    const confirmed = await confirm({
+    const confirmed = await showConfirm({
       title: 'CẢNH BÁO: Xóa vĩnh viễn',
       message: `Bạn có chắc chắn muốn XÓA VĨNH VIỄN sản phẩm "${name}"? Hành động này không thể hoàn tác!`
     });
@@ -498,8 +498,8 @@ function ManageTrash() {
       
       {/* Product Detail Modal */}
       {detailProduct && (
-        <div className="modal-overlay d-flex align-items-center justify-content-center position-fixed top-0 start-0 w-100 h-100" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }}>
-          <div className="card w-100 m-3 shadow" style={{ maxWidth: '750px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)', background: '#ffffff', color: '#212529' }}>
+        <div className="modal-overlay position-fixed top-0 start-0 w-100 h-100" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060, overflowY: 'auto', padding: '40px 10px' }}>
+          <div className="card w-100 mx-auto shadow" style={{ maxWidth: '750px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)', background: '#ffffff', color: '#212529' }}>
             <div className="card-header d-flex justify-content-between align-items-center bg-light border-bottom py-3" style={{ background: '#f8f9fa' }}>
               <h5 className="mb-0 fw-bold d-flex align-items-center gap-2 text-dark">
                 <span className="badge bg-primary fs-7">{detailProduct.brand}</span>
@@ -507,7 +507,7 @@ function ManageTrash() {
               </h5>
               <button className="btn btn-link p-0 text-muted" onClick={() => setDetailProduct(null)}><X size={20} /></button>
             </div>
-            <div className="card-body p-4" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
+            <div className="card-body p-4">
               <div className="row g-4">
                 {/* Images Section */}
                 <div className="col-md-5">

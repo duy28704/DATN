@@ -12,39 +12,27 @@ export const useToast = () => {
 export const ToastProvider = ({ children }) => {
   const [confirmConfig, setConfirmConfig] = useState(null)
 
-  const showToast = useCallback(({ type = 'success', title, message, image, duration = 3000 }) => {
-    const content = (
-      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-        {image && (
-          <img 
-            src={image} 
-            alt="" 
-            style={{ width: '32px', height: '32px', borderRadius: '4px', objectFit: 'contain', background: '#111', marginRight: '4px' }} 
-          />
-        )}
-        <div>
-          {title && <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{title}</div>}
-          {message && <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)' }}>{message}</div>}
-        </div>
-      </div>
-    )
-
-    const options = { duration }
+  const showToast = useCallback(({ type = 'success', title, message, duration = 3000 }) => {
+    const text = title || message;
+    const options = {
+      duration,
+      description: title ? message : undefined
+    };
 
     if (type === 'success') {
-      toast.success(content, options)
+      toast.success(text, options)
     } else if (type === 'error') {
-      toast.error(content, options)
+      toast.error(text, options)
     } else if (type === 'warning') {
-      toast.warning(content, options)
+      toast.warning(text, options)
     } else if (type === 'info') {
-      toast.info(content, options)
+      toast.info(text, options)
     } else {
-      toast(content, options)
+      toast(text, options)
     }
   }, [])
 
-  const confirm = useCallback(({ title = 'Xác nhận', message = 'Bạn có chắc chắn muốn thực hiện hành động này?' }) => {
+  const showConfirm = useCallback(({ title = 'Xác nhận', message = 'Bạn có chắc chắn muốn thực hiện hành động này?' }) => {
     return new Promise((resolve) => {
       setConfirmConfig({
         title,
@@ -62,7 +50,7 @@ export const ToastProvider = ({ children }) => {
   }, [])
 
   return (
-    <ToastContext.Provider value={{ showToast, removeToast: () => {}, toasts: [], confirm, confirmConfig }}>
+    <ToastContext.Provider value={{ showToast, removeToast: () => {}, toasts: [], showConfirm, confirmConfig }}>
       {children}
     </ToastContext.Provider>
   )

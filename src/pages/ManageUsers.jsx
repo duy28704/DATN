@@ -4,7 +4,7 @@ import { Loader2, Plus, Edit, Trash2, ShieldAlert, Search, X } from 'lucide-reac
 import { useToast } from '../context/ToastContext';
 
 function ManageUsers() {
-  const { showToast, confirm } = useToast();
+  const { showToast, showConfirm } = useToast();
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState('');
@@ -129,7 +129,7 @@ function ManageUsers() {
   };
 
   const deleteUser = async (id) => {
-    const confirmed = await confirm({
+    const confirmed = await showConfirm({
       title: 'Xác nhận xóa người dùng',
       message: 'Bạn có chắc chắn muốn xóa người dùng này?'
     });
@@ -262,14 +262,14 @@ function ManageUsers() {
 
       {/* USER ADD/EDIT MODAL OVERLAY */}
       {showUserModal && (
-        <div className="modal-overlay d-flex align-items-center justify-content-center position-fixed top-0 start-0 w-100 h-100" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
-          <div className="card w-100 m-3 shadow" style={{ maxWidth: '500px', borderRadius: '8px', overflow: 'hidden' }}>
+        <div className="modal-overlay position-fixed top-0 start-0 w-100 h-100" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050, overflowY: 'auto', padding: '40px 10px' }}>
+          <div className="card w-100 mx-auto shadow" style={{ maxWidth: '500px', borderRadius: '8px', overflow: 'hidden' }}>
             <div className="card-header d-flex justify-content-between align-items-center bg-white border-bottom py-3">
               <h5 className="mb-0 fw-bold">{userModalMode === 'add' ? 'Thêm Người Dùng Mới' : 'Cập Nhật Người Dùng'}</h5>
               <button className="btn btn-link p-0 text-muted" onClick={() => setShowUserModal(false)}><X size={20} /></button>
             </div>
             <form onSubmit={handleUserSubmit}>
-              <div className="card-body p-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+              <div className="card-body p-4">
                 {userFormErrors.global && (
                   <div className="alert alert-danger py-2 px-3 fs-7 mb-3 d-flex align-items-center gap-2 border-0 bg-danger bg-opacity-10 text-danger">
                     <ShieldAlert size={16} />

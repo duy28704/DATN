@@ -90,7 +90,7 @@ const buildSpecs = (item) => {
 }
 
 function ManageProducts() {
-  const { showToast, confirm } = useToast();
+  const { showToast, showConfirm } = useToast();
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState('');
@@ -130,7 +130,6 @@ function ManageProducts() {
   const [filterPrice, setFilterPrice] = useState('All');
   const [sortBy, setSortBy] = useState('none');
 
-  const [activeTab, setActiveTab] = useState('general');
   const [productFormData, setProductFormData] = useState({
     name: '',
     price: '',
@@ -296,7 +295,6 @@ function ManageProducts() {
     });
     setProductFormErrors({});
     setProductModalMode('add');
-    setActiveTab('general');
     setShowProductModal(true);
   };
 
@@ -355,7 +353,6 @@ function ManageProducts() {
     });
     setProductFormErrors({});
     setProductModalMode('edit');
-    setActiveTab('general');
     setShowProductModal(true);
   };
 
@@ -370,7 +367,6 @@ function ManageProducts() {
 
     if (Object.keys(errs).length > 0) {
       setProductFormErrors(errs);
-      setActiveTab('general');
       return;
     }
 
@@ -398,7 +394,7 @@ function ManageProducts() {
   };
 
   const deleteProduct = async (id) => {
-    const confirmed = await confirm({
+    const confirmed = await showConfirm({
       title: 'Xác nhận xóa sản phẩm',
       message: 'Bạn có chắc chắn muốn xóa sản phẩm này? Sản phẩm sẽ được chuyển vào Thùng rác.'
     });
@@ -706,14 +702,14 @@ function ManageProducts() {
 
       {/* PRODUCT ADD/EDIT MODAL OVERLAY */}
       {showProductModal && (
-        <div className="modal-overlay d-flex align-items-center justify-content-center position-fixed top-0 start-0 w-100 h-100" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
-          <div className="card w-100 m-3 shadow" style={{ maxWidth: '800px', borderRadius: '8px', overflow: 'hidden' }}>
+        <div className="modal-overlay position-fixed top-0 start-0 w-100 h-100" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050, overflowY: 'auto', padding: '40px 10px' }}>
+          <div className="card w-100 mx-auto shadow" style={{ maxWidth: '800px', borderRadius: '8px', overflow: 'hidden' }}>
             <div className="card-header d-flex justify-content-between align-items-center bg-white border-bottom py-3">
               <h5 className="mb-0 fw-bold">{productModalMode === 'add' ? 'Thêm Sản Phẩm Mới' : 'Cập Nhật Sản Phẩm'}</h5>
               <button className="btn btn-link p-0 text-muted" onClick={() => setShowProductModal(false)}><X size={20} /></button>
             </div>
             <form onSubmit={handleProductSubmit}>
-              <div className="card-body p-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+              <div className="card-body p-4">
                 {productFormErrors.global && (
                   <div className="alert alert-danger py-2 px-3 fs-7 mb-3 d-flex align-items-center gap-2 border-0 bg-danger bg-opacity-10 text-danger">
                     <ShieldAlert size={16} />
@@ -721,590 +717,507 @@ function ManageProducts() {
                   </div>
                 )}
 
-                {/* Tab Navigation */}
-                <ul className="nav nav-pills mb-4 border-bottom pb-2 gap-1" style={{ fontSize: '0.82rem', fontWeight: 500 }}>
-                  <li className="nav-item">
-                    <button
-                      type="button"
-                      className={`nav-link py-2 px-3 ${activeTab === 'general' ? 'active btn-primary' : 'text-secondary bg-transparent'}`}
-                      onClick={() => setActiveTab('general')}
-                      style={{ borderRadius: '6px', transition: 'all 0.2s' }}
-                    >
-                      Chung
-                    </button>
-                  </li>
-                  <li className="nav-item">
-                    <button
-                      type="button"
-                      className={`nav-link py-2 px-3 ${activeTab === 'cpu-gpu' ? 'active btn-primary' : 'text-secondary bg-transparent'}`}
-                      onClick={() => setActiveTab('cpu-gpu')}
-                      style={{ borderRadius: '6px', transition: 'all 0.2s' }}
-                    >
-                      CPU & GPU
-                    </button>
-                  </li>
-                  <li className="nav-item">
-                    <button
-                      type="button"
-                      className={`nav-link py-2 px-3 ${activeTab === 'ram-storage' ? 'active btn-primary' : 'text-secondary bg-transparent'}`}
-                      onClick={() => setActiveTab('ram-storage')}
-                      style={{ borderRadius: '6px', transition: 'all 0.2s' }}
-                    >
-                      RAM & Ổ cứng
-                    </button>
-                  </li>
-                  <li className="nav-item">
-                    <button
-                      type="button"
-                      className={`nav-link py-2 px-3 ${activeTab === 'display' ? 'active btn-primary' : 'text-secondary bg-transparent'}`}
-                      onClick={() => setActiveTab('display')}
-                      style={{ borderRadius: '6px', transition: 'all 0.2s' }}
-                    >
-                      Màn hình
-                    </button>
-                  </li>
-                  <li className="nav-item">
-                    <button
-                      type="button"
-                      className={`nav-link py-2 px-3 ${activeTab === 'connectivity' ? 'active btn-primary' : 'text-secondary bg-transparent'}`}
-                      onClick={() => setActiveTab('connectivity')}
-                      style={{ borderRadius: '6px', transition: 'all 0.2s' }}
-                    >
-                      Kết nối & Tiện ích
-                    </button>
-                  </li>
-                  <li className="nav-item">
-                    <button
-                      type="button"
-                      className={`nav-link py-2 px-3 ${activeTab === 'battery-os' ? 'active btn-primary' : 'text-secondary bg-transparent'}`}
-                      onClick={() => setActiveTab('battery-os')}
-                      style={{ borderRadius: '6px', transition: 'all 0.2s' }}
-                    >
-                      Pin & Hệ điều hành
-                    </button>
-                  </li>
-                </ul>
+                {/* SECTION 1: THÔNG TIN CHUNG */}
+                <h6 className="fw-bold mb-3 text-primary border-bottom pb-2">1. Thông tin chung</h6>
+                <div className="mb-3">
+                  <label className="form-label text-muted fs-7 mb-1 fw-semibold">Tên sản phẩm *</label>
+                  <input
+                    type="text"
+                    required
+                    value={productFormData.name}
+                    onChange={(e) => setProductFormData({ ...productFormData, name: e.target.value })}
+                    className={`form-control ${productFormErrors.name ? 'is-invalid' : ''}`}
+                  />
+                  {productFormErrors.name && <span className="invalid-feedback fs-8">{productFormErrors.name}</span>}
+                </div>
 
-                {/* Tab content */}
-                {activeTab === 'general' && (
-                  <div className="tab-pane-content animate__animated animate__fadeIn">
-                    <div className="mb-3">
-                      <label className="form-label text-muted fs-7 mb-1 fw-semibold">Tên sản phẩm *</label>
-                      <input
-                        type="text"
-                        required
-                        value={productFormData.name}
-                        onChange={(e) => setProductFormData({ ...productFormData, name: e.target.value })}
-                        className={`form-control ${productFormErrors.name ? 'is-invalid' : ''}`}
-                      />
-                      {productFormErrors.name && <span className="invalid-feedback fs-8">{productFormErrors.name}</span>}
-                    </div>
-
-                    <div className="row g-3 mb-3">
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1 fw-semibold">Giá bán ($) *</label>
-                        <input
-                          type="number"
-                          required
-                          value={productFormData.price}
-                          onChange={(e) => setProductFormData({ ...productFormData, price: e.target.value })}
-                          className={`form-control ${productFormErrors.price ? 'is-invalid' : ''}`}
-                        />
-                        {productFormErrors.price && <span className="invalid-feedback fs-8">{productFormErrors.price}</span>}
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1 fw-semibold">Hãng sản xuất</label>
-                        <input
-                          type="text"
-                          value={productFormData.brand}
-                          onChange={(e) => setProductFormData({ ...productFormData, brand: e.target.value })}
-                          className="form-control"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="row g-3 mb-3">
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1 fw-semibold">Danh mục</label>
-                        <select
-                          value={productFormData.category}
-                          onChange={(e) => setProductFormData({ ...productFormData, category: e.target.value })}
-                          className="form-select"
-                        >
-                          <option value="computing">Computing (Máy tính)</option>
-                          <option value="wearables">Wearables (Thiết bị đeo)</option>
-                          <option value="audio">Audio (Thiết bị âm thanh)</option>
-                          <option value="input">Input (Thiết bị nhập liệu)</option>
-                        </select>
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1 fw-semibold">Nhãn hiển thị (Tag)</label>
-                        <select
-                          value={productFormData.tag}
-                          onChange={(e) => setProductFormData({ ...productFormData, tag: e.target.value })}
-                          className="form-select"
-                        >
-                          <option value="New">New</option>
-                          <option value="Hot">Hot</option>
-                          <option value="Bán Chạy">Bán Chạy</option>
-                          <option value="Premium">Premium</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="row g-3 mb-3">
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1 fw-semibold">Đường dẫn ảnh sản phẩm *</label>
-                        <input
-                          type="text"
-                          required
-                          value={productFormData.images}
-                          onChange={(e) => setProductFormData({ ...productFormData, images: e.target.value })}
-                          className={`form-control ${productFormErrors.images ? 'is-invalid' : ''}`}
-                        />
-                        {productFormErrors.images && <span className="invalid-feedback fs-8">{productFormErrors.images}</span>}
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1 fw-semibold">Đường dẫn tĩnh (Link - tự động tạo nếu bỏ trống)</label>
-                        <input
-                          type="text"
-                          value={productFormData.link}
-                          onChange={(e) => setProductFormData({ ...productFormData, link: e.target.value })}
-                          className="form-control"
-                          placeholder="laptop-asus-rog-strix"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="mb-3">
-                      <label className="form-label text-muted fs-7 mb-1 fw-semibold">Mô tả ngắn</label>
-                      <input
-                        type="text"
-                        value={productFormData.shortDescription}
-                        onChange={(e) => setProductFormData({ ...productFormData, shortDescription: e.target.value })}
-                        className="form-control"
-                        placeholder="Mô tả tóm tắt tính năng nổi bật của sản phẩm"
-                      />
-                    </div>
-
-                    <div className="mb-3">
-                      <label className="form-label text-muted fs-7 mb-1 fw-semibold">Mô tả chi tiết</label>
-                      <textarea
-                        rows="4"
-                        value={productFormData.description}
-                        onChange={(e) => setProductFormData({ ...productFormData, description: e.target.value })}
-                        className="form-control"
-                        placeholder="Giới thiệu chi tiết thông tin sản phẩm"
-                      ></textarea>
-                    </div>
+                <div className="row g-3 mb-3">
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1 fw-semibold">Giá bán ($) *</label>
+                    <input
+                      type="number"
+                      required
+                      value={productFormData.price}
+                      onChange={(e) => setProductFormData({ ...productFormData, price: e.target.value })}
+                      className={`form-control ${productFormErrors.price ? 'is-invalid' : ''}`}
+                    />
+                    {productFormErrors.price && <span className="invalid-feedback fs-8">{productFormErrors.price}</span>}
                   </div>
-                )}
-
-                {activeTab === 'cpu-gpu' && (
-                  <div className="tab-pane-content animate__animated animate__fadeIn">
-                    <h6 className="fw-bold mb-3 text-primary border-bottom pb-2">Thông số vi xử lý (CPU)</h6>
-                    <div className="row g-3 mb-4">
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Công nghệ CPU</label>
-                        <input
-                          type="text"
-                          value={productFormData.cpuTechnology}
-                          onChange={(e) => setProductFormData({ ...productFormData, cpuTechnology: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: Intel Core Ultra 7 155H"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Tốc độ CPU</label>
-                        <input
-                          type="text"
-                          value={productFormData.cpuSpeed}
-                          onChange={(e) => setProductFormData({ ...productFormData, cpuSpeed: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: 1.40 GHz (Max 4.8 GHz)"
-                        />
-                      </div>
-                      <div className="col-md-4">
-                        <label className="form-label text-muted fs-7 mb-1">Số nhân</label>
-                        <input
-                          type="text"
-                          value={productFormData.cpuCores}
-                          onChange={(e) => setProductFormData({ ...productFormData, cpuCores: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: 16 nhân"
-                        />
-                      </div>
-                      <div className="col-md-4">
-                        <label className="form-label text-muted fs-7 mb-1">Số luồng</label>
-                        <input
-                          type="text"
-                          value={productFormData.cpuThreads}
-                          onChange={(e) => setProductFormData({ ...productFormData, cpuThreads: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: 22 luồng"
-                        />
-                      </div>
-                      <div className="col-md-4">
-                        <label className="form-label text-muted fs-7 mb-1">Bộ xử lý NPU (AI)</label>
-                        <input
-                          type="text"
-                          value={productFormData.npu}
-                          onChange={(e) => setProductFormData({ ...productFormData, npu: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: Intel AI Boost"
-                        />
-                      </div>
-                      <div className="col-md-12">
-                        <label className="form-label text-muted fs-7 mb-1">Hiệu năng AI CPU (TOPS)</label>
-                        <input
-                          type="text"
-                          value={productFormData.cpuAiPerformanceTops}
-                          onChange={(e) => setProductFormData({ ...productFormData, cpuAiPerformanceTops: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: 11 TOPS"
-                        />
-                      </div>
-                    </div>
-
-                    <h6 className="fw-bold mb-3 text-primary border-bottom pb-2">Thông số đồ họa (GPU)</h6>
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Card đồ họa (GPU)</label>
-                        <input
-                          type="text"
-                          value={productFormData.gpuCard}
-                          onChange={(e) => setProductFormData({ ...productFormData, gpuCard: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: NVIDIA GeForce RTX 4060"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Số nhân GPU</label>
-                        <input
-                          type="text"
-                          value={productFormData.gpuCores}
-                          onChange={(e) => setProductFormData({ ...productFormData, gpuCores: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: 3072 CUDA Cores"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">TGP GPU (W)</label>
-                        <input
-                          type="text"
-                          value={productFormData.gpuTgp}
-                          onChange={(e) => setProductFormData({ ...productFormData, gpuTgp: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: 115 W"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Hiệu năng AI GPU (TOPS)</label>
-                        <input
-                          type="text"
-                          value={productFormData.gpuAiPerformanceTops}
-                          onChange={(e) => setProductFormData({ ...productFormData, gpuAiPerformanceTops: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: 233 TOPS"
-                        />
-                      </div>
-                    </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1 fw-semibold">Hãng sản xuất</label>
+                    <input
+                      type="text"
+                      value={productFormData.brand}
+                      onChange={(e) => setProductFormData({ ...productFormData, brand: e.target.value })}
+                      className="form-control"
+                    />
                   </div>
-                )}
+                </div>
 
-                {activeTab === 'ram-storage' && (
-                  <div className="tab-pane-content animate__animated animate__fadeIn">
-                    <h6 className="fw-bold mb-3 text-primary border-bottom pb-2">Thông tin Bộ nhớ RAM</h6>
-                    <div className="row g-3 mb-4">
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Dung lượng RAM</label>
-                        <input
-                          type="text"
-                          value={productFormData.ram}
-                          onChange={(e) => setProductFormData({ ...productFormData, ram: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: 16 GB"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Loại RAM</label>
-                        <input
-                          type="text"
-                          value={productFormData.ramType}
-                          onChange={(e) => setProductFormData({ ...productFormData, ramType: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: LPDDR5X"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Tốc độ Bus RAM (MHz)</label>
-                        <input
-                          type="text"
-                          value={productFormData.ramBusSpeed}
-                          onChange={(e) => setProductFormData({ ...productFormData, ramBusSpeed: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: 7467 MHz"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Hỗ trợ RAM tối đa</label>
-                        <input
-                          type="text"
-                          value={productFormData.maxRam}
-                          onChange={(e) => setProductFormData({ ...productFormData, maxRam: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: 16 GB (Onboard)"
-                        />
-                      </div>
-                    </div>
-
-                    <h6 className="fw-bold mb-3 text-primary border-bottom pb-2">Thông tin Ổ cứng</h6>
-                    <div className="mb-3">
-                      <label className="form-label text-muted fs-7 mb-1">Ổ cứng (Storage)</label>
-                      <input
-                        type="text"
-                        value={productFormData.storage}
-                        onChange={(e) => setProductFormData({ ...productFormData, storage: e.target.value })}
-                        className="form-control"
-                        placeholder="Ví dụ: 512 GB SSD NVMe PCIe Gen 4"
-                      />
-                    </div>
+                <div className="row g-3 mb-3">
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1 fw-semibold">Danh mục</label>
+                    <select
+                      value={productFormData.category}
+                      onChange={(e) => setProductFormData({ ...productFormData, category: e.target.value })}
+                      className="form-select"
+                    >
+                      <option value="computing">Computing (Máy tính)</option>
+                      <option value="wearables">Wearables (Thiết bị đeo)</option>
+                      <option value="audio">Audio (Thiết bị âm thanh)</option>
+                      <option value="input">Input (Thiết bị nhập liệu)</option>
+                    </select>
                   </div>
-                )}
-
-                {activeTab === 'display' && (
-                  <div className="tab-pane-content animate__animated animate__fadeIn">
-                    <h6 className="fw-bold mb-3 text-primary border-bottom pb-2">Thông số Màn hình</h6>
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Kích thước màn hình</label>
-                        <input
-                          type="text"
-                          value={productFormData.screenSize}
-                          onChange={(e) => setProductFormData({ ...productFormData, screenSize: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: 14 inch"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Độ phân giải</label>
-                        <input
-                          type="text"
-                          value={productFormData.screenResolution}
-                          onChange={(e) => setProductFormData({ ...productFormData, screenResolution: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: 3K (2880 x 1800)"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Tấm nền</label>
-                        <input
-                          type="text"
-                          value={productFormData.panel}
-                          onChange={(e) => setProductFormData({ ...productFormData, panel: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: OLED"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Tần số quét (Hz)</label>
-                        <input
-                          type="text"
-                          value={productFormData.refreshRate}
-                          onChange={(e) => setProductFormData({ ...productFormData, refreshRate: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: 120 Hz"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Độ phủ màu (Color Gamut)</label>
-                        <input
-                          type="text"
-                          value={productFormData.colorGamut}
-                          onChange={(e) => setProductFormData({ ...productFormData, colorGamut: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: 100% DCI-P3"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Màn hình cảm ứng</label>
-                        <input
-                          type="text"
-                          value={productFormData.touchScreen}
-                          onChange={(e) => setProductFormData({ ...productFormData, touchScreen: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: Có / Không"
-                        />
-                      </div>
-                      <div className="col-md-12">
-                        <label className="form-label text-muted fs-7 mb-1">Công nghệ màn hình</label>
-                        <textarea
-                          rows="2"
-                          value={productFormData.displayTechnology}
-                          onChange={(e) => setProductFormData({ ...productFormData, displayTechnology: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: HDR True Black 500, Glossy display, SGS Eye Care, TUV Rheinland certified..."
-                        ></textarea>
-                      </div>
-                    </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1 fw-semibold">Nhãn hiển thị (Tag)</label>
+                    <select
+                      value={productFormData.tag}
+                      onChange={(e) => setProductFormData({ ...productFormData, tag: e.target.value })}
+                      className="form-select"
+                    >
+                      <option value="New">New</option>
+                      <option value="Hot">Hot</option>
+                      <option value="Bán Chạy">Bán Chạy</option>
+                      <option value="Premium">Premium</option>
+                    </select>
                   </div>
-                )}
+                </div>
 
-                {activeTab === 'connectivity' && (
-                  <div className="tab-pane-content animate__animated animate__fadeIn">
-                    <h6 className="fw-bold mb-3 text-primary border-bottom pb-2">Cổng kết nối & Tiện ích</h6>
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Kết nối không dây</label>
-                        <input
-                          type="text"
-                          value={productFormData.wireless}
-                          onChange={(e) => setProductFormData({ ...productFormData, wireless: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: Wi-Fi 6E, Bluetooth 5.3"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Webcam</label>
-                        <input
-                          type="text"
-                          value={productFormData.webcam}
-                          onChange={(e) => setProductFormData({ ...productFormData, webcam: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: FHD IR Camera hỗ trợ Windows Hello"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Đèn bàn phím</label>
-                        <input
-                          type="text"
-                          value={productFormData.keyboardBacklight}
-                          onChange={(e) => setProductFormData({ ...productFormData, keyboardBacklight: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: Đơn sắc trắng / RGB 1 vùng"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Khe đọc thẻ nhớ</label>
-                        <input
-                          type="text"
-                          value={productFormData.memoryCardReader}
-                          onChange={(e) => setProductFormData({ ...productFormData, memoryCardReader: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: MicroSD card reader"
-                        />
-                      </div>
-                      <div className="col-md-12">
-                        <label className="form-label text-muted fs-7 mb-1">Cổng giao tiếp (Ports)</label>
-                        <textarea
-                          rows="2"
-                          value={productFormData.ports}
-                          onChange={(e) => setProductFormData({ ...productFormData, ports: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: 1x Thunderbolt 4, 1x USB 3.2, 1x HDMI 2.1, 1x Jack 3.5mm..."
-                        ></textarea>
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Bảo mật</label>
-                        <input
-                          type="text"
-                          value={productFormData.security}
-                          onChange={(e) => setProductFormData({ ...productFormData, security: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: Chip TPM 2.0, Bảo mật vân tay"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Hệ thống tản nhiệt</label>
-                        <input
-                          type="text"
-                          value={productFormData.cooling}
-                          onChange={(e) => setProductFormData({ ...productFormData, cooling: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: Quạt kép IceBlade, 2 ống dẫn nhiệt"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Công nghệ âm thanh</label>
-                        <input
-                          type="text"
-                          value={productFormData.audioTechnology}
-                          onChange={(e) => setProductFormData({ ...productFormData, audioTechnology: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: Harman Kardon, Dolby Atmos"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Tính năng khác</label>
-                        <input
-                          type="text"
-                          value={productFormData.otherFeatures}
-                          onChange={(e) => setProductFormData({ ...productFormData, otherFeatures: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: Đạt chuẩn độ bền quân đội MIL-STD 810H"
-                        />
-                      </div>
-                    </div>
+                <div className="row g-3 mb-3">
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1 fw-semibold">Đường dẫn ảnh sản phẩm *</label>
+                    <input
+                      type="text"
+                      required
+                      value={productFormData.images}
+                      onChange={(e) => setProductFormData({ ...productFormData, images: e.target.value })}
+                      className={`form-control ${productFormErrors.images ? 'is-invalid' : ''}`}
+                    />
+                    {productFormErrors.images && <span className="invalid-feedback fs-8">{productFormErrors.images}</span>}
                   </div>
-                )}
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1 fw-semibold">Đường dẫn tĩnh (Link - tự động tạo nếu bỏ trống)</label>
+                    <input
+                      type="text"
+                      value={productFormData.link}
+                      onChange={(e) => setProductFormData({ ...productFormData, link: e.target.value })}
+                      className="form-control"
+                      placeholder="laptop-asus-rog-strix"
+                    />
+                  </div>
+                </div>
 
-                {activeTab === 'battery-os' && (
-                  <div className="tab-pane-content animate__animated animate__fadeIn">
-                    <h6 className="fw-bold mb-3 text-primary border-bottom pb-2">Pin & Hệ điều hành</h6>
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Thông tin Pin</label>
-                        <input
-                          type="text"
-                          value={productFormData.battery}
-                          onChange={(e) => setProductFormData({ ...productFormData, battery: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: 3-cell Li-ion, 75 Wh"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Hệ điều hành</label>
-                        <input
-                          type="text"
-                          value={productFormData.operatingSystem}
-                          onChange={(e) => setProductFormData({ ...productFormData, operatingSystem: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: Windows 11 Home"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Thời điểm ra mắt</label>
-                        <input
-                          type="text"
-                          value={productFormData.releaseTime}
-                          onChange={(e) => setProductFormData({ ...productFormData, releaseTime: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: 2024"
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-muted fs-7 mb-1">Kích thước & Trọng lượng</label>
-                        <input
-                          type="text"
-                          value={productFormData.dimensionsWeight}
-                          onChange={(e) => setProductFormData({ ...productFormData, dimensionsWeight: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: 31.2 x 22.0 x 1.49 cm - 1.2 kg"
-                        />
-                      </div>
-                      <div className="col-md-12">
-                        <label className="form-label text-muted fs-7 mb-1">Chất liệu vỏ</label>
-                        <input
-                          type="text"
-                          value={productFormData.material}
-                          onChange={(e) => setProductFormData({ ...productFormData, material: e.target.value })}
-                          className="form-control"
-                          placeholder="Ví dụ: Vỏ nhôm nguyên khối"
-                        />
-                      </div>
-                    </div>
+                <div className="mb-3">
+                  <label className="form-label text-muted fs-7 mb-1 fw-semibold">Mô tả ngắn</label>
+                  <input
+                    type="text"
+                    value={productFormData.shortDescription}
+                    onChange={(e) => setProductFormData({ ...productFormData, shortDescription: e.target.value })}
+                    className="form-control"
+                    placeholder="Mô tả tóm tắt tính năng nổi bật"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="form-label text-muted fs-7 mb-1 fw-semibold">Mô tả chi tiết</label>
+                  <textarea
+                    rows="3"
+                    value={productFormData.description}
+                    onChange={(e) => setProductFormData({ ...productFormData, description: e.target.value })}
+                    className="form-control"
+                    placeholder="Giới thiệu đầy đủ chi tiết sản phẩm"
+                  ></textarea>
+                </div>
+
+                {/* SECTION 2: BỘ VI XỬ LÝ (CPU) */}
+                <h6 className="fw-bold mb-3 text-primary border-bottom pb-2">2. Bộ vi xử lý (CPU)</h6>
+                <div className="row g-3 mb-4">
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Công nghệ CPU</label>
+                    <input
+                      type="text"
+                      value={productFormData.cpuTechnology}
+                      onChange={(e) => setProductFormData({ ...productFormData, cpuTechnology: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: Intel Core Ultra 7 155H"
+                    />
                   </div>
-                )}
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Tốc độ CPU</label>
+                    <input
+                      type="text"
+                      value={productFormData.cpuSpeed}
+                      onChange={(e) => setProductFormData({ ...productFormData, cpuSpeed: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: 1.40 GHz (Max 4.8 GHz)"
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label text-muted fs-7 mb-1">Số nhân</label>
+                    <input
+                      type="text"
+                      value={productFormData.cpuCores}
+                      onChange={(e) => setProductFormData({ ...productFormData, cpuCores: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: 16 nhân"
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label text-muted fs-7 mb-1">Số luồng</label>
+                    <input
+                      type="text"
+                      value={productFormData.cpuThreads}
+                      onChange={(e) => setProductFormData({ ...productFormData, cpuThreads: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: 22 luồng"
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label text-muted fs-7 mb-1">Bộ xử lý NPU (AI)</label>
+                    <input
+                      type="text"
+                      value={productFormData.npu}
+                      onChange={(e) => setProductFormData({ ...productFormData, npu: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: Intel AI Boost"
+                    />
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label text-muted fs-7 mb-1">Hiệu năng AI CPU (TOPS)</label>
+                    <input
+                      type="text"
+                      value={productFormData.cpuAiPerformanceTops}
+                      onChange={(e) => setProductFormData({ ...productFormData, cpuAiPerformanceTops: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: 11 TOPS"
+                    />
+                  </div>
+                </div>
+
+                {/* SECTION 3: ĐỒ HỌA (GPU) */}
+                <h6 className="fw-bold mb-3 text-primary border-bottom pb-2">3. Đồ họa (GPU)</h6>
+                <div className="row g-3 mb-4">
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Card đồ họa (GPU)</label>
+                    <input
+                      type="text"
+                      value={productFormData.gpuCard}
+                      onChange={(e) => setProductFormData({ ...productFormData, gpuCard: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: NVIDIA GeForce RTX 4060"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Số nhân GPU</label>
+                    <input
+                      type="text"
+                      value={productFormData.gpuCores}
+                      onChange={(e) => setProductFormData({ ...productFormData, gpuCores: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: 3072 CUDA Cores"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">TGP GPU (W)</label>
+                    <input
+                      type="text"
+                      value={productFormData.gpuTgp}
+                      onChange={(e) => setProductFormData({ ...productFormData, gpuTgp: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: 115 W"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Hiệu năng AI GPU (TOPS)</label>
+                    <input
+                      type="text"
+                      value={productFormData.gpuAiPerformanceTops}
+                      onChange={(e) => setProductFormData({ ...productFormData, gpuAiPerformanceTops: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: 233 TOPS"
+                    />
+                  </div>
+                </div>
+
+                {/* SECTION 4: BỘ NHỚ RAM & LƯU TRỮ */}
+                <h6 className="fw-bold mb-3 text-primary border-bottom pb-2">4. Bộ nhớ RAM & Lưu trữ</h6>
+                <div className="row g-3 mb-4">
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Dung lượng RAM</label>
+                    <input
+                      type="text"
+                      value={productFormData.ram}
+                      onChange={(e) => setProductFormData({ ...productFormData, ram: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: 16 GB"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Loại RAM</label>
+                    <input
+                      type="text"
+                      value={productFormData.ramType}
+                      onChange={(e) => setProductFormData({ ...productFormData, ramType: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: LPDDR5X"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Tốc độ Bus RAM (MHz)</label>
+                    <input
+                      type="text"
+                      value={productFormData.ramBusSpeed}
+                      onChange={(e) => setProductFormData({ ...productFormData, ramBusSpeed: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: 7467 MHz"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Hỗ trợ RAM tối đa</label>
+                    <input
+                      type="text"
+                      value={productFormData.maxRam}
+                      onChange={(e) => setProductFormData({ ...productFormData, maxRam: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: 16 GB (Onboard)"
+                    />
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label text-muted fs-7 mb-1">Ổ cứng (Storage)</label>
+                    <input
+                      type="text"
+                      value={productFormData.storage}
+                      onChange={(e) => setProductFormData({ ...productFormData, storage: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: 512 GB SSD NVMe PCIe Gen 4"
+                    />
+                  </div>
+                </div>
+
+                {/* SECTION 5: MÀN HÌNH */}
+                <h6 className="fw-bold mb-3 text-primary border-bottom pb-2">5. Màn hình</h6>
+                <div className="row g-3 mb-4">
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Kích thước màn hình</label>
+                    <input
+                      type="text"
+                      value={productFormData.screenSize}
+                      onChange={(e) => setProductFormData({ ...productFormData, screenSize: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: 14 inch"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Độ phân giải</label>
+                    <input
+                      type="text"
+                      value={productFormData.screenResolution}
+                      onChange={(e) => setProductFormData({ ...productFormData, screenResolution: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: 3K (2880 x 1800)"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Tấm nền</label>
+                    <input
+                      type="text"
+                      value={productFormData.panel}
+                      onChange={(e) => setProductFormData({ ...productFormData, panel: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: OLED"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Tần số quét (Hz)</label>
+                    <input
+                      type="text"
+                      value={productFormData.refreshRate}
+                      onChange={(e) => setProductFormData({ ...productFormData, refreshRate: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: 120 Hz"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Độ phủ màu (Color Gamut)</label>
+                    <input
+                      type="text"
+                      value={productFormData.colorGamut}
+                      onChange={(e) => setProductFormData({ ...productFormData, colorGamut: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: 100% DCI-P3"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Màn hình cảm ứng</label>
+                    <input
+                      type="text"
+                      value={productFormData.touchScreen}
+                      onChange={(e) => setProductFormData({ ...productFormData, touchScreen: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: Có / Không"
+                    />
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label text-muted fs-7 mb-1">Công nghệ màn hình</label>
+                    <textarea
+                      rows="2"
+                      value={productFormData.displayTechnology}
+                      onChange={(e) => setProductFormData({ ...productFormData, displayTechnology: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: HDR True Black 500, Glossy display, SGS Eye Care..."
+                    ></textarea>
+                  </div>
+                </div>
+
+                {/* SECTION 6: CỔNG KẾT NỐI & TIỆN ÍCH */}
+                <h6 className="fw-bold mb-3 text-primary border-bottom pb-2">6. Cổng kết nối & Tiện ích</h6>
+                <div className="row g-3 mb-4">
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Kết nối không dây</label>
+                    <input
+                      type="text"
+                      value={productFormData.wireless}
+                      onChange={(e) => setProductFormData({ ...productFormData, wireless: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: Wi-Fi 6E, Bluetooth 5.3"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Webcam</label>
+                    <input
+                      type="text"
+                      value={productFormData.webcam}
+                      onChange={(e) => setProductFormData({ ...productFormData, webcam: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: FHD IR Camera hỗ trợ Windows Hello"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Đèn bàn phím</label>
+                    <input
+                      type="text"
+                      value={productFormData.keyboardBacklight}
+                      onChange={(e) => setProductFormData({ ...productFormData, keyboardBacklight: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: Đơn sắc trắng / RGB 1 vùng"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Khe đọc thẻ nhớ</label>
+                    <input
+                      type="text"
+                      value={productFormData.memoryCardReader}
+                      onChange={(e) => setProductFormData({ ...productFormData, memoryCardReader: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: MicroSD card reader"
+                    />
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label text-muted fs-7 mb-1">Cổng giao tiếp (Ports)</label>
+                    <textarea
+                      rows="2"
+                      value={productFormData.ports}
+                      onChange={(e) => setProductFormData({ ...productFormData, ports: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: 1x Thunderbolt 4, 1x USB 3.2, 1x HDMI 2.1, 1x Jack 3.5mm..."
+                    ></textarea>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Bảo mật</label>
+                    <input
+                      type="text"
+                      value={productFormData.security}
+                      onChange={(e) => setProductFormData({ ...productFormData, security: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: Chip TPM 2.0, Bảo mật vân tay"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Hệ thống tản nhiệt</label>
+                    <input
+                      type="text"
+                      value={productFormData.cooling}
+                      onChange={(e) => setProductFormData({ ...productFormData, cooling: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: Quạt kép IceBlade, 2 ống dẫn nhiệt"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Công nghệ âm thanh</label>
+                    <input
+                      type="text"
+                      value={productFormData.audioTechnology}
+                      onChange={(e) => setProductFormData({ ...productFormData, audioTechnology: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: Harman Kardon, Dolby Atmos"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Tính năng khác</label>
+                    <input
+                      type="text"
+                      value={productFormData.otherFeatures}
+                      onChange={(e) => setProductFormData({ ...productFormData, otherFeatures: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: Đạt chuẩn độ bền quân đội MIL-STD 810H"
+                    />
+                  </div>
+                </div>
+
+                {/* SECTION 7: PIN & HỆ ĐIỀU HÀNH */}
+                <h6 className="fw-bold mb-3 text-primary border-bottom pb-2">7. Pin & Hệ điều hành</h6>
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Thông tin Pin</label>
+                    <input
+                      type="text"
+                      value={productFormData.battery}
+                      onChange={(e) => setProductFormData({ ...productFormData, battery: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: 3-cell Li-ion, 75 Wh"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Hệ điều hành</label>
+                    <input
+                      type="text"
+                      value={productFormData.operatingSystem}
+                      onChange={(e) => setProductFormData({ ...productFormData, operatingSystem: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: Windows 11 Home"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Thời điểm ra mắt</label>
+                    <input
+                      type="text"
+                      value={productFormData.releaseTime}
+                      onChange={(e) => setProductFormData({ ...productFormData, releaseTime: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: 2024"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1">Kích thước & Trọng lượng</label>
+                    <input
+                      type="text"
+                      value={productFormData.dimensionsWeight}
+                      onChange={(e) => setProductFormData({ ...productFormData, dimensionsWeight: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: 31.2 x 22.0 x 1.49 cm - 1.2 kg"
+                    />
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label text-muted fs-7 mb-1">Chất liệu vỏ</label>
+                    <input
+                      type="text"
+                      value={productFormData.material}
+                      onChange={(e) => setProductFormData({ ...productFormData, material: e.target.value })}
+                      className="form-control"
+                      placeholder="Ví dụ: Vỏ nhôm nguyên khối"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="card-footer d-flex justify-content-end gap-2 bg-light py-3 border-top px-4">
@@ -1322,8 +1235,8 @@ function ManageProducts() {
 
       {/* Product Detail Modal */}
       {detailProduct && (
-        <div className="modal-overlay d-flex align-items-center justify-content-center position-fixed top-0 start-0 w-100 h-100" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }}>
-          <div className="card w-100 m-3 shadow" style={{ maxWidth: '750px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)', background: '#ffffff', color: '#212529' }}>
+        <div className="modal-overlay position-fixed top-0 start-0 w-100 h-100" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060, overflowY: 'auto', padding: '40px 10px' }}>
+          <div className="card w-100 mx-auto shadow" style={{ maxWidth: '750px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)', background: '#ffffff', color: '#212529' }}>
             <div className="card-header d-flex justify-content-between align-items-center bg-light border-bottom py-3" style={{ background: '#f8f9fa' }}>
               <h5 className="mb-0 fw-bold d-flex align-items-center gap-2 text-dark">
                 <span className="badge bg-primary fs-7">{detailProduct.brand}</span>
@@ -1331,7 +1244,7 @@ function ManageProducts() {
               </h5>
               <button className="btn btn-link p-0 text-muted" onClick={() => setDetailProduct(null)}><X size={20} /></button>
             </div>
-            <div className="card-body p-4" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
+            <div className="card-body p-4">
               <div className="row g-4">
                 {/* Images Section */}
                 <div className="col-md-5">

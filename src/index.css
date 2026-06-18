@@ -671,3 +671,17 @@ body.toggle-sidebar .sidebar {
 .admin-dashboard-layout .sidebar-nav .nav-link.collapsed i {
   color: #899bbd !important;
 }
+
+/* Fix visibility of Toast and Confirm dialog inside Admin Dashboard */
+.admin-dashboard-layout [data-sonner-toast] * {
+  color: inherit !important;
+}
+.admin-dashboard-layout .nexus-confirm-modal * {
+  color: #ffffff !important;
+}
+.admin-dashboard-layout .nexus-confirm-modal button {
+  color: #ffffff !important;
+}
+.admin-dashboard-layout .nexus-confirm-modal button:first-child {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
