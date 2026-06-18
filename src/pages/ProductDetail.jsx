@@ -1,5 +1,5 @@
 import { useState, useContext } from 'react'
-import { ProductContext } from '../context/ProductContext'
+import { ProductContext, formatDisplayPrice } from '../context/ProductContext'
 import { CartContext } from '../context/CartContext'
 import ProductCard from '../components/ProductCard'
 import SEO from '../components/SEO'
@@ -159,9 +159,8 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct }) => {
                 <span className="text-secondary" style={{ fontSize: '0.8rem' }}>({product.reviewCount} Đánh giá khách hàng)</span>
               </div>
 
-              {/* Price display */}
               <div className="fs-3 text-white fw-bold mb-4 display-font">
-                ${product.price.toLocaleString()}
+                {formatDisplayPrice(product.price, product.displayPrice)}
               </div>
 
               {/* Description body */}

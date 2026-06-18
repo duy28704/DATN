@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CreditCard, CheckCircle, ChevronDown, ChevronUp, Landmark, ShieldAlert, Phone, User, Mail, Calendar, Calculator } from 'lucide-react';
-import { ProductContext } from '../context/ProductContext';
+import { ProductContext, formatDisplayPrice } from '../context/ProductContext';
 import { AuthContext } from '../context/AuthContext';
 import { apiService, validators } from '../services/api';
 
@@ -259,7 +259,7 @@ const Installments = ({ setCurrentPage }) => {
                 style={{ height: '50px' }}
               >
                 {products.map(p => (
-                  <option key={p.id} value={p.id}>{p.name} — ${p.price.toLocaleString()}</option>
+                  <option key={p.id} value={p.id}>{p.name} — {formatDisplayPrice(p.price, p.displayPrice)}</option>
                 ))}
               </select>
             </div>
@@ -296,7 +296,7 @@ const Installments = ({ setCurrentPage }) => {
               <div className="d-flex justify-content-between mb-2">
                 <label className="form-label text-secondary fs-7 uppercase tracking-wider mb-0">3. Số tiền trả trước ({downPaymentPct}%)</label>
                 <span className="text-danger fw-bold display-font">
-                  ${((downPaymentPct / 100) * (selectedProduct?.price || 0)).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  {((downPaymentPct / 100) * (selectedProduct?.price || 0)).toLocaleString('vi-VN', { maximumFractionDigits: 0 })} ₫
                 </span>
               </div>
               <input 
@@ -389,15 +389,15 @@ const Installments = ({ setCurrentPage }) => {
 
                 <div className="d-flex justify-content-between mb-3 border-bottom border-secondary border-opacity-10 pb-2">
                   <span className="text-secondary fs-7">Giá trị sản phẩm:</span>
-                  <span className="text-white fw-semibold display-font">${selectedProduct.price.toLocaleString()}</span>
+                  <span className="text-white fw-semibold display-font">{formatDisplayPrice(selectedProduct.price, selectedProduct.displayPrice)}</span>
                 </div>
                 <div className="d-flex justify-content-between mb-3 border-bottom border-secondary border-opacity-10 pb-2">
                   <span className="text-secondary fs-7">Số tiền trả trước ({downPaymentPct}%):</span>
-                  <span className="text-white fw-semibold display-font">${results.downPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                  <span className="text-white fw-semibold display-font">{results.downPayment.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} ₫</span>
                 </div>
                 <div className="d-flex justify-content-between mb-3 border-bottom border-secondary border-opacity-10 pb-2">
                   <span className="text-secondary fs-7">Số tiền cần vay ngân hàng:</span>
-                  <span className="text-white fw-semibold display-font">${results.loanAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                  <span className="text-white fw-semibold display-font">{results.loanAmount.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} ₫</span>
                 </div>
                 <div className="d-flex justify-content-between mb-3 border-bottom border-secondary border-opacity-10 pb-2">
                   <span className="text-secondary fs-7">Lãi suất vay áp dụng:</span>
@@ -411,7 +411,7 @@ const Installments = ({ setCurrentPage }) => {
                 </div>
                 <div className="d-flex justify-content-between mb-4 pb-2">
                   <span className="text-secondary fs-7">Tổng lãi phải trả:</span>
-                  <span className="text-white fw-semibold display-font">${results.totalInterest.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                  <span className="text-white fw-semibold display-font">{results.totalInterest.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} ₫</span>
                 </div>
 
                 <div className="p-3 rounded mb-4 text-center" style={{ backgroundColor: 'rgba(255,0,60,0.05)', border: '1px solid var(--accent-red-dim)' }}>
@@ -419,7 +419,7 @@ const Installments = ({ setCurrentPage }) => {
                     {selectedPackage === 'niendim' ? 'TRẢ GÓP HÀNG THÁNG CỐ ĐỊNH' : 'TRẢ HÀNG THÁNG (THÁNG ĐẦU)'}
                   </span>
                   <span className="text-danger fw-extrabold display-font fs-3">
-                    ${results.monthlyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    {results.monthlyPayment.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} ₫
                   </span>
                   <span className="text-muted fs-8 d-block mt-1" style={{ fontSize: '0.7rem' }}>
                     *Gồm nợ gốc cố định + tiền lãi tháng đầu
@@ -580,11 +580,11 @@ const Installments = ({ setCurrentPage }) => {
                     {results.schedule.map((row) => (
                       <tr key={row.month} className="border-bottom border-secondary border-opacity-10 hover-bg-dark">
                         <td className="py-3 fw-bold display-font text-danger">Tháng {row.month}</td>
-                        <td className="py-3 text-end display-font">${row.startBalance.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                        <td className="py-3 text-end display-font text-white">${row.principal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                        <td className="py-3 text-end display-font text-warning">${row.interest.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                        <td className="py-3 text-end display-font fw-bold text-success">${row.total.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                        <td className="py-3 text-end display-font">${row.endBalance.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                        <td className="py-3 text-end display-font">{row.startBalance.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} ₫</td>
+                        <td className="py-3 text-end display-font text-white">{row.principal.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} ₫</td>
+                        <td className="py-3 text-end display-font text-warning">{row.interest.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} ₫</td>
+                        <td className="py-3 text-end display-font fw-bold text-success">{row.total.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} ₫</td>
+                        <td className="py-3 text-end display-font">{row.endBalance.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} ₫</td>
                       </tr>
                     ))}
                   </tbody>

@@ -558,7 +558,7 @@ const Login = ({ setCurrentPage }) => {
                                     </div>
 
                                     <div className="d-flex align-items-center gap-3">
-                                      <span className="fs-7 text-white fw-bold display-font">${order.total.toLocaleString()}</span>
+                                      <span className="fs-7 text-white fw-bold display-font">{order.total.toLocaleString('vi-VN')} ₫</span>
                                       <span className={`badge py-2 px-3 rounded-pill fs-8 ${getStatusBadgeClass(order.status)}`}>
                                         {order.status}
                                       </span>
@@ -630,9 +630,9 @@ const Login = ({ setCurrentPage }) => {
                                               <p className="text-danger fw-semibold mb-2 uppercase tracking-wider">Thanh toán</p>
                                               <p className="mb-1">Phương thức: <span className="text-white fw-medium">{translatePayment(order.paymentMethod)}</span></p>
                                               {order.paymentCardInfo && <p className="mb-1">Thẻ: <span className="text-white fw-medium">{order.paymentCardInfo}</span></p>}
-                                              <p className="mb-1">Tạm tính: <span className="text-white display-font">${order.subtotal.toLocaleString()}</span></p>
-                                              <p className="mb-1">Phí vận chuyển: <span className="text-white display-font">{order.shipping === 0 ? 'Miễn phí' : `$${order.shipping.toLocaleString()}`}</span></p>
-                                              <p className="mb-0 text-white">Tổng cộng: <span className="text-danger fw-bold display-font fs-7">${order.total.toLocaleString()}</span></p>
+                                              <p className="mb-1">Tạm tính: <span className="text-white display-font">{order.subtotal.toLocaleString('vi-VN')} ₫</span></p>
+                                              <p className="mb-1">Phí vận chuyển: <span className="text-white display-font">{order.shipping === 0 ? 'Miễn phí' : `${order.shipping.toLocaleString('vi-VN')} ₫`}</span></p>
+                                              <p className="mb-0 text-white">Tổng cộng: <span className="text-danger fw-bold display-font fs-7">{order.total.toLocaleString('vi-VN')} ₫</span></p>
                                             </div>
                                           </div>
 
@@ -654,7 +654,7 @@ const Login = ({ setCurrentPage }) => {
                                                     <span className="text-secondary" style={{ fontSize: '0.7rem' }}>Màu: {item.selectedColor}</span>
                                                   </div>
                                                 </div>
-                                                <span className="text-white fs-8 display-font">{item.quantity} x ${item.price.toLocaleString()}</span>
+                                                <span className="text-white fs-8 display-font">{item.quantity} x {item.price.toLocaleString('vi-VN')} ₫</span>
                                               </div>
                                             ))}
                                           </div>
@@ -713,7 +713,7 @@ const Login = ({ setCurrentPage }) => {
                                   <div className="col-12 col-sm-6">
                                     <p className="text-danger fw-semibold mb-2 uppercase tracking-wider">Thông tin sản phẩm</p>
                                     <p className="text-white fw-medium mb-1">{req.productName}</p>
-                                    <p className="mb-1">Giá bán: <span className="text-white display-font">${req.price.toLocaleString()}</span></p>
+                                    <p className="mb-1">Giá bán: <span className="text-white display-font">{req.price.toLocaleString('vi-VN')} ₫</span></p>
                                     <p className="mb-0">Đăng ký tư vấn bởi: <span className="text-white fw-medium">{req.customerName} - {req.phone}</span></p>
                                   </div>
 
@@ -722,7 +722,7 @@ const Login = ({ setCurrentPage }) => {
                                     <p className="mb-1">Chương trình vay: <span className="text-white">{req.packageName}</span></p>
                                     <p className="mb-1">Ngân hàng liên kết: <span className="text-white fw-medium">{req.bankName}</span></p>
                                     <p className="mb-1">Kỳ hạn chọn vay: <span className="text-white">{req.loanTerm} tháng</span></p>
-                                    <p className="mb-0 text-white">Số tiền trả hàng tháng: <span className="text-danger fw-bold display-font fs-7">${req.monthlyEstimate.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span></p>
+                                    <p className="mb-0 text-white">Số tiền trả hàng tháng: <span className="text-danger fw-bold display-font fs-7">{req.monthlyEstimate.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} ₫</span></p>
                                   </div>
                                 </div>
                                 

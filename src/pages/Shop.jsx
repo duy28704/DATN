@@ -1,4 +1,4 @@
-import { useState, useMemo, useContext } from 'react'
+import { useState, useMemo, useContext, useEffect } from 'react'
 import { ProductContext } from '../context/ProductContext'
 import ProductCard from '../components/ProductCard'
 import SEO from '../components/SEO'
@@ -19,6 +19,12 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
     if (params.get('cat')) selectedCat = params.get('cat')
     if (params.get('search')) searchQuery = params.get('search')
   }
+
+  const [visibleCount, setVisibleCount] = useState(6)
+
+  useEffect(() => {
+    setVisibleCount(6)
+  }, [selectedCat, searchQuery, sortOption])
 
   // Filter and sort mechanism
   const filteredProducts = useMemo(() => {
@@ -48,7 +54,11 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
     }
 
     return result
-  }, [selectedCat, searchQuery, sortOption])
+  }, [selectedCat, searchQuery, sortOption, products])
+
+  const displayedProducts = useMemo(() => {
+    return filteredProducts.slice(0, visibleCount)
+  }, [filteredProducts, visibleCount])
 
   const handleResetFilters = () => {
     setSortOption('featured')
@@ -155,25 +165,38 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
             </button>
           </div>
         ) : (
-          <motion.div 
-            layout 
-            className="row g-4"
-          >
-            <AnimatePresence mode="popLayout">
-              {filteredProducts.map((product) => (
-                <div 
-                  key={product.id} 
-                  className="col-12 col-sm-6 col-md-4"
+          <>
+            <motion.div 
+              layout 
+              className="row g-4"
+            >
+              <AnimatePresence mode="popLayout">
+                {displayedProducts.map((product) => (
+                  <div 
+                    key={product.id} 
+                    className="col-12 col-sm-6 col-md-4"
+                  >
+                    <ProductCard
+                      product={product}
+                      onSelectProduct={onSelectProduct}
+                      setCurrentPage={setCurrentPage}
+                    />
+                  </div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
+
+            {visibleCount < filteredProducts.length && (
+              <div className="text-center mt-5">
+                <button 
+                  className="btn btn-danger btn-lg px-5 py-3 glow-btn"
+                  onClick={() => setVisibleCount(prev => prev + 6)}
                 >
-                  <ProductCard
-                    product={product}
-                    onSelectProduct={onSelectProduct}
-                    setCurrentPage={setCurrentPage}
-                  />
-                </div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
+                  Xem thêm
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </>

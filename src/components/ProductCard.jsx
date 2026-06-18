@@ -2,6 +2,7 @@ import { useContext } from 'react'
 import { CartContext } from '../context/CartContext'
 import { Star, ShoppingCart, Eye } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { formatDisplayPrice } from '../context/ProductContext'
 
 const ProductCard = ({ product, onSelectProduct, setCurrentPage }) => {
   const { addToCart } = useContext(CartContext)
@@ -75,7 +76,7 @@ const ProductCard = ({ product, onSelectProduct, setCurrentPage }) => {
         {/* Price and Action Buttons */}
         <div className="mt-auto d-flex align-items-center justify-content-between">
           <span className="fs-5 fw-bold text-white display-font">
-            ${product.price.toLocaleString()}
+            {formatDisplayPrice(product.price, product.displayPrice)}
           </span>
           <div className="d-flex gap-2">
             <button 

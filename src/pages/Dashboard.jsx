@@ -110,7 +110,7 @@ function Dashboard() {
                       <div className="col-md-4">
                         <div className="p-3 bg-light rounded border text-center">
                           <span className="text-muted fs-8 d-block mb-1">GIÁ BÁN TRUNG BÌNH</span>
-                          <strong className="fs-3 text-danger">${Number(avgPrice).toLocaleString()}</strong>
+                          <strong className="fs-3 text-danger">{Number(avgPrice).toLocaleString('vi-VN')} ₫</strong>
                           <span className="d-block text-muted fs-9 mt-1">trên mỗi thiết bị</span>
                         </div>
                       </div>
@@ -120,7 +120,7 @@ function Dashboard() {
                           <strong className="fs-6 text-dark d-block text-truncate" title={mostExpensiveProduct?.name || 'N/A'}>
                             {mostExpensiveProduct ? mostExpensiveProduct.name : 'N/A'}
                           </strong>
-                          <span className="text-danger fw-bold fs-7">${mostExpensiveProduct ? Number(mostExpensiveProduct.price).toLocaleString() : '0'}</span>
+                          <span className="text-danger fw-bold fs-7">{mostExpensiveProduct ? (mostExpensiveProduct.displayPrice || `${Number(mostExpensiveProduct.price).toLocaleString('vi-VN')} ₫`) : '0'}</span>
                         </div>
                       </div>
                     </div>

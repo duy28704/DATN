@@ -244,7 +244,7 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage }) => {
                           </div>
 
                           {/* Price */}
-                          <span className="fs-7 fw-bold display-font">${(item.price * item.quantity).toLocaleString()}</span>
+                          <span className="fs-7 fw-bold display-font">{(item.price * item.quantity).toLocaleString('vi-VN')} ₫</span>
                         </div>
                       </div>
                       
@@ -267,23 +267,23 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage }) => {
               <div className="p-4" style={{ backgroundColor: 'rgba(0,0,0,0.2)', borderTop: '1px solid var(--border-color)' }}>
                 <div className="d-flex justify-content-between mb-2">
                   <span className="text-secondary fs-7">Tạm tính:</span>
-                  <span className="text-white fw-medium display-font">${cartSubtotal.toLocaleString()}</span>
+                  <span className="text-white fw-medium display-font">{cartSubtotal.toLocaleString('vi-VN')} ₫</span>
                 </div>
                 <div className="d-flex justify-content-between mb-2">
                   <span className="text-secondary fs-7">Vận chuyển:</span>
                   <span className="text-white fw-medium display-font">
-                    {cartShipping === 0 ? 'Miễn phí' : `$${cartShipping.toLocaleString()}`}
+                    {cartShipping === 0 ? 'Miễn phí' : `${cartShipping.toLocaleString('vi-VN')} ₫`}
                   </span>
                 </div>
                 {cartShipping > 0 && (
                   <p className="fs-8 text-secondary mb-3" style={{ fontSize: '0.75rem' }}>
-                    *Miễn phí vận chuyển cho đơn hàng trên $500
+                    *Miễn phí vận chuyển cho đơn hàng trên 15.000.000 ₫
                   </p>
                 )}
                 <div className="h-line w-100 my-3" style={{ borderTop: '1px dashed var(--border-color)' }}></div>
                 <div className="d-flex justify-content-between mb-4">
                   <span className="text-white fw-semibold">Tổng thanh toán:</span>
-                  <span className="text-danger fw-bold fs-4 display-font">${cartTotal.toLocaleString()}</span>
+                  <span className="text-danger fw-bold fs-4 display-font">{cartTotal.toLocaleString('vi-VN')} ₫</span>
                 </div>
 
                 <button 
@@ -574,7 +574,7 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage }) => {
               <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--border-color)' }}>
                 <div className="d-flex justify-content-between mb-3 fs-7">
                   <span className="text-secondary">Tổng số tiền:</span>
-                  <span className="text-danger fw-bold fs-5 display-font">${cartTotal.toLocaleString()}</span>
+                  <span className="text-danger fw-bold fs-5 display-font">{cartTotal.toLocaleString('vi-VN')} ₫</span>
                 </div>
 
                 <div className="d-flex gap-2">
@@ -626,7 +626,7 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage }) => {
               <p className="text-secondary mb-1">Phương thức: <span className="text-white fw-medium text-capitalize">{placedOrder.paymentMethod}</span></p>
               <div className="h-line w-100 my-2" style={{ borderTop: '1px dashed var(--border-color)' }}></div>
               <p className="text-secondary mb-1">
-                Tổng cộng: <span className="text-danger fw-bold display-font fs-6">${placedOrder.total.toLocaleString()}</span>
+                Tổng cộng: <span className="text-danger fw-bold display-font fs-6">{placedOrder.total.toLocaleString('vi-VN')} ₫</span>
               </p>
               <p className="text-muted mb-0 fs-8 text-center mt-2" style={{ fontSize: '0.75rem' }}>
                 Hóa đơn ảo được lưu trong Lịch sử mua hàng của bạn.

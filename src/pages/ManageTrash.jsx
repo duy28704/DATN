@@ -3,6 +3,7 @@ import { apiService } from '../services/api';
 import { Loader2, RotateCcw, Trash2, ShieldAlert, Search, AlertCircle, Eye, X } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import ReactPaginate from 'react-paginate';
+import { formatDisplayPrice } from '../context/ProductContext';
 
 const resolveComponent = (obj) => {
   if (!obj) return null;
@@ -415,7 +416,7 @@ function ManageTrash() {
                             </td>
                             <td>
                               <span className="fw-bold">
-                                {p.price ? parseFloat(p.price).toLocaleString('vi-VN') + ' ₫' : 'Chưa cập nhật'}
+                                {formatDisplayPrice(p.price, p.displayPrice)}
                               </span>
                             </td>
                             <td>{formatDate(p.deletedAt)}</td>
@@ -558,9 +559,9 @@ function ManageTrash() {
                       </tr>
                       <tr>
                         <td className="text-secondary fw-semibold">Giá bán lẻ</td>
-                        <td className="text-danger fw-bold">
-                          {detailProduct.price ? parseFloat(detailProduct.price).toLocaleString('vi-VN') + ' ₫' : 'Chưa cập nhật'}
-                        </td>
+                         <td className="text-danger fw-bold">
+                          {formatDisplayPrice(detailProduct.price, detailProduct.displayPrice)}
+                         </td>
                       </tr>
                       <tr>
                         <td className="text-secondary fw-semibold">Đánh giá</td>

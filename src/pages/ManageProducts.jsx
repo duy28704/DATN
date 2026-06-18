@@ -3,6 +3,7 @@ import { apiService } from '../services/api';
 import { Loader2, Plus, Edit, Trash2, ShieldAlert, Search, X, FileSpreadsheet, Eye } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import ReactPaginate from 'react-paginate';
+import { formatDisplayPrice } from '../context/ProductContext';
 
 const resolveComponent = (obj) => {
   if (!obj) return null;
@@ -520,7 +521,7 @@ function ManageProducts() {
                               {p.category === 'wearables' ? 'Đồ đeo thông nhịp' : p.category === 'audio' ? 'Âm thanh' : p.category === 'computing' ? 'Máy tính' : p.category === 'input' ? 'Phụ kiện nhập' : p.category}
                             </span>
                           </td>
-                          <td><strong className="text-danger">${Number(p.price).toLocaleString()}</strong></td>
+                          <td><strong className="text-danger">{formatDisplayPrice(p.price, p.displayPrice)}</strong></td>
                           <td>
                             <div className="d-flex align-items-center gap-1 fs-8 text-warning">
                               <span>★</span><span>{p.rating || '5.0'}</span>
@@ -777,7 +778,7 @@ function ManageProducts() {
                       <tr>
                         <td className="text-secondary fw-semibold">Giá bán lẻ</td>
                         <td className="text-danger fw-bold">
-                          {detailProduct.price ? parseFloat(detailProduct.price).toLocaleString('vi-VN') + ' ₫' : 'Chưa cập nhật'}
+                          {formatDisplayPrice(detailProduct.price, detailProduct.displayPrice)}
                         </td>
                       </tr>
                       <tr>

@@ -90,6 +90,18 @@ const buildSpecs = (item) => {
   return specs;
 }
 
+export const formatDisplayPrice = (price, displayPrice) => {
+  const str = (displayPrice || String(price || '')).trim();
+  if (!str) return 'Chưa cập nhật';
+  
+  const num = Number(str);
+  if (!isNaN(num)) {
+    return `${num.toLocaleString('vi-VN')} ₫`;
+  }
+  
+  return str;
+};
+
 export const ProductProvider = ({ children }) => {
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState(CATEGORIES)
@@ -102,20 +114,28 @@ export const ProductProvider = ({ children }) => {
       const data = await apiService.products.getAll()
       if (data && data.length > 0) {
         // Chuyển đổi cấu trúc thực thể từ database thành định dạng mà giao diện người dùng sử dụng
-        const transformed = data.map(item => ({
-          id: item.id,
-          name: item.name,
-          category: item.category || 'computing',
-          price: parseFloat(item.price) || 0,
-          rating: item.rating || 5.0,
-          reviewCount: item.reviewCount || 0,
-          tag: item.tag,
-          image: item.images || '',
-          shortDescription: item.shortDescription || item.description || '',
-          description: item.description || '',
-          specs: buildSpecs(item), // Gọi hàm gộp thông số kỹ thuật đầy đủ đã bổ sung các trường cột riêng lẻ
-          reviews: item.reviewsJson ? JSON.parse(item.reviewsJson) : []
-        }))
+        const transformed = data.map(item => {
+          let numPrice = 0;
+          if (item.price) {
+            const cleaned = String(item.price).replace(/[^0-9]/g, '');
+            numPrice = parseFloat(cleaned) || 0;
+          }
+          return {
+            id: item.id,
+            name: item.name,
+            category: item.category || 'computing',
+            price: numPrice,
+            displayPrice: item.price || '',
+            rating: item.rating || 5.0,
+            reviewCount: item.reviewCount || 0,
+            tag: item.tag,
+            image: item.images || '',
+            shortDescription: item.shortDescription || item.description || '',
+            description: item.description || '',
+            specs: buildSpecs(item), // Gọi hàm gộp thông số kỹ thuật đầy đủ đã bổ sung các trường cột riêng lẻ
+            reviews: item.reviewsJson ? JSON.parse(item.reviewsJson) : []
+          };
+        })
         setProducts(transformed)
         setError(null)
       } else {
