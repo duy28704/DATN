@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react'
+import { useState, useContext, useEffect } from 'react'
 import { ProductContext, formatDisplayPrice } from '../context/ProductContext'
 import { CartContext } from '../context/CartContext'
 import ProductCard from '../components/ProductCard'
@@ -22,6 +22,13 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct }) => {
   
   const [selectedColor, setSelectedColor] = useState(() => getDefaultColor(product))
   const [activeTab, setActiveTab] = useState('specs') // 'specs', 'reviews'
+  const [activeImage, setActiveImage] = useState(null)
+  
+  useEffect(() => {
+    if (product) {
+      setActiveImage(product.image)
+    }
+  }, [product])
 
   if (!product) {
     return (
@@ -112,22 +119,36 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct }) => {
           <div className="col-12 col-lg-6">
             <div className="p-4 rounded text-center d-flex align-items-center justify-content-center bg-black" style={{ border: '1px solid var(--border-color)', minHeight: '380px' }}>
               <motion.img 
-                key={selectedColor}
+                key={activeImage || product.image}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3 }}
-                src={product.image} 
+                src={activeImage || product.image} 
                 alt={product.name} 
                 className="img-fluid"
                 style={{ maxHeight: '350px', objectFit: 'contain', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.5))' }}
               />
             </div>
             {/* Visual configuration details */}
-            <div className="d-flex gap-3 justify-content-center mt-3">
-              <div className="p-2 rounded bg-secondary bg-opacity-25" style={{ width: '60px', height: '60px', border: '1px solid var(--accent-red)', cursor: 'pointer' }}>
-                <img src={product.image} alt="Thumbnail 1" className="img-fluid h-100 object-fit-contain" />
+            {product.imagesList && product.imagesList.length > 1 && (
+              <div className="d-flex gap-2 justify-content-center mt-3 flex-wrap">
+                {product.imagesList.map((imgUrl, idx) => (
+                  <div 
+                    key={idx}
+                    onClick={() => setActiveImage(imgUrl)}
+                    className="p-1 rounded bg-secondary bg-opacity-25" 
+                    style={{ 
+                      width: '60px', 
+                      height: '60px', 
+                      border: (activeImage || product.image) === imgUrl ? '2px solid var(--accent-red)' : '1px solid var(--border-color)', 
+                      cursor: 'pointer' 
+                    }}
+                  >
+                    <img src={imgUrl} alt={`Thumbnail ${idx + 1}`} className="img-fluid h-100 w-100 object-fit-contain" />
+                  </div>
+                ))}
               </div>
-            </div>
+            )}
           </div>
 
           {/* Right Column: Information specs configurator */}

@@ -2,12 +2,21 @@ import { useState, useMemo, useContext, useEffect } from 'react'
 import { ProductContext } from '../context/ProductContext'
 import ProductCard from '../components/ProductCard'
 import SEO from '../components/SEO'
-import { Filter, RotateCcw, LayoutGrid } from 'lucide-react'
+import { Filter, RotateCcw, LayoutGrid, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
   const { products, categories } = useContext(ProductContext)
   const [sortOption, setSortOption] = useState('featured')
+  const [loadingMore, setLoadingMore] = useState(false)
+
+  const handleLoadMore = () => {
+    setLoadingMore(true)
+    setTimeout(() => {
+      setVisibleCount(prev => prev + 6)
+      setLoadingMore(false)
+    }, 400)
+  }
 
   // Parse parameters directly in render
   let selectedCat = 'all'
@@ -189,10 +198,18 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
             {visibleCount < filteredProducts.length && (
               <div className="text-center mt-5">
                 <button 
-                  className="btn btn-danger btn-lg px-5 py-3 glow-btn"
-                  onClick={() => setVisibleCount(prev => prev + 6)}
+                  className="btn btn-danger btn-lg px-5 py-3 glow-btn d-inline-flex align-items-center gap-2"
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
                 >
-                  Xem thêm
+                  {loadingMore ? (
+                    <>
+                      <Loader2 className="spinner-border border-0" style={{ width: '16px', height: '16px' }} />
+                      Đang tải...
+                    </>
+                  ) : (
+                    'Xem thêm'
+                  )}
                 </button>
               </div>
             )}

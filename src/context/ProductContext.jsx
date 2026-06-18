@@ -120,6 +120,18 @@ export const ProductProvider = ({ children }) => {
             const cleaned = String(item.price).replace(/[^0-9]/g, '');
             numPrice = parseFloat(cleaned) || 0;
           }
+          
+          let firstImage = '/assets/nexus-keyboard.png';
+          let imagesList = [];
+          if (item.images && item.images.trim()) {
+            imagesList = item.images.split(/[\n,]/).map(url => url.trim()).filter(Boolean);
+            if (imagesList.length > 0) {
+              firstImage = imagesList[0];
+            }
+          } else {
+            imagesList = ['/assets/nexus-keyboard.png'];
+          }
+
           return {
             id: item.id,
             name: item.name,
@@ -129,7 +141,8 @@ export const ProductProvider = ({ children }) => {
             rating: item.rating || 5.0,
             reviewCount: item.reviewCount || 0,
             tag: item.tag,
-            image: item.images || '',
+            image: firstImage,
+            imagesList: imagesList,
             shortDescription: item.shortDescription || item.description || '',
             description: item.description || '',
             specs: buildSpecs(item), // Gọi hàm gộp thông số kỹ thuật đầy đủ đã bổ sung các trường cột riêng lẻ
