@@ -70,7 +70,7 @@ const buildSpecs = (item) => {
   for (const [field, label] of Object.entries(fieldMapping)) {
     if (item[field] !== undefined && item[field] !== null && String(item[field]).trim() !== '') {
       let value = item[field];
-      
+
       // Tự động thêm đơn vị phù hợp nếu dữ liệu từ backend chưa có đơn vị đo tương ứng
       if (field === 'ramBusSpeed' && !String(value).includes('MHz')) {
         value = `${value} MHz`;
@@ -81,7 +81,7 @@ const buildSpecs = (item) => {
       } else if (field === 'refreshRate' && !String(value).includes('Hz')) {
         value = `${value} Hz`;
       }
-      
+
       // Lưu thông số vào object với nhãn hiển thị tương ứng
       specs[label] = String(value);
     }
@@ -93,12 +93,12 @@ const buildSpecs = (item) => {
 export const formatDisplayPrice = (price, displayPrice) => {
   const str = (displayPrice || String(price || '')).trim();
   if (!str) return 'Chưa cập nhật';
-  
+
   const num = Number(str);
   if (!isNaN(num)) {
     return `${num.toLocaleString('vi-VN')} ₫`;
   }
-  
+
   return str;
 };
 
@@ -120,7 +120,7 @@ export const ProductProvider = ({ children }) => {
             const cleaned = String(item.price).replace(/[^0-9]/g, '');
             numPrice = parseFloat(cleaned) || 0;
           }
-          
+
           let firstImage = '/assets/nexus-keyboard.png';
           let imagesList = [];
           if (item.images && item.images.trim()) {

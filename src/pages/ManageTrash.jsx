@@ -208,13 +208,13 @@ function ManageTrash() {
     const matchesSearch = p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.brand?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.category?.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     // 2. Brand Filter
     const matchesBrand = filterBrand === 'All' || p.brand === filterBrand;
-    
+
     // 3. Category Filter
     const matchesCategory = filterCategory === 'All' || p.category === filterCategory;
-    
+
     // 4. Price Filter
     const priceVal = parseFloat(p.price) || 0;
     let matchesPrice = true;
@@ -274,7 +274,7 @@ function ManageTrash() {
 
                 {/* Brand Filter */}
                 <div style={{ minWidth: '130px' }}>
-                  <select 
+                  <select
                     className="form-select"
                     value={filterBrand}
                     onChange={(e) => setFilterBrand(e.target.value)}
@@ -294,7 +294,7 @@ function ManageTrash() {
 
                 {/* Category Filter */}
                 <div style={{ minWidth: '130px' }}>
-                  <select 
+                  <select
                     className="form-select"
                     value={filterCategory}
                     onChange={(e) => setFilterCategory(e.target.value)}
@@ -310,7 +310,7 @@ function ManageTrash() {
 
                 {/* Price Filter */}
                 <div style={{ minWidth: '130px' }}>
-                  <select 
+                  <select
                     className="form-select"
                     value={filterPrice}
                     onChange={(e) => setFilterPrice(e.target.value)}
@@ -326,7 +326,7 @@ function ManageTrash() {
 
                 {/* Sorting */}
                 <div style={{ minWidth: '130px' }}>
-                  <select 
+                  <select
                     className="form-select"
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
@@ -341,7 +341,7 @@ function ManageTrash() {
 
                 {/* Reset Filters Link */}
                 {(searchQuery || filterBrand !== 'All' || filterCategory !== 'All' || filterPrice !== 'All' || sortBy !== 'none') && (
-                  <button 
+                  <button
                     className="btn btn-link btn-sm text-decoration-none text-muted"
                     onClick={() => {
                       setSearchQuery('');
@@ -495,7 +495,7 @@ function ManageTrash() {
           </div>
         </div>
       </section>
-      
+
       {/* Product Detail Modal */}
       {detailProduct && (
         <div className="modal-overlay position-fixed top-0 start-0 w-100 h-100" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060, overflowY: 'auto', padding: '40px 10px' }}>
@@ -524,14 +524,14 @@ function ManageTrash() {
                     {detailProduct.images && detailProduct.images.split(',').length > 1 && (
                       <div className="d-flex gap-2 overflow-x-auto pb-2">
                         {detailProduct.images.split(',').map((imgUrl, idx) => (
-                          <div 
-                            key={idx} 
+                          <div
+                            key={idx}
                             onClick={() => setActiveImageIndex(idx)}
-                            className="p-1 rounded bg-light border d-flex align-items-center justify-content-center" 
-                            style={{ 
-                              width: '50px', 
-                              height: '50px', 
-                              flexShrink: 0, 
+                            className="p-1 rounded bg-light border d-flex align-items-center justify-content-center"
+                            style={{
+                              width: '50px',
+                              height: '50px',
+                              flexShrink: 0,
                               cursor: 'pointer',
                               border: activeImageIndex === idx ? '2px solid #4154f1' : '1px solid #dee2e6'
                             }}
@@ -559,9 +559,9 @@ function ManageTrash() {
                       </tr>
                       <tr>
                         <td className="text-secondary fw-semibold">Giá bán lẻ</td>
-                         <td className="text-danger fw-bold">
+                        <td className="text-danger fw-bold">
                           {formatDisplayPrice(detailProduct.price, detailProduct.displayPrice)}
-                         </td>
+                        </td>
                       </tr>
                       <tr>
                         <td className="text-secondary fw-semibold">Đánh giá</td>

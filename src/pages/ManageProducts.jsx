@@ -357,7 +357,7 @@ function ManageProducts() {
     setProductFormErrors({});
     setProductModalMode('edit');
     const existing = prod.images
-      ? prod.images.split(',').filter(url => url.trim() && url !== '/assets/nexus-keyboard.png').map(url => ({ type: 'url', value: url }))
+      ? prod.images.split(/[\s,]+/).map(url => url.trim()).filter(url => url && url !== '/assets/nexus-keyboard.png').map(url => ({ type: 'url', value: url }))
       : [];
     setTempImagesList(existing);
     setShowProductModal(true);
@@ -671,7 +671,7 @@ function ManageProducts() {
                           <td>
                             <div className="p-1 rounded bg-light border d-flex align-items-center justify-content-center" style={{ width: '44px', height: '44px' }}>
                               <img
-                                src={p.images ? p.images.split(',')[0] : '/assets/nexus-keyboard.png'}
+                                src={p.images ? p.images.split(/[\s,]+/)[0].trim() : '/assets/nexus-keyboard.png'}
                                 alt={p.name}
                                 className="img-fluid"
                                 style={{ maxHeight: '100%', objectFit: 'contain' }}
@@ -835,14 +835,14 @@ function ManageProducts() {
                 <div className="row g-3 mb-3">
                   <div className="col-md-12">
                     <label className="form-label text-muted fs-7 mb-1 fw-semibold">Hình ảnh sản phẩm (chọn từ máy tính) *</label>
-                    
+
                     <div className="d-flex flex-wrap gap-2 mb-2 align-items-center">
                       {tempImagesList.map((item, idx) => (
                         <div key={idx} className="position-relative border rounded overflow-hidden" style={{ width: '80px', height: '80px', background: '#0e0e11', borderColor: 'var(--border-color)' }}>
-                          <img 
-                            src={item.type === 'file' ? item.previewUrl : item.value} 
-                            alt={`Product preview ${idx}`} 
-                            className="w-100 h-100" 
+                          <img
+                            src={item.type === 'file' ? item.previewUrl : item.value}
+                            alt={`Product preview ${idx}`}
+                            className="w-100 h-100"
                             style={{ objectFit: 'cover' }}
                           />
                           <button
@@ -858,14 +858,14 @@ function ManageProducts() {
                         </div>
                       ))}
 
-                      <label 
+                      <label
                         className={`border rounded d-flex flex-column align-items-center justify-content-center m-0 hover-opacity ${submitting ? 'disabled' : ''}`}
-                        style={{ 
-                          width: '80px', 
-                          height: '80px', 
-                          background: 'rgba(255,255,255,0.02)', 
-                          borderColor: 'var(--border-color)', 
-                          borderStyle: 'dashed', 
+                        style={{
+                          width: '80px',
+                          height: '80px',
+                          background: 'rgba(255,255,255,0.02)',
+                          borderColor: 'var(--border-color)',
+                          borderStyle: 'dashed',
                           cursor: submitting ? 'not-allowed' : 'pointer',
                           transition: 'var(--transition-fast)'
                         }}
@@ -1354,15 +1354,15 @@ function ManageProducts() {
                   <div className="d-flex flex-column gap-3">
                     <div className="p-3 rounded bg-light border d-flex align-items-center justify-content-center" style={{ height: '220px' }}>
                       <img
-                        src={detailProduct.images ? detailProduct.images.split(',')[activeImageIndex] : '/assets/nexus-keyboard.png'}
+                        src={detailProduct.images ? detailProduct.images.split(/[\s,]+/)[activeImageIndex].trim() : '/assets/nexus-keyboard.png'}
                         alt={detailProduct.name}
                         style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                       />
                     </div>
                     {/* Thumbnail list */}
-                    {detailProduct.images && detailProduct.images.split(',').length > 1 && (
+                    {detailProduct.images && detailProduct.images.split(/[\s,]+/).filter(url => url.trim()).length > 1 && (
                       <div className="d-flex gap-2 overflow-x-auto pb-2">
-                        {detailProduct.images.split(',').map((imgUrl, idx) => (
+                        {detailProduct.images.split(/[\s,]+/).map(url => url.trim()).filter(Boolean).map((imgUrl, idx) => (
                           <div
                             key={idx}
                             onClick={() => setActiveImageIndex(idx)}
