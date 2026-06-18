@@ -141,6 +141,7 @@ function AppContent() {
         <Sidebar currentPage={currentPage} />
         {renderDashboardContent()}
         <Footerdashboard />
+        <ToastContainer />
       </div>
     )
   }
