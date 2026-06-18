@@ -213,6 +213,27 @@ export const apiService = {
 
   // --- PRODUCTS API ---
   products: {
+    uploadImage: async (file) => {
+      console.log(`[API] calling POST ${BASE_URL}/api/v1/products/upload`);
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const authHeaders = getAuthHeaders();
+      const headers = { ...authHeaders };
+      delete headers['Content-Type'];
+
+      const response = await fetch(`${BASE_URL}/api/v1/products/upload`, {
+        method: 'POST',
+        headers: headers,
+        body: formData
+      });
+
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi tải ảnh lên Cloudinary');
+      }
+      return resJson.data;
+    },
     getAll: async () => {
       console.log(`[API] calling ${BASE_URL}/api/v1/products`);
       const response = await fetch(`${BASE_URL}/api/v1/products`);

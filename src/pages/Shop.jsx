@@ -181,7 +181,12 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
             >
               <AnimatePresence mode="popLayout">
                 {displayedProducts.map((product) => (
-                  <div 
+                  <motion.div 
+                    layout
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
                     key={product.id} 
                     className="col-12 col-sm-6 col-md-4"
                   >
@@ -190,7 +195,7 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
                       onSelectProduct={onSelectProduct}
                       setCurrentPage={setCurrentPage}
                     />
-                  </div>
+                  </motion.div>
                 ))}
               </AnimatePresence>
             </motion.div>
@@ -198,9 +203,10 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
             {visibleCount < filteredProducts.length && (
               <div className="text-center mt-5">
                 <button 
-                  className="btn btn-danger btn-lg px-5 py-3 glow-btn d-inline-flex align-items-center gap-2"
+                  className="btn btn-danger btn-lg px-5 py-3 glow-btn d-inline-flex align-items-center justify-content-center gap-2"
                   onClick={handleLoadMore}
                   disabled={loadingMore}
+                  style={{ minWidth: '180px', minHeight: '56px' }}
                 >
                   {loadingMore ? (
                     <>

@@ -129,13 +129,15 @@ function ManageProducts() {
   const [filterCategory, setFilterCategory] = useState('All');
   const [filterPrice, setFilterPrice] = useState('All');
   const [sortBy, setSortBy] = useState('none');
+  const [tempImagesList, setTempImagesList] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
 
   const [productFormData, setProductFormData] = useState({
     name: '',
     price: '',
     brand: 'NEXUS',
     category: 'computing',
-    images: '/assets/nexus-keyboard.png',
+    images: '',
     tag: 'New',
     description: '',
     shortDescription: '',
@@ -251,7 +253,7 @@ function ManageProducts() {
       price: '',
       brand: 'NEXUS',
       category: 'computing',
-      images: '/assets/nexus-keyboard.png',
+      images: '',
       tag: 'New',
       description: '',
       shortDescription: '',
@@ -295,6 +297,7 @@ function ManageProducts() {
     });
     setProductFormErrors({});
     setProductModalMode('add');
+    setTempImagesList([]);
     setShowProductModal(true);
   };
 
@@ -305,7 +308,7 @@ function ManageProducts() {
       price: prod.price ? String(prod.price) : '',
       brand: prod.brand || 'NEXUS',
       category: prod.category || 'computing',
-      images: prod.images || '/assets/nexus-keyboard.png',
+      images: prod.images || '',
       tag: prod.tag || 'New',
       description: prod.description || '',
       shortDescription: prod.shortDescription || '',
@@ -353,7 +356,34 @@ function ManageProducts() {
     });
     setProductFormErrors({});
     setProductModalMode('edit');
+    const existing = prod.images
+      ? prod.images.split(',').filter(url => url.trim() && url !== '/assets/nexus-keyboard.png').map(url => ({ type: 'url', value: url }))
+      : [];
+    setTempImagesList(existing);
     setShowProductModal(true);
+  };
+
+  const handleImageUpload = (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const newItems = Array.from(files).map(file => ({
+      type: 'file',
+      value: file,
+      previewUrl: URL.createObjectURL(file)
+    }));
+
+    setTempImagesList(prev => [...prev, ...newItems]);
+  };
+
+  const handleRemoveImage = (indexToRemove) => {
+    setTempImagesList(prev => {
+      const item = prev[indexToRemove];
+      if (item && item.type === 'file' && item.previewUrl) {
+        URL.revokeObjectURL(item.previewUrl);
+      }
+      return prev.filter((_, idx) => idx !== indexToRemove);
+    });
   };
 
   const handleProductSubmit = async (e) => {
@@ -363,22 +393,39 @@ function ManageProducts() {
     const errs = {};
     if (!productFormData.name.trim()) errs.name = 'Tên sản phẩm không được trống';
     if (!productFormData.price.trim()) errs.price = 'Giá không được trống';
-    if (!productFormData.images.trim()) errs.images = 'URL ảnh không được trống';
+    if (tempImagesList.length === 0) errs.images = 'Vui lòng chọn hoặc tải lên ít nhất một hình ảnh sản phẩm';
 
     if (Object.keys(errs).length > 0) {
       setProductFormErrors(errs);
       return;
     }
 
-    const linkStr = productFormData.link || productFormData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now();
-    const payload = {
-      ...productFormData,
-      link: linkStr,
-      specsJson: productFormData.specsJson || '{}',
-      reviewsJson: productFormData.reviewsJson || '[]'
-    };
+    setSubmitting(true);
 
     try {
+      const finalUrls = [];
+      for (const item of tempImagesList) {
+        if (item.type === 'file') {
+          const uploadedUrl = await apiService.products.uploadImage(item.value);
+          finalUrls.push(uploadedUrl);
+          if (item.previewUrl) {
+            URL.revokeObjectURL(item.previewUrl);
+          }
+        } else {
+          finalUrls.push(item.value);
+        }
+      }
+
+      const imagesString = finalUrls.join(',');
+      const linkStr = productFormData.link || productFormData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now();
+      const payload = {
+        ...productFormData,
+        images: imagesString,
+        link: linkStr,
+        specsJson: productFormData.specsJson || '{}',
+        reviewsJson: productFormData.reviewsJson || '[]'
+      };
+
       if (productModalMode === 'add') {
         await apiService.products.create(payload);
         showToast({ type: 'success', title: 'Thêm thành công', message: `Sản phẩm "${payload.name}" đã được thêm.` });
@@ -390,6 +437,8 @@ function ManageProducts() {
       loadProducts();
     } catch (err) {
       setProductFormErrors({ global: err.message || 'Lỗi khi lưu sản phẩm.' });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -706,7 +755,7 @@ function ManageProducts() {
           <div className="card w-100 mx-auto shadow" style={{ maxWidth: '800px', borderRadius: '8px', overflow: 'hidden' }}>
             <div className="card-header d-flex justify-content-between align-items-center bg-white border-bottom py-3">
               <h5 className="mb-0 fw-bold">{productModalMode === 'add' ? 'Thêm Sản Phẩm Mới' : 'Cập Nhật Sản Phẩm'}</h5>
-              <button className="btn btn-link p-0 text-muted" onClick={() => setShowProductModal(false)}><X size={20} /></button>
+              <button className="btn btn-link p-0 text-muted" onClick={() => setShowProductModal(false)} disabled={submitting}><X size={20} /></button>
             </div>
             <form onSubmit={handleProductSubmit}>
               <div className="card-body p-4">
@@ -784,18 +833,64 @@ function ManageProducts() {
                 </div>
 
                 <div className="row g-3 mb-3">
-                  <div className="col-md-6">
-                    <label className="form-label text-muted fs-7 mb-1 fw-semibold">Đường dẫn ảnh sản phẩm *</label>
-                    <input
-                      type="text"
-                      required
-                      value={productFormData.images}
-                      onChange={(e) => setProductFormData({ ...productFormData, images: e.target.value })}
-                      className={`form-control ${productFormErrors.images ? 'is-invalid' : ''}`}
-                    />
-                    {productFormErrors.images && <span className="invalid-feedback fs-8">{productFormErrors.images}</span>}
+                  <div className="col-md-12">
+                    <label className="form-label text-muted fs-7 mb-1 fw-semibold">Hình ảnh sản phẩm (chọn từ máy tính) *</label>
+                    
+                    <div className="d-flex flex-wrap gap-2 mb-2 align-items-center">
+                      {tempImagesList.map((item, idx) => (
+                        <div key={idx} className="position-relative border rounded overflow-hidden" style={{ width: '80px', height: '80px', background: '#0e0e11', borderColor: 'var(--border-color)' }}>
+                          <img 
+                            src={item.type === 'file' ? item.previewUrl : item.value} 
+                            alt={`Product preview ${idx}`} 
+                            className="w-100 h-100" 
+                            style={{ objectFit: 'cover' }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(idx)}
+                            className="position-absolute top-0 end-0 bg-danger text-white border-0 rounded-circle d-flex align-items-center justify-content-center m-1 shadow-sm"
+                            style={{ width: '18px', height: '18px', fontSize: '10px', padding: 0 }}
+                            title="Xóa hình ảnh này"
+                            disabled={submitting}
+                          >
+                            <X size={10} />
+                          </button>
+                        </div>
+                      ))}
+
+                      <label 
+                        className={`border rounded d-flex flex-column align-items-center justify-content-center m-0 hover-opacity ${submitting ? 'disabled' : ''}`}
+                        style={{ 
+                          width: '80px', 
+                          height: '80px', 
+                          background: 'rgba(255,255,255,0.02)', 
+                          borderColor: 'var(--border-color)', 
+                          borderStyle: 'dashed', 
+                          cursor: submitting ? 'not-allowed' : 'pointer',
+                          transition: 'var(--transition-fast)'
+                        }}
+                        onMouseEnter={(e) => { if (!submitting) { e.currentTarget.style.borderColor = 'var(--accent-red)'; e.currentTarget.style.background = 'rgba(255,0,60,0.02)'; } }}
+                        onMouseLeave={(e) => { if (!submitting) { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; } }}
+                      >
+                        <Plus size={20} className="text-muted" />
+                        <span className="text-muted" style={{ fontSize: '10px', marginTop: '2px' }}>Thêm ảnh</span>
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="d-none"
+                          disabled={submitting}
+                        />
+                      </label>
+                    </div>
+                    {productFormErrors.images && <span className="text-danger fs-8 d-block mt-1">{productFormErrors.images}</span>}
+                    <small className="text-muted fs-8">Hỗ trợ chọn nhiều hình ảnh từ máy tính (tải lên Cloudinary khi lưu sản phẩm).</small>
                   </div>
-                  <div className="col-md-6">
+                </div>
+
+                <div className="row g-3 mb-3">
+                  <div className="col-md-12">
                     <label className="form-label text-muted fs-7 mb-1 fw-semibold">Đường dẫn tĩnh (Link - tự động tạo nếu bỏ trống)</label>
                     <input
                       type="text"
@@ -1221,11 +1316,18 @@ function ManageProducts() {
               </div>
 
               <div className="card-footer d-flex justify-content-end gap-2 bg-light py-3 border-top px-4">
-                <button type="button" className="btn btn-outline-secondary px-3 py-2 fs-7" onClick={() => setShowProductModal(false)}>
+                <button type="button" className="btn btn-outline-secondary px-3 py-2 fs-7" onClick={() => setShowProductModal(false)} disabled={submitting}>
                   Hủy bỏ
                 </button>
-                <button type="submit" className="btn btn-primary px-4 py-2 fs-7">
-                  Lưu sản phẩm
+                <button type="submit" className="btn btn-primary px-4 py-2 fs-7" disabled={submitting}>
+                  {submitting ? (
+                    <span className="d-flex align-items-center gap-2">
+                      <Loader2 className="spinner-border border-0 text-white" style={{ width: '16px', height: '16px', margin: 0 }} />
+                      Đang lưu...
+                    </span>
+                  ) : (
+                    'Lưu sản phẩm'
+                  )}
                 </button>
               </div>
             </form>
