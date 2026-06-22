@@ -287,7 +287,13 @@ const Home = ({ setCurrentPage, onSelectProduct }) => {
             borderBottom: '1px solid var(--border-color)' 
           }}
         >
-          <div className="container px-4 px-md-5">
+          <motion.div 
+            className="container px-4 px-md-5"
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          >
             <div className="text-center mb-5">
               <span className="text-danger text-uppercase fw-bold tracking-widest fs-8 mb-2 d-block" style={{ letterSpacing: '0.15em', fontSize: '0.75rem', color: 'var(--accent-red)' }}>
                 NEXUS COMMITMENT
@@ -323,12 +329,18 @@ const Home = ({ setCurrentPage, onSelectProduct }) => {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </section>
 
         {/* Section 2: Categories */}
         <section id="categories-section" className="py-5 position-relative" style={{ zIndex: 5, backgroundColor: 'var(--bg-primary)' }}>
-          <div className="container px-4 px-md-5">
+          <motion.div 
+            className="container px-4 px-md-5"
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.6, ease: 'easeOut', delay: 0.1 }}
+          >
             <div className="text-center mb-5">
               <span className="text-danger text-uppercase fw-bold tracking-widest fs-8 mb-2 d-block" style={{ letterSpacing: '0.15em', fontSize: '0.75rem', color: 'var(--accent-red)' }}>
                 Dòng Laptop Chuyên Biệt
@@ -397,12 +409,18 @@ const Home = ({ setCurrentPage, onSelectProduct }) => {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </section>
 
         {/* Section 3: Featured Laptops */}
         <section id="featured-section" className="py-5 position-relative" style={{ zIndex: 5, backgroundColor: '#ffffff', borderTop: '1px solid var(--border-color)' }}>
-          <div className="container px-4 px-md-5">
+          <motion.div 
+            className="container px-4 px-md-5"
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          >
             <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-5 text-start gap-3">
               <div>
                 <span className="text-danger text-uppercase fw-bold tracking-widest fs-8 mb-2 d-block" style={{ letterSpacing: '0.15em', fontSize: '0.75rem', color: 'var(--accent-red)' }}>
@@ -430,12 +448,18 @@ const Home = ({ setCurrentPage, onSelectProduct }) => {
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
         </section>
 
         {/* Section 4: Sale Products */}
         <section id="sale-section" className="py-5 position-relative" style={{ zIndex: 5, backgroundColor: 'var(--bg-primary)', borderTop: '1px solid var(--border-color)' }}>
-          <div className="container px-4 px-md-5">
+          <motion.div 
+            className="container px-4 px-md-5"
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          >
             <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-5 text-start gap-3">
               <div>
                 <span className="text-danger text-uppercase fw-bold tracking-widest fs-8 mb-2 d-block" style={{ letterSpacing: '0.15em', fontSize: '0.75rem', color: 'var(--accent-red)' }}>
@@ -463,7 +487,7 @@ const Home = ({ setCurrentPage, onSelectProduct }) => {
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
         </section>
       </div>
     </>
