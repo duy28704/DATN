@@ -1,8 +1,8 @@
 import { useContext } from 'react'
 import { CartContext } from '../context/CartContext'
-import { Star, ShoppingCart, Eye } from 'lucide-react'
+import { Star, ShoppingCart, Eye, GitCompare } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { formatDisplayPrice } from '../context/ProductContext'
+import { ProductContext, formatDisplayPrice } from '../context/ProductContext'
 
 const categoryNames = {
   gaming: 'Laptop Gaming',
@@ -16,6 +16,8 @@ const categoryNames = {
 
 const ProductCard = ({ product, onSelectProduct, setCurrentPage }) => {
   const { addToCart } = useContext(CartContext)
+  const { compareItems, toggleCompare } = useContext(ProductContext)
+  const isCompared = compareItems.some(item => item.id === product.id)
 
   const handleQuickAdd = (e) => {
     e.stopPropagation() // Don't trigger card selection detail page
@@ -88,6 +90,17 @@ const ProductCard = ({ product, onSelectProduct, setCurrentPage }) => {
             {formatDisplayPrice(product.price, product.displayPrice)}
           </span>
           <div className="d-flex gap-2">
+            <button 
+              className={`btn btn-sm p-2 d-flex align-items-center justify-content-center ${isCompared ? 'btn-danger' : 'btn-outline-secondary'}`}
+              style={{ borderRadius: '6px', width: '34px', height: '34px' }}
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleCompare(product)
+              }}
+              title={isCompared ? "Xóa so sánh" : "Thêm so sánh"}
+            >
+              <GitCompare size={15} style={{ color: isCompared ? '#ffffff' : 'inherit' }} />
+            </button>
             <button 
               className="btn btn-sm btn-outline-secondary p-2 d-flex align-items-center justify-content-center"
               style={{ borderRadius: '6px', width: '34px', height: '34px' }}

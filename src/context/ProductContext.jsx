@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect } from 'react'
 import { apiService } from '../services/api'
+import { useToast } from './ToastContext'
 
 export const ProductContext = createContext()
 
@@ -231,8 +232,55 @@ export const ProductProvider = ({ children }) => {
     fetchProducts()
   }, [])
 
+  const [compareItems, setCompareItems] = useState([])
+  const { showToast } = useToast()
+
+  // Đồng bộ danh sách sản phẩm so sánh từ URL hash khi tải trang
+  useEffect(() => {
+    if (products.length > 0 && compareItems.length === 0) {
+      const hash = window.location.hash.replace('#', '');
+      if (hash.startsWith('compare')) {
+        const urlParams = new URLSearchParams(hash.split('?')[1] || '');
+        const idsStr = urlParams.get('ids');
+        if (idsStr) {
+          const ids = idsStr.split(',').map(id => parseInt(id, 10)).filter(Boolean);
+          const matched = products.filter(p => ids.includes(p.id));
+          if (matched.length > 0) {
+            setCompareItems(matched.slice(0, 2));
+          }
+        }
+      }
+    }
+  }, [products])
+
+  const toggleCompare = (product) => {
+    setCompareItems(prev => {
+      const exists = prev.some(item => item.id === product.id)
+      if (exists) {
+        return prev.filter(item => item.id !== product.id)
+      } else {
+        if (prev.length >= 2) {
+          showToast({ type: 'warning', title: 'Giới hạn so sánh', message: 'Bạn chỉ có thể so sánh tối đa 2 sản phẩm.' })
+          return prev
+        }
+        return [...prev, product]
+      }
+    })
+  }
+
+  const clearCompare = () => setCompareItems([])
+
   return (
-    <ProductContext.Provider value={{ products, categories, loading, error, refreshProducts: fetchProducts }}>
+    <ProductContext.Provider value={{ 
+      products, 
+      categories, 
+      loading, 
+      error, 
+      refreshProducts: fetchProducts,
+      compareItems,
+      toggleCompare,
+      clearCompare
+    }}>
       {children}
     </ProductContext.Provider>
   )

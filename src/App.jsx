@@ -23,6 +23,7 @@ import Headerdashboard from './components/Headerdashboard'
 import Sidebar from './components/Sidebar'
 import Footerdashboard from './components/Footerdashboard'
 import { motion, AnimatePresence } from 'framer-motion'
+import CompareBar from './components/CompareBar'
 
 function AppContent() {
   const [currentPage, setCurrentPageState] = useState('home')
@@ -171,6 +172,8 @@ function AppContent() {
       </main>
 
       <Footer setCurrentPage={setCurrentPage} />
+
+      <CompareBar setCurrentPage={setCurrentPage} />
 
       <AnimatePresence>
         {cartOpen && (
