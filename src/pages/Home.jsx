@@ -2,14 +2,24 @@ import { useContext } from 'react'
 import { ProductContext } from '../context/ProductContext'
 import ProductCard from '../components/ProductCard'
 import SEO from '../components/SEO'
-import { ShieldCheck, Truck, Headphones, ChevronRight, Cpu, Zap, Radio } from 'lucide-react'
+import { ShieldCheck, Truck, Headphones, ChevronRight, Cpu, Laptop, Palette } from 'lucide-react'
 import { motion } from 'framer-motion'
-import bannerImg from '../assets/hero_banner.png'
+import bannerImg from '../assets/laptop_gaming.png'
+import laptopOfficeImg from '../assets/laptop_office.png'
+import laptopGraphicsImg from '../assets/laptop_graphics.png'
 
 const Home = ({ setCurrentPage, onSelectProduct }) => {
   const { products } = useContext(ProductContext)
-  // Show 3 featured items
-  const featuredProducts = products.slice(0, 3)
+  
+  // Show 3 featured premium laptops (High rating or Hot tag)
+  const featuredProducts = products
+    .filter(p => p.tag === 'Hot' || p.rating >= 4.8)
+    .slice(0, 3)
+
+  // Show 4 products on sale (price < 20,000,000 or Sale tag)
+  const saleProducts = products
+    .filter(p => p.tag === 'Sale' || p.price < 20000000)
+    .slice(0, 4)
 
   // JSON-LD structured schema for Home
   const websiteSchema = {
@@ -17,7 +27,7 @@ const Home = ({ setCurrentPage, onSelectProduct }) => {
     '@type': 'WebSite',
     'name': 'NEXUS Tech',
     'url': window.location.origin,
-    'description': 'Cửa hàng đồ công nghệ cao cấp hiện đại với các sản phẩm độc quyền.',
+    'description': 'Hệ thống phân phối Laptop cao cấp chính hãng từ các thương hiệu hàng đầu.',
     'potentialAction': {
       '@type': 'SearchAction',
       'target': `${window.location.origin}/#shop?search={search_term_string}`,
@@ -50,9 +60,9 @@ const Home = ({ setCurrentPage, onSelectProduct }) => {
   return (
     <>
       <SEO 
-        title="Trang Chủ" 
-        description="Chào mừng bạn đến với NEXUS Tech. Chúng tôi cung cấp các sản phẩm kính VR, tai nghe, đồng hồ thông minh thiết kế tối giản, cao cấp chính hãng."
-        keywords="đồ công nghệ, tai nghe, kính vr, đồng hồ thông minh, nexus, shop đồ công nghệ"
+        title="Trang Chủ | NEXUS Tech" 
+        description="Chào mừng bạn đến với NEXUS Tech. Chúng tôi cung cấp các sản phẩm Laptop Gaming, Laptop Văn phòng, Laptop Đồ họa chính hãng cao cấp."
+        keywords="laptop, laptop gaming, laptop van phong, laptop do hoa, laptop asus, msi, dell, lenovo, hp, macbook, nexus tech"
         schema={websiteSchema}
       />
 
@@ -66,14 +76,14 @@ const Home = ({ setCurrentPage, onSelectProduct }) => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                <div className="hero-tagline">NEXUS SYSTEM 2026</div>
-                <h1 className="hero-title text-white fw-bold display-font">
-                  Khai Phá <br />
-                  <span className="text-gradient">Tương Lai</span> <br />
-                  Đồ Công Nghệ.
+                <div className="hero-tagline" style={{ color: 'var(--accent-red)' }}>NEXUS SYSTEM 2026</div>
+                <h1 className="hero-title fw-bold display-font" style={{ color: 'var(--text-primary)' }}>
+                  Laptop Thế Hệ Mới <br />
+                  Tích Hợp <span className="text-gradient">Trí Tuệ Nhân Tạo</span> <br />
+                  Kiến Tạo Tương Lai.
                 </h1>
                 <p className="hero-description text-secondary">
-                  Trải nghiệm sự đột phá vượt trội của các dòng sản phẩm cơ học cao cấp. Tối giản trong thiết kế, đỉnh cao trong công nghệ và chất âm tinh khiết nhất.
+                  Trải nghiệm hiệu năng vượt trội từ các dòng Laptop cao cấp nhất thế giới. Thiết kế tối giản tinh xảo, bộ xử lý NPU thông minh và màn hình OLED sắc nét.
                 </p>
                 <div className="d-flex flex-wrap gap-3">
                   <button 
@@ -83,7 +93,7 @@ const Home = ({ setCurrentPage, onSelectProduct }) => {
                     Mua sắm ngay
                   </button>
                   <button 
-                    className="btn btn-outline-secondary outline-btn text-white"
+                    className="btn btn-outline-secondary outline-btn"
                     onClick={() => {
                       const featuredSec = document.getElementById('featured-section')
                       if (featuredSec) {
@@ -99,7 +109,7 @@ const Home = ({ setCurrentPage, onSelectProduct }) => {
             
             <div className="col-12 col-lg-6 d-flex justify-content-center align-items-center position-relative">
               {/* Decorative background grid glow */}
-              <div className="position-absolute translate-middle-y start-50 top-50 rounded-circle" style={{ width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(255,0,60,0.1) 0%, rgba(0,0,0,0) 70%)', zIndex: 0 }} />
+              <div className="position-absolute translate-middle-y start-50 top-50 rounded-circle" style={{ width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(15,98,254,0.08) 0%, rgba(0,0,0,0) 70%)', zIndex: 0 }} />
               
               <motion.div 
                 animate={{ y: [0, -15, 0] }}
@@ -109,9 +119,9 @@ const Home = ({ setCurrentPage, onSelectProduct }) => {
               >
                 <img 
                   src={bannerImg} 
-                  alt="NEXUS Premium VR Headset Banner" 
+                  alt="NEXUS Premium Laptop" 
                   className="img-fluid"
-                  style={{ maxHeight: '420px', filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.7))' }}
+                  style={{ maxHeight: '350px', filter: 'drop-shadow(0 15px 30px rgba(15,98,254,0.15))' }}
                 />
               </motion.div>
             </div>
@@ -120,33 +130,33 @@ const Home = ({ setCurrentPage, onSelectProduct }) => {
       </section>
 
       {/* Features Showcase Section */}
-      <section className="py-5" style={{ backgroundColor: '#09090b', borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)' }}>
+      <section className="py-5" style={{ backgroundColor: '#ffffff', borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)' }}>
         <div className="container px-4 px-md-5">
           <div className="row g-4">
             <div className="col-12 col-md-4">
-              <div className="p-4 rounded h-100 text-start d-flex flex-column gap-3" style={{ border: '1px solid rgba(255,255,255,0.03)', backgroundColor: '#0c0c0e' }}>
-                <div className="text-danger"><Truck size={32} /></div>
-                <h3 className="fs-5 text-white display-font mb-0">Miễn Phí Vận Chuyển</h3>
+              <div className="p-4 rounded h-100 text-start d-flex flex-column gap-3" style={{ border: '1px solid var(--border-color)', backgroundColor: '#f8fafc' }}>
+                <div className="text-danger" style={{ color: 'var(--accent-red)' }}><Truck size={32} /></div>
+                <h3 className="fs-5 display-font mb-0" style={{ color: 'var(--text-primary)' }}>Giao Hàng Miễn Phí</h3>
                 <p className="fs-7 text-secondary mb-0">
-                  Giao hàng hỏa tốc và hoàn toàn miễn phí vận chuyển trên toàn quốc cho tất cả các đơn hàng có giá trị trên $500.
+                  Hỗ trợ giao hàng hỏa tốc hoàn toàn miễn phí trên toàn quốc cho tất cả các đơn hàng trị giá từ 15.000.000 ₫.
                 </p>
               </div>
             </div>
             <div className="col-12 col-md-4">
-              <div className="p-4 rounded h-100 text-start d-flex flex-column gap-3" style={{ border: '1px solid rgba(255,255,255,0.03)', backgroundColor: '#0c0c0e' }}>
-                <div className="text-danger"><ShieldCheck size={32} /></div>
-                <h3 className="fs-5 text-white display-font mb-0">Bảo Hành 2 Năm</h3>
+              <div className="p-4 rounded h-100 text-start d-flex flex-column gap-3" style={{ border: '1px solid var(--border-color)', backgroundColor: '#f8fafc' }}>
+                <div className="text-danger" style={{ color: 'var(--accent-red)' }}><ShieldCheck size={32} /></div>
+                <h3 className="fs-5 display-font mb-0" style={{ color: 'var(--text-primary)' }}>Bảo Hành Chính Hãng</h3>
                 <p className="fs-7 text-secondary mb-0">
-                  Cam kết bảo hành chính hãng lỗi 1 đổi 1 trong vòng 2 năm đối với mọi vấn đề kỹ thuật của nhà sản xuất.
+                  Cam kết bảo hành chính hãng lỗi 1 đổi 1 tận nơi trong vòng 2 năm đối với tất cả lỗi từ nhà sản xuất.
                 </p>
               </div>
             </div>
             <div className="col-12 col-md-4">
-              <div className="p-4 rounded h-100 text-start d-flex flex-column gap-3" style={{ border: '1px solid rgba(255,255,255,0.03)', backgroundColor: '#0c0c0e' }}>
-                <div className="text-danger"><Headphones size={32} /></div>
-                <h3 className="fs-5 text-white display-font mb-0">Hỗ Trợ Kỹ Thuật 24/7</h3>
+              <div className="p-4 rounded h-100 text-start d-flex flex-column gap-3" style={{ border: '1px solid var(--border-color)', backgroundColor: '#f8fafc' }}>
+                <div className="text-danger" style={{ color: 'var(--accent-red)' }}><Headphones size={32} /></div>
+                <h3 className="fs-5 display-font mb-0" style={{ color: 'var(--text-primary)' }}>Hỗ Trợ Kỹ Thuật 24/7</h3>
                 <p className="fs-7 text-secondary mb-0">
-                  Đội ngũ kỹ thuật viên công nghệ chuyên sâu luôn sẵn sàng giải đáp và xử lý các vấn đề cài đặt của bạn.
+                  Đội ngũ kỹ sư CNTT tay nghề cao sẵn sàng hỗ trợ trực tuyến cài đặt phần mềm và giải quyết lỗi 24/7.
                 </p>
               </div>
             </div>
@@ -155,64 +165,73 @@ const Home = ({ setCurrentPage, onSelectProduct }) => {
       </section>
 
       {/* Top Categories Grid Section */}
-      <section className="py-5">
+      <section className="py-5" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="container px-4 px-md-5">
           <div className="text-center mb-5">
-            <span className="text-danger text-uppercase fw-bold tracking-widest fs-8 mb-2 d-block" style={{ letterSpacing: '0.15em', fontSize: '0.75rem' }}>
-              Danh Mục Sản Phẩm
+            <span className="text-danger text-uppercase fw-bold tracking-widest fs-8 mb-2 d-block" style={{ letterSpacing: '0.15em', fontSize: '0.75rem', color: 'var(--accent-red)' }}>
+              Dòng Laptop Chuyên Biệt
             </span>
-            <h2 className="fs-2 text-white display-font">Thiết Bị Công Nghệ Cao Cấp</h2>
+            <h2 className="fs-2 display-font" style={{ color: 'var(--text-primary)' }}>Danh Mục Sản Phẩm</h2>
           </div>
 
           <div className="row g-4 justify-content-center">
-            {/* Wearables Card */}
-            <div className="col-12 col-sm-6 col-md-4">
+            {/* Gaming Card */}
+            <div className="col-12 col-md-4">
               <div 
-                className="p-4 rounded text-start d-flex justify-content-between align-items-end cursor-pointer"
-                style={{ border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', height: '140px', cursor: 'pointer', transition: 'var(--transition-fast)' }}
-                onClick={() => handleShopRedirect('wearables')}
-                onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent-red)'}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
+                className="tech-card rounded overflow-hidden cursor-pointer"
+                onClick={() => handleShopRedirect('gaming')}
+                style={{ border: '1px solid var(--border-color)' }}
               >
-                <div>
-                  <div className="text-danger mb-2"><Cpu size={24} /></div>
-                  <h3 className="fs-5 text-white display-font mb-0">Thiết bị đeo</h3>
+                <div className="position-relative" style={{ height: '180px', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                  <img src={bannerImg} alt="Gaming Laptop" className="img-fluid h-100 object-fit-contain" />
                 </div>
-                <ChevronRight size={20} className="text-secondary" />
+                <div className="p-4 text-start bg-white">
+                  <div className="d-flex align-items-center gap-2 mb-2">
+                    <span className="p-1 rounded bg-primary bg-opacity-10 text-primary"><Cpu size={18} style={{ color: 'var(--accent-red)' }} /></span>
+                    <h3 className="fs-5 display-font mb-0" style={{ color: 'var(--text-primary)' }}>Laptop Gaming</h3>
+                  </div>
+                  <p className="fs-8 text-secondary mb-0">Cấu hình khủng, card đồ họa rời chuyên nghiệp, tần số quét siêu tốc cho game thủ.</p>
+                </div>
               </div>
             </div>
 
-            {/* Audio Card */}
-            <div className="col-12 col-sm-6 col-md-4">
+            {/* Office Card */}
+            <div className="col-12 col-md-4">
               <div 
-                className="p-4 rounded text-start d-flex justify-content-between align-items-end cursor-pointer"
-                style={{ border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', height: '140px', cursor: 'pointer', transition: 'var(--transition-fast)' }}
-                onClick={() => handleShopRedirect('audio')}
-                onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent-red)'}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
+                className="tech-card rounded overflow-hidden cursor-pointer"
+                onClick={() => handleShopRedirect('vanphong')}
+                style={{ border: '1px solid var(--border-color)' }}
               >
-                <div>
-                  <div className="text-danger mb-2"><Radio size={24} /></div>
-                  <h3 className="fs-5 text-white display-font mb-0">Âm thanh</h3>
+                <div className="position-relative" style={{ height: '180px', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                  <img src={laptopOfficeImg} alt="Office Laptop" className="img-fluid h-100 object-fit-contain" />
                 </div>
-                <ChevronRight size={20} className="text-secondary" />
+                <div className="p-4 text-start bg-white">
+                  <div className="d-flex align-items-center gap-2 mb-2">
+                    <span className="p-1 rounded bg-primary bg-opacity-10 text-primary"><Laptop size={18} style={{ color: 'var(--accent-red)' }} /></span>
+                    <h3 className="fs-5 display-font mb-0" style={{ color: 'var(--text-primary)' }}>Laptop Văn Phòng</h3>
+                  </div>
+                  <p className="fs-8 text-secondary mb-0">Mỏng nhẹ thời trang, pin cực trâu, bàn phím êm ái thích hợp cho học tập & làm việc.</p>
+                </div>
               </div>
             </div>
 
-            {/* Gear Card */}
-            <div className="col-12 col-sm-6 col-md-4">
+            {/* Graphics Card */}
+            <div className="col-12 col-md-4">
               <div 
-                className="p-4 rounded text-start d-flex justify-content-between align-items-end cursor-pointer"
-                style={{ border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', height: '140px', cursor: 'pointer', transition: 'var(--transition-fast)' }}
-                onClick={() => handleShopRedirect('computing')}
-                onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent-red)'}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
+                className="tech-card rounded overflow-hidden cursor-pointer"
+                onClick={() => handleShopRedirect('doha')}
+                style={{ border: '1px solid var(--border-color)' }}
               >
-                <div>
-                  <div className="text-danger mb-2"><Zap size={24} /></div>
-                  <h3 className="fs-5 text-white display-font mb-0">Gaming Gear</h3>
+                <div className="position-relative" style={{ height: '180px', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                  <img src={laptopGraphicsImg} alt="Graphics Laptop" className="img-fluid h-100 object-fit-contain" />
                 </div>
-                <ChevronRight size={20} className="text-secondary" />
+                <div className="p-4 text-start bg-white">
+                  <div className="d-flex align-items-center gap-2 mb-2">
+                    <span className="p-1 rounded bg-primary bg-opacity-10 text-primary"><Palette size={18} style={{ color: 'var(--accent-red)' }} /></span>
+                    <h3 className="fs-5 display-font mb-0" style={{ color: 'var(--text-primary)' }}>Laptop Đồ Họa</h3>
+                  </div>
+                  <p className="fs-8 text-secondary mb-0">Màn hình chuẩn màu OLED/Retina, hiệu năng CPU mạnh mẽ chuyên đồ họa & render video.</p>
+                </div>
               </div>
             </div>
           </div>
@@ -220,18 +239,19 @@ const Home = ({ setCurrentPage, onSelectProduct }) => {
       </section>
 
       {/* Trending Products (Featured) Grid */}
-      <section id="featured-section" className="py-5" style={{ backgroundColor: '#060608', borderTop: '1px solid var(--border-color)' }}>
+      <section id="featured-section" className="py-5" style={{ backgroundColor: '#ffffff', borderTop: '1px solid var(--border-color)' }}>
         <div className="container px-4 px-md-5">
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-5 text-start gap-3">
             <div>
-              <span className="text-danger text-uppercase fw-bold tracking-widest fs-8 mb-2 d-block" style={{ letterSpacing: '0.15em', fontSize: '0.75rem' }}>
-                Bộ Sưu Tập Nổi Bật
+              <span className="text-danger text-uppercase fw-bold tracking-widest fs-8 mb-2 d-block" style={{ letterSpacing: '0.15em', fontSize: '0.75rem', color: 'var(--accent-red)' }}>
+                Sản Phẩm Cao Cấp
               </span>
-              <h2 className="fs-2 text-white display-font mb-0">Sản Phẩm Xu Hướng</h2>
+              <h2 className="fs-2 display-font mb-0" style={{ color: 'var(--text-primary)' }}>Laptop Nổi Bật Nhất</h2>
             </div>
             <button 
               className="btn btn-link text-danger fw-bold d-flex align-items-center gap-1 p-0 border-0 text-decoration-none"
               onClick={() => handleShopRedirect('all')}
+              style={{ color: 'var(--accent-red)' }}
             >
               Xem tất cả sản phẩm <ChevronRight size={16} />
             </button>
@@ -249,6 +269,49 @@ const Home = ({ setCurrentPage, onSelectProduct }) => {
                 key={product.id} 
                 variants={itemVariants}
                 className="col-12 col-md-6 col-lg-4"
+              >
+                <ProductCard 
+                  product={product} 
+                  onSelectProduct={onSelectProduct} 
+                  setCurrentPage={setCurrentPage} 
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Sale Products Grid */}
+      <section id="sale-section" className="py-5" style={{ backgroundColor: 'var(--bg-primary)', borderTop: '1px solid var(--border-color)' }}>
+        <div className="container px-4 px-md-5">
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-5 text-start gap-3">
+            <div>
+              <span className="text-danger text-uppercase fw-bold tracking-widest fs-8 mb-2 d-block" style={{ letterSpacing: '0.15em', fontSize: '0.75rem', color: 'var(--accent-red)' }}>
+                Giá Tốt Mỗi Ngày
+              </span>
+              <h2 className="fs-2 display-font mb-0" style={{ color: 'var(--text-primary)' }}>Laptop Đang Giảm Giá</h2>
+            </div>
+            <button 
+              className="btn btn-link text-danger fw-bold d-flex align-items-center gap-1 p-0 border-0 text-decoration-none"
+              onClick={() => handleShopRedirect('all')}
+              style={{ color: 'var(--accent-red)' }}
+            >
+              Xem tất cả ưu đãi <ChevronRight size={16} />
+            </button>
+          </div>
+
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-100px' }}
+            className="row g-4"
+          >
+            {saleProducts.map((product) => (
+              <motion.div 
+                key={product.id} 
+                variants={itemVariants}
+                className="col-12 col-sm-6 col-md-4 col-lg-3"
               >
                 <ProductCard 
                   product={product} 

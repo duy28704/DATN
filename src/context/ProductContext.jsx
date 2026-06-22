@@ -4,12 +4,26 @@ import { apiService } from '../services/api'
 export const ProductContext = createContext()
 
 const CATEGORIES = [
-  { id: 'all', name: 'Tất cả' },
-  { id: 'wearables', name: 'Thiết bị Đeo' },
-  { id: 'audio', name: 'Âm thanh' },
-  { id: 'computing', name: 'Máy tính' },
-  { id: 'input', name: 'Thiết bị ngoại vi' }
+  { id: 'all', name: 'Tất cả Laptop' },
+  { id: 'gaming', name: 'Laptop Gaming' },
+  { id: 'vanphong', name: 'Laptop Văn phòng' },
+  { id: 'doha', name: 'Laptop Đồ họa' }
 ]
+
+// Hàm tự động trích xuất hãng sản xuất từ tên sản phẩm để tránh giá trị null từ DB
+const extractBrand = (name) => {
+  if (!name) return 'NEXUS';
+  const lowerName = name.toLowerCase();
+  if (lowerName.includes('lenovo')) return 'Lenovo';
+  if (lowerName.includes('asus') || lowerName.includes('rog') || lowerName.includes('tuf')) return 'Asus';
+  if (lowerName.includes('dell') || lowerName.includes('inspiron') || lowerName.includes('vostro') || lowerName.includes('latitude') || lowerName.includes('alienware')) return 'Dell';
+  if (lowerName.includes('hp') || lowerName.includes('pavilion') || lowerName.includes('envy') || lowerName.includes('spectre') || lowerName.includes('victus')) return 'HP';
+  if (lowerName.includes('acer') || lowerName.includes('predator') || lowerName.includes('nitro') || lowerName.includes('swift') || lowerName.includes('aspire')) return 'Acer';
+  if (lowerName.includes('msi') || lowerName.includes('katana') || lowerName.includes('cyborg') || lowerName.includes('modern')) return 'MSI';
+  if (lowerName.includes('macbook') || lowerName.includes('apple')) return 'Apple';
+  return 'NEXUS';
+};
+
 
 // Hàm chuyển đổi và gộp các thông số kỹ thuật chi tiết của sản phẩm.
 // Vì dữ liệu sản phẩm (đặc biệt là Laptop) có các trường thông số lưu dưới dạng cột riêng biệt trong database,
@@ -132,21 +146,70 @@ export const ProductProvider = ({ children }) => {
             imagesList = ['/assets/nexus-keyboard.png'];
           }
 
+          // Phân loại Laptop động dựa trên tên và thông số card đồ họa
+          let finalCategory = 'vanphong'; // Mặc định là Văn phòng
+          const nameLower = (item.name || '').toLowerCase();
+          const gpuLower = (item.gpuCard || '').toLowerCase();
+          const descLower = (item.description || item.shortDescription || '').toLowerCase();
+
+          if (
+            nameLower.includes('gaming') || 
+            nameLower.includes('tuf') || 
+            nameLower.includes('rog') || 
+            nameLower.includes('strix') || 
+            nameLower.includes('legion') || 
+            nameLower.includes('loq') || 
+            nameLower.includes('predator') || 
+            nameLower.includes('nitro') || 
+            nameLower.includes('cyborg') || 
+            nameLower.includes('katana') || 
+            nameLower.includes('victus') || 
+            nameLower.includes('omen') ||
+            gpuLower.includes('rtx') ||
+            gpuLower.includes('gtx') ||
+            gpuLower.includes('radeon rx')
+          ) {
+            finalCategory = 'gaming';
+          } else if (
+            nameLower.includes('creator') || 
+            nameLower.includes('studio') || 
+            nameLower.includes('proart') || 
+            nameLower.includes('oled') ||
+            descLower.includes('đồ họa') ||
+            descLower.includes('thiết kế đồ họa') ||
+            descLower.includes('render') ||
+            gpuLower.includes('arc graphics') ||
+            gpuLower.includes('geforce') ||
+            (gpuLower.includes('nvidia') && !gpuLower.includes('rtx') && !gpuLower.includes('gtx')) ||
+            item.ram === '32 GB' ||
+            item.ram === '64 GB'
+          ) {
+            finalCategory = 'doha';
+          }
+
           return {
             id: item.id,
             name: item.name,
-            category: item.category || 'computing',
+            category: finalCategory,
             price: numPrice,
             displayPrice: item.price || '',
             rating: item.rating || 5.0,
             reviewCount: item.reviewCount || 0,
-            tag: item.tag,
+            tag: item.tag || (numPrice > 35000000 ? 'Hot' : (numPrice < 15000000 ? 'Sale' : 'New')),
             image: firstImage,
             imagesList: imagesList,
             shortDescription: item.shortDescription || item.description || '',
             description: item.description || '',
             specs: buildSpecs(item), // Gọi hàm gộp thông số kỹ thuật đầy đủ đã bổ sung các trường cột riêng lẻ
-            reviews: item.reviewsJson ? JSON.parse(item.reviewsJson) : []
+            reviews: item.reviewsJson ? JSON.parse(item.reviewsJson) : [],
+            // Các trường gốc phục vụ bộ lọc thông minh ở Trang danh sách sản phẩm
+            brand: item.brand || extractBrand(item.name),
+            cpuTechnology: item.cpuTechnology || '',
+            gpuCard: item.gpuCard || '',
+            ram: item.ram || '',
+            storage: item.storage || '',
+            screenResolution: item.screenResolution || '',
+            refreshRate: item.refreshRate || ''
           };
         })
         setProducts(transformed)

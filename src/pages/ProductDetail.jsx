@@ -6,7 +6,7 @@ import SEO from '../components/SEO'
 import { Star, ShieldCheck, ChevronLeft, Minus, Plus, ShoppingCart } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-const ProductDetail = ({ productId, setCurrentPage, onSelectProduct }) => {
+const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow }) => {
   const { addToCart } = useContext(CartContext)
   const { products } = useContext(ProductContext)
   
@@ -53,6 +53,13 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct }) => {
 
   const handleAddToCart = () => {
     addToCart(product, quantity, selectedColor)
+  }
+
+  const handleBuyNow = () => {
+    addToCart(product, quantity, selectedColor)
+    if (onBuyNow) {
+      onBuyNow()
+    }
   }
 
   // JSON-LD dynamic schema for product
@@ -237,10 +244,18 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct }) => {
             <div className="d-flex flex-column gap-3">
               <div className="d-flex gap-3">
                 <button 
-                  className="btn btn-danger flex-grow-1 py-3 glow-btn d-flex align-items-center justify-content-center gap-2"
+                  className="btn btn-outline-danger py-3 d-flex align-items-center justify-content-center gap-2"
                   onClick={handleAddToCart}
+                  style={{ flex: 1, borderRadius: '6px' }}
                 >
-                  <ShoppingCart size={18} /> Thêm Vào Giỏ Hàng
+                  <ShoppingCart size={18} /> Thêm Vào Giỏ
+                </button>
+                <button 
+                  className="btn btn-danger py-3 glow-btn d-flex align-items-center justify-content-center gap-2 fw-bold"
+                  onClick={handleBuyNow}
+                  style={{ flex: 1.5, borderRadius: '6px' }}
+                >
+                  Mua Ngay
                 </button>
               </div>
               <div className="d-flex align-items-center gap-2 text-secondary fs-8 mt-2" style={{ fontSize: '0.8rem' }}>

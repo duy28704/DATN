@@ -28,7 +28,13 @@ function AppContent() {
   const [currentPage, setCurrentPageState] = useState('home')
   const [selectedProductId, setSelectedProductId] = useState(null)
   const [cartOpen, setCartOpen] = useState(false)
+  const [cartDrawerStep, setCartDrawerStep] = useState('cart')
   const { user } = useContext(AuthContext)
+
+  const handleOpenCart = (step = 'cart') => {
+    setCartDrawerStep(step)
+    setCartOpen(true)
+  }
 
   const setCurrentPage = (pageString) => {
     setCurrentPageState(pageString)
@@ -100,7 +106,7 @@ function AppContent() {
       return <Shop currentPage={currentPage} onSelectProduct={setSelectedProductId} setCurrentPage={setCurrentPage} />
     }
     if (currentPage.startsWith('product/')) {
-      return <ProductDetail key={selectedProductId} productId={selectedProductId} setCurrentPage={setCurrentPage} onSelectProduct={setSelectedProductId} />
+      return <ProductDetail key={selectedProductId} productId={selectedProductId} setCurrentPage={setCurrentPage} onSelectProduct={setSelectedProductId} onBuyNow={() => handleOpenCart('checkout')} />
     }
     if (currentPage === 'installments') {
       return <Installments setCurrentPage={setCurrentPage} />
@@ -148,7 +154,7 @@ function AppContent() {
 
   return (
     <div id="root" className="d-flex flex-column min-vh-100" style={{ backgroundColor: 'var(--bg-primary)' }}>
-      <Header currentPage={currentPage} setCurrentPage={setCurrentPage} onCartOpen={() => setCartOpen(true)} />
+      <Header currentPage={currentPage} setCurrentPage={setCurrentPage} onCartOpen={() => handleOpenCart('cart')} />
 
       <main className="flex-grow-1">
         <AnimatePresence mode="wait">
@@ -168,7 +174,7 @@ function AppContent() {
 
       <AnimatePresence>
         {cartOpen && (
-          <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} setCurrentPage={setCurrentPage} />
+          <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} setCurrentPage={setCurrentPage} initialStep={cartDrawerStep} />
         )}
       </AnimatePresence>
 

@@ -10,10 +10,16 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
   const [sortOption, setSortOption] = useState('featured')
   const [loadingMore, setLoadingMore] = useState(false)
 
+  // Bộ lọc thông minh bổ sung
+  const [filterCpu, setFilterCpu] = useState('all')
+  const [filterRam, setFilterRam] = useState('all')
+  const [filterGpu, setFilterGpu] = useState('all')
+  const [filterPriceRange, setFilterPriceRange] = useState('all')
+
   const handleLoadMore = () => {
     setLoadingMore(true)
     setTimeout(() => {
-      setVisibleCount(prev => prev + 6)
+      setVisibleCount(prev => prev + 8)
       setLoadingMore(false)
     }, 400)
   }
@@ -29,11 +35,11 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
     if (params.get('search')) searchQuery = params.get('search')
   }
 
-  const [visibleCount, setVisibleCount] = useState(6)
+  const [visibleCount, setVisibleCount] = useState(8)
 
   useEffect(() => {
-    setVisibleCount(6)
-  }, [selectedCat, searchQuery, sortOption])
+    setVisibleCount(8)
+  }, [selectedCat, searchQuery, sortOption, filterCpu, filterRam, filterGpu, filterPriceRange])
 
   // Filter and sort mechanism
   const filteredProducts = useMemo(() => {
@@ -53,6 +59,52 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
       )
     }
 
+    // Lọc theo CPU
+    if (filterCpu !== 'all') {
+      const cpu = filterCpu.toLowerCase()
+      result = result.filter(item => {
+        const cpuTech = (item.cpuTechnology || '').toLowerCase()
+        const name = (item.name || '').toLowerCase()
+        return cpuTech.includes(cpu) || name.includes(cpu)
+      })
+    }
+
+    // Lọc theo RAM
+    if (filterRam !== 'all') {
+      const ramVal = filterRam.toLowerCase()
+      result = result.filter(item => {
+        const ram = (item.ram || '').toLowerCase()
+        return ram.startsWith(ramVal) || ram.includes(ramVal)
+      })
+    }
+
+    // Lọc theo GPU
+    if (filterGpu !== 'all') {
+      result = result.filter(item => {
+        const gpu = (item.gpuCard || '').toLowerCase()
+        if (filterGpu === 'nvidia') {
+          return gpu.includes('nvidia') || gpu.includes('geforce') || gpu.includes('rtx') || gpu.includes('gtx')
+        } else if (filterGpu === 'intel') {
+          return gpu.includes('intel') || gpu.includes('arc') || gpu.includes('iris')
+        } else if (filterGpu === 'apple') {
+          return gpu.includes('apple')
+        }
+        return true
+      })
+    }
+
+    // Lọc theo khoảng giá (VND)
+    if (filterPriceRange !== 'all') {
+      result = result.filter(item => {
+        const price = item.price
+        if (filterPriceRange === 'under15m') return price < 15000000
+        if (filterPriceRange === '15to25m') return price >= 15000000 && price <= 25000000
+        if (filterPriceRange === '25to40m') return price >= 25000000 && price <= 40000000
+        if (filterPriceRange === 'over40m') return price > 40000000
+        return true
+      })
+    }
+
     // Sorting
     if (sortOption === 'price-asc') {
       result.sort((a, b) => a.price - b.price)
@@ -63,7 +115,7 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
     }
 
     return result
-  }, [selectedCat, searchQuery, sortOption, products])
+  }, [selectedCat, searchQuery, sortOption, products, filterCpu, filterRam, filterGpu, filterPriceRange])
 
   const displayedProducts = useMemo(() => {
     return filteredProducts.slice(0, visibleCount)
@@ -71,6 +123,10 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
 
   const handleResetFilters = () => {
     setSortOption('featured')
+    setFilterCpu('all')
+    setFilterRam('all')
+    setFilterGpu('all')
+    setFilterPriceRange('all')
     setCurrentPage('shop')
   }
 
@@ -89,19 +145,19 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
   return (
     <>
       <SEO
-        title="Danh Sách Sản Phẩm"
-        description="Duyệt qua danh mục thiết bị công nghệ cao cấp của NEXUS Tech. Lọc theo thiết bị đeo, thiết bị âm thanh, bàn phím cơ gaming gear."
-        keywords="đồ công nghệ cao cấp, tai nghe gaming, chuột không dây, bàn phím cơ nhôm, kính vr pancake"
+        title="Danh Sách Sản Phẩm | NEXUS Tech"
+        description="Duyệt qua danh mục Laptop Gaming, Laptop Văn phòng, Laptop Đồ họa chính hãng cao cấp của NEXUS Tech. Bộ lọc thông minh theo cấu hình phần cứng."
+        keywords="laptop gaming, laptop van phong, laptop do hoa, core i7, rtx 4060, ram 16gb, ssd 1tb, oled"
         schema={shopSchema}
       />
 
       <div className="container py-5 px-4 px-md-5">
         {/* Page title and stats */}
         <div className="text-start mb-5">
-          <span className="text-danger text-uppercase fw-bold tracking-widest fs-8 mb-2 d-block" style={{ letterSpacing: '0.15em', fontSize: '0.75rem' }}>
+          <span className="text-danger text-uppercase fw-bold tracking-widest fs-8 mb-2 d-block" style={{ letterSpacing: '0.15em', fontSize: '0.75rem', color: 'var(--accent-red)' }}>
             NEXUS SHOP
           </span>
-          <h1 className="fs-2 text-white display-font mb-2">
+          <h1 className="fs-2 display-font mb-2" style={{ color: 'var(--text-primary)' }}>
             {searchQuery ? `Kết quả tìm kiếm cho: "${searchQuery}"` : 'Tất Cả Sản Phẩm'}
           </h1>
           <p className="text-secondary fs-7 mb-0">
@@ -137,7 +193,7 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
               <select
                 value={sortOption}
                 onChange={(e) => setSortOption(e.target.value)}
-                className="form-select bg-black text-white border-secondary fs-7"
+                className="form-select bg-white text-dark border-secondary fs-7"
                 style={{ height: '38px', borderRadius: '4px', fontSize: '0.85rem' }}
                 aria-label="Sắp xếp sản phẩm"
               >
@@ -148,7 +204,7 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
               </select>
             </div>
             
-            {(selectedCat !== 'all' || sortOption !== 'featured' || searchQuery) && (
+            {(selectedCat !== 'all' || sortOption !== 'featured' || searchQuery || filterCpu !== 'all' || filterRam !== 'all' || filterGpu !== 'all' || filterPriceRange !== 'all') && (
               <button
                 className="btn btn-outline-danger p-2 d-flex align-items-center justify-content-center"
                 onClick={handleResetFilters}
@@ -158,6 +214,86 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
                 <RotateCcw size={16} />
               </button>
             )}
+          </div>
+        </div>
+
+        {/* Smart Filters Grid */}
+        <div className="p-4 rounded mb-5" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', boxShadow: '0 4px 12px rgba(15,98,254,0.03)' }}>
+          <div className="row g-3">
+            {/* CPU Filter */}
+            <div className="col-12 col-sm-6 col-md-3 text-start">
+              <label className="form-label fs-8 fw-semibold text-secondary mb-1">Cấu hình CPU</label>
+              <select
+                value={filterCpu}
+                onChange={(e) => setFilterCpu(e.target.value)}
+                className="form-select bg-white text-dark border-secondary fs-7"
+                style={{ height: '38px', borderRadius: '6px' }}
+                aria-label="Lọc CPU"
+              >
+                <option value="all">Tất cả CPU</option>
+                <option value="ultra">Intel Core Ultra</option>
+                <option value="i9">Intel Core i9</option>
+                <option value="i7">Intel Core i7</option>
+                <option value="i5">Intel Core i5</option>
+                <option value="ryzen 9">AMD Ryzen 9</option>
+                <option value="ryzen 7">AMD Ryzen 7</option>
+                <option value="ryzen 5">AMD Ryzen 5</option>
+                <option value="m1">Apple M-Series</option>
+              </select>
+            </div>
+
+            {/* RAM Filter */}
+            <div className="col-12 col-sm-6 col-md-3 text-start">
+              <label className="form-label fs-8 fw-semibold text-secondary mb-1">Dung lượng RAM</label>
+              <select
+                value={filterRam}
+                onChange={(e) => setFilterRam(e.target.value)}
+                className="form-select bg-white text-dark border-secondary fs-7"
+                style={{ height: '38px', borderRadius: '6px' }}
+                aria-label="Lọc RAM"
+              >
+                <option value="all">Tất cả RAM</option>
+                <option value="8 gb">8 GB</option>
+                <option value="16 gb">16 GB</option>
+                <option value="32 gb">32 GB</option>
+                <option value="64 gb">64 GB+</option>
+              </select>
+            </div>
+
+            {/* GPU Filter */}
+            <div className="col-12 col-sm-6 col-md-3 text-start">
+              <label className="form-label fs-8 fw-semibold text-secondary mb-1">Card đồ họa (GPU)</label>
+              <select
+                value={filterGpu}
+                onChange={(e) => setFilterGpu(e.target.value)}
+                className="form-select bg-white text-dark border-secondary fs-7"
+                style={{ height: '38px', borderRadius: '6px' }}
+                aria-label="Lọc Card đồ họa"
+              >
+                <option value="all">Tất cả đồ họa</option>
+                <option value="nvidia">NVIDIA Dedicated GPU</option>
+                <option value="intel">Intel integrated/Arc</option>
+                <option value="apple">Apple GPU</option>
+              </select>
+            </div>
+
+            {/* Price Filter */}
+            <div className="col-12 col-sm-6 col-md-3 text-start">
+              <label className="form-label fs-8 fw-semibold text-secondary mb-1">Mức giá</label>
+              <select
+                value={filterPriceRange}
+                onChange={(e) => setFilterPriceRange(e.target.value)}
+                className="form-select bg-white text-dark border-secondary fs-7"
+                style={{ height: '38px', borderRadius: '6px' }}
+                aria-label="Lọc theo Giá"
+              >
+                <option value="all">Tất cả mức giá</option>
+                <option value="under15m">Dưới 15 triệu</option>
+                <option value="15to25m">15 - 25 triệu</option>
+                <option value="25to40m">25 - 40 triệu</option>
+                <option value="over40m">Trên 40 triệu</option>
+              </select>
+            </div>
           </div>
         </div>
 

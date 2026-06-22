@@ -4,6 +4,16 @@ import { Star, ShoppingCart, Eye } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { formatDisplayPrice } from '../context/ProductContext'
 
+const categoryNames = {
+  gaming: 'Laptop Gaming',
+  vanphong: 'Laptop Văn phòng',
+  doha: 'Laptop Đồ họa',
+  wearables: 'Thiết bị Đeo',
+  audio: 'Âm thanh',
+  computing: 'Máy tính',
+  input: 'Thiết bị ngoại vi'
+}
+
 const ProductCard = ({ product, onSelectProduct, setCurrentPage }) => {
   const { addToCart } = useContext(CartContext)
 
@@ -44,14 +54,14 @@ const ProductCard = ({ product, onSelectProduct, setCurrentPage }) => {
         />
       </div>
 
-      <div className="p-3 d-flex flex-column flex-grow-1">
+      <div className="p-3 d-flex flex-column flex-grow-1 text-start">
         {/* Category */}
-        <span className="text-uppercase text-danger fw-bold mb-1" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>
-          {product.category}
+        <span className="text-uppercase fw-bold mb-1" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--accent-red)' }}>
+          {categoryNames[product.category] || product.category}
         </span>
         
         {/* Title */}
-        <h3 className="fs-6 text-white text-truncate-2 mb-2" style={{ fontWeight: '600', height: '42px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', lineHeight: '1.3' }}>
+        <h3 className="fs-6 text-dark text-truncate-2 mb-2" style={{ fontWeight: '600', height: '42px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', lineHeight: '1.3' }}>
           {product.name}
         </h3>
 
@@ -68,19 +78,19 @@ const ProductCard = ({ product, onSelectProduct, setCurrentPage }) => {
             ))}
           </div>
           <span className="text-secondary" style={{ fontSize: '0.75rem' }}>
-            ({product.reviewCount})
+            ({product.reviewCount || 0})
           </span>
         </div>
 
         {/* Price and Action Buttons */}
-        <div className="mt-auto d-flex align-items-center justify-content-between">
-          <span className="fs-5 fw-bold text-white display-font">
+        <div className="mt-auto d-flex align-items-center justify-content-between pt-2" style={{ borderTop: '1px solid #f1f5f9' }}>
+          <span className="fs-6 fw-bold display-font" style={{ color: 'var(--accent-red)' }}>
             {formatDisplayPrice(product.price, product.displayPrice)}
           </span>
           <div className="d-flex gap-2">
             <button 
               className="btn btn-sm btn-outline-secondary p-2 d-flex align-items-center justify-content-center"
-              style={{ borderRadius: '4px', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
+              style={{ borderRadius: '6px', width: '34px', height: '34px' }}
               onClick={(e) => {
                 e.stopPropagation()
                 handleCardClick()
@@ -90,12 +100,12 @@ const ProductCard = ({ product, onSelectProduct, setCurrentPage }) => {
               <Eye size={15} />
             </button>
             <button 
-              className="btn btn-sm btn-danger p-2 d-flex align-items-center justify-content-center glow-btn-sm"
-              style={{ borderRadius: '4px', backgroundColor: 'var(--accent-red)', border: 'none' }}
+              className="btn btn-sm btn-danger p-2 d-flex align-items-center justify-content-center"
+              style={{ borderRadius: '6px', width: '34px', height: '34px' }}
               onClick={handleQuickAdd}
               title="Thêm vào giỏ"
             >
-              <ShoppingCart size={15} className="text-white" />
+              <ShoppingCart size={15} style={{ color: '#ffffff' }} />
             </button>
           </div>
         </div>

@@ -6,7 +6,7 @@ import { useToast } from '../context/ToastContext'
 import { X, Plus, Minus, Trash2, ShieldCheck, ShoppingBag, ArrowRight, Truck, CreditCard, Landmark, QrCode, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-const CartDrawer = ({ isOpen, onClose, setCurrentPage }) => {
+const CartDrawer = ({ isOpen, onClose, setCurrentPage, initialStep = 'cart' }) => {
   const { 
     cartItems, 
     updateQuantity, 
@@ -20,7 +20,13 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage }) => {
   const { user } = useContext(AuthContext)
   const { showToast } = useToast()
 
-  const [checkoutStep, setCheckoutStep] = useState('cart') // 'cart', 'checkout', 'success'
+  const [checkoutStep, setCheckoutStep] = useState(initialStep) // 'cart', 'checkout', 'success'
+
+  useEffect(() => {
+    if (isOpen) {
+      setCheckoutStep(initialStep)
+    }
+  }, [isOpen, initialStep])
   const [formData, setFormData] = useState({ name: '', phone: '', address: '', note: '' })
   const [paymentMethod, setPaymentMethod] = useState('cod') // 'cod', 'visa', 'atm', 'momo'
   const [cardData, setCardData] = useState({ number: '', name: '', expiry: '', cvc: '' })
@@ -571,10 +577,29 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage }) => {
               </div>
 
               {/* Sticky bottom price and buttons */}
-              <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--border-color)' }}>
+              <div className="mt-4 pt-3 text-start" style={{ borderTop: '1px solid var(--border-color)' }}>
+                <div className="d-flex justify-content-between mb-2 fs-7">
+                  <span className="text-secondary">Tạm tính (Subtotal):</span>
+                  <span className="text-white fw-medium">{cartSubtotal.toLocaleString('vi-VN')} ₫</span>
+                </div>
+                <div className="d-flex justify-content-between mb-2 fs-7">
+                  <span className="text-secondary">Phí vận chuyển (Shipping):</span>
+                  <span className="text-white fw-medium">
+                    {cartShipping === 0 ? 'Miễn phí' : `${cartShipping.toLocaleString('vi-VN')} ₫`}
+                  </span>
+                </div>
+                <div className="d-flex justify-content-between mb-2 fs-7">
+                  <span className="text-secondary">Thuế (VAT):</span>
+                  <span className="text-white fw-medium">Đã bao gồm (10%)</span>
+                </div>
                 <div className="d-flex justify-content-between mb-3 fs-7">
-                  <span className="text-secondary">Tổng số tiền:</span>
-                  <span className="text-danger fw-bold fs-5 display-font">{cartTotal.toLocaleString('vi-VN')} ₫</span>
+                  <span className="text-secondary">Giao hàng dự kiến:</span>
+                  <span className="text-white fw-medium">2 - 3 ngày làm việc</span>
+                </div>
+                <div className="h-line w-100 my-2" style={{ borderTop: '1px dashed var(--border-color)' }}></div>
+                <div className="d-flex justify-content-between mb-4 align-items-center">
+                  <span className="text-white fw-semibold">Tổng thanh toán:</span>
+                  <span className="text-danger fw-bold fs-4 display-font">{cartTotal.toLocaleString('vi-VN')} ₫</span>
                 </div>
 
                 <div className="d-flex gap-2">
