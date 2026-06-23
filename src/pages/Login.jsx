@@ -651,7 +651,7 @@ const Login = ({ setCurrentPage }) => {
                                                   </div>
                                                   <div>
                                                     <h5 className="fs-8 text-white mb-0">{item.name}</h5>
-                                                    <span className="text-secondary" style={{ fontSize: '0.7rem' }}>Màu: {item.selectedColor}</span>
+                                                    <span className="text-secondary" style={{ fontSize: '0.7rem' }}>{item.configuration ? `Cấu hình: ${item.configuration}` : `Màu: ${item.selectedColor}`}</span>
                                                   </div>
                                                 </div>
                                                 <span className="text-white fs-8 display-font">{item.quantity} x {item.price.toLocaleString('vi-VN')} ₫</span>

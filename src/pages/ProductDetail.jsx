@@ -13,14 +13,26 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow })
   const product = products.find(p => String(p.id) === String(productId))
   const [quantity, setQuantity] = useState(1)
   
-  const getDefaultColor = (p) => {
-    if (!p) return 'Carbon Black'
-    if (p.category === 'audio') return 'Sonic Red'
-    if (p.category === 'wearables') return 'Titanium Gray'
-    return 'Carbon Black'
+  const getConfigurations = (p) => {
+    if (!p) return ['Standard Configuration']
+    const ram = p.ram || '16 GB'
+    const storage = p.storage || '512 GB'
+    
+    // Calculate upgraded RAM
+    let upgradedRam = '32 GB'
+    if (ram.includes('8')) upgradedRam = '16 GB'
+    else if (ram.includes('16')) upgradedRam = '32 GB'
+    else if (ram.includes('32')) upgradedRam = '64 GB'
+    else upgradedRam = ram
+    
+    return [
+      `${ram} RAM / ${storage}`,
+      `${upgradedRam} RAM / 1 TB SSD (Hiệu năng cao)`
+    ]
   }
   
-  const [selectedColor, setSelectedColor] = useState(() => getDefaultColor(product))
+  const [configurations] = useState(() => getConfigurations(product))
+  const [selectedConfig, setSelectedConfig] = useState(() => getConfigurations(product)[0])
   const [activeTab, setActiveTab] = useState('specs') // 'specs', 'reviews'
   const [activeImage, setActiveImage] = useState(null)
   
@@ -52,11 +64,11 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow })
   }
 
   const handleAddToCart = () => {
-    addToCart(product, quantity, selectedColor)
+    addToCart(product, quantity, selectedConfig)
   }
 
   const handleBuyNow = () => {
-    addToCart(product, quantity, selectedColor)
+    addToCart(product, quantity, selectedConfig)
     if (onBuyNow) {
       onBuyNow()
     }
@@ -91,11 +103,7 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow })
     }
   }
 
-  const colorsList = [
-    { name: 'Carbon Black', hex: '#0e0e10' },
-    { name: 'Sonic Red', hex: '#ff003c' },
-    { name: 'Chrono Silver', hex: '#e2e2e9' }
-  ]
+
 
   return (
     <>
@@ -196,26 +204,30 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow })
                 {product.description}
               </p>
 
-              {/* Color configurations */}
+              {/* Configurations selection */}
               <div className="mb-4">
-                <span className="d-block text-secondary fs-7 mb-2">Màu sắc lựa chọn: <strong className="text-white">{selectedColor}</strong></span>
-                <div className="d-flex gap-2">
-                  {colorsList.map((col) => (
-                    <button
-                      key={col.name}
-                      onClick={() => setSelectedColor(col.name)}
-                      className={`btn p-0 rounded-circle d-flex align-items-center justify-content-center`}
-                      style={{ 
-                        width: '32px', 
-                        height: '32px', 
-                        backgroundColor: col.hex,
-                        border: selectedColor === col.name ? '2px solid var(--accent-red)' : '1px solid rgba(255,255,255,0.2)',
-                        boxShadow: selectedColor === col.name ? '0 0 8px var(--accent-red-glow)' : 'none',
-                        transition: 'var(--transition-fast)'
-                      }}
-                      title={col.name}
-                    />
-                  ))}
+                <span className="d-block text-secondary fs-7 mb-2">Cấu hình lựa chọn:</span>
+                <div className="d-flex flex-column gap-2" style={{ maxWidth: '400px' }}>
+                  {configurations.map((config) => {
+                    const isSelected = selectedConfig === config
+                    return (
+                      <button
+                        key={config}
+                        onClick={() => setSelectedConfig(config)}
+                        className="btn text-start p-3 rounded transition-smooth d-flex align-items-center justify-content-between text-white"
+                        style={{
+                          backgroundColor: isSelected ? 'rgba(255, 0, 60, 0.05)' : 'rgba(255, 255, 255, 0.02)',
+                          borderColor: isSelected ? 'var(--accent-red)' : 'var(--border-color)',
+                          borderWidth: '1px',
+                          borderStyle: 'solid',
+                          transition: 'var(--transition-fast)'
+                        }}
+                      >
+                        <span className="fs-7 fw-medium">{config}</span>
+                        {isSelected && <span className="fs-8 text-danger fw-semibold">Đã chọn</span>}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 

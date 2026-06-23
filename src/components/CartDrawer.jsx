@@ -7,14 +7,14 @@ import { X, Plus, Minus, Trash2, ShieldCheck, ShoppingBag, ArrowRight, Truck, Cr
 import { motion, AnimatePresence } from 'framer-motion'
 
 const CartDrawer = ({ isOpen, onClose, setCurrentPage, initialStep = 'cart' }) => {
-  const { 
-    cartItems, 
-    updateQuantity, 
-    removeFromCart, 
-    cartSubtotal, 
-    cartShipping, 
+  const {
+    cartItems,
+    updateQuantity,
+    removeFromCart,
+    cartSubtotal,
+    cartShipping,
     cartTotal,
-    clearCart 
+    clearCart
   } = useContext(CartContext)
 
   const { user } = useContext(AuthContext)
@@ -140,7 +140,7 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage, initialStep = 'cart' }) =
         name: item.name,
         price: item.price,
         quantity: item.quantity,
-        selectedColor: item.selectedColor,
+        configuration: item.configuration,
         image: item.image
       })),
       subtotal: cartSubtotal,
@@ -176,7 +176,7 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage, initialStep = 'cart' }) =
   return (
     <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-end" style={{ zIndex: 1050 }}>
       {/* Backdrop */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.7 }}
         exit={{ opacity: 0 }}
@@ -186,7 +186,7 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage, initialStep = 'cart' }) =
       />
 
       {/* Slide-out Drawer Panel */}
-      <motion.div 
+      <motion.div
         initial={{ x: '100%' }}
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
@@ -213,7 +213,7 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage, initialStep = 'cart' }) =
                 <div className="h-100 d-flex flex-column align-items-center justify-content-center text-center gap-3">
                   <ShoppingBag size={48} className="text-secondary" />
                   <p className="text-secondary mb-0">Giỏ hàng của bạn đang trống.</p>
-                  <button 
+                  <button
                     className="btn btn-sm btn-danger glow-btn"
                     onClick={() => { onClose(); setCurrentPage('shop'); }}
                   >
@@ -223,27 +223,27 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage, initialStep = 'cart' }) =
               ) : (
                 <div className="d-flex flex-column gap-4">
                   {cartItems.map((item) => (
-                    <div key={`${item.id}-${item.selectedColor}`} className="d-flex gap-3 align-items-start pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                    <div key={`${item.id}-${item.configuration}`} className="d-flex gap-3 align-items-start pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                       <div className="p-2 bg-black rounded" style={{ width: '70px', height: '70px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <img src={item.image} alt={item.name} className="img-fluid" style={{ maxHeight: '100%', objectFit: 'contain' }} />
                       </div>
                       <div className="flex-grow-1">
                         <h3 className="fs-7 text-white fw-semibold mb-1 display-font" style={{ fontSize: '0.9rem' }}>{item.name}</h3>
-                        <p className="fs-8 text-danger mb-2" style={{ fontSize: '0.75rem' }}>Màu sắc: {item.selectedColor}</p>
-                        
+                        <p className="fs-8 text-danger mb-2" style={{ fontSize: '0.75rem' }}>Cấu hình: {item.configuration}</p>
+
                         <div className="d-flex align-items-center justify-content-between">
                           {/* Quantity selector */}
                           <div className="d-flex align-items-center border border-secondary rounded" style={{ overflow: 'hidden' }}>
-                            <button 
-                              className="btn btn-sm text-white px-2 py-0 border-0" 
-                              onClick={() => updateQuantity(item.id, item.selectedColor, -1)}
+                            <button
+                              className="btn btn-sm text-white px-2 py-0 border-0"
+                              onClick={() => updateQuantity(item.id, item.configuration, -1)}
                             >
                               <Minus size={12} />
                             </button>
                             <span className="px-2 fs-7 fw-medium">{item.quantity}</span>
-                            <button 
-                              className="btn btn-sm text-white px-2 py-0 border-0" 
-                              onClick={() => updateQuantity(item.id, item.selectedColor, 1)}
+                            <button
+                              className="btn btn-sm text-white px-2 py-0 border-0"
+                              onClick={() => updateQuantity(item.id, item.configuration, 1)}
                             >
                               <Plus size={12} />
                             </button>
@@ -253,11 +253,11 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage, initialStep = 'cart' }) =
                           <span className="fs-7 fw-bold display-font">{(item.price * item.quantity).toLocaleString('vi-VN')} ₫</span>
                         </div>
                       </div>
-                      
+
                       {/* Delete button */}
-                      <button 
+                      <button
                         className="btn btn-link text-secondary hover-red p-0 border-0"
-                        onClick={() => removeFromCart(item.id, item.selectedColor)}
+                        onClick={() => removeFromCart(item.id, item.configuration)}
                         title="Xóa sản phẩm"
                       >
                         <Trash2 size={16} />
@@ -292,7 +292,7 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage, initialStep = 'cart' }) =
                   <span className="text-danger fw-bold fs-4 display-font">{cartTotal.toLocaleString('vi-VN')} ₫</span>
                 </div>
 
-                <button 
+                <button
                   className="btn btn-danger w-100 py-3 glow-btn d-flex align-items-center justify-content-center gap-2"
                   onClick={() => setCheckoutStep('checkout')}
                 >
@@ -307,7 +307,7 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage, initialStep = 'cart' }) =
         {checkoutStep === 'checkout' && (
           <div className="flex-grow-1 overflow-auto p-4 d-flex flex-column">
             <form onSubmit={handleOrderSubmit} className="d-flex flex-column gap-4">
-              
+
               {/* Shipping info */}
               <div>
                 <h3 className="fs-7 text-uppercase tracking-wider mb-3 display-font" style={{ color: 'var(--accent-red)' }}>
@@ -372,20 +372,20 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage, initialStep = 'cart' }) =
                 <h3 className="fs-7 text-uppercase tracking-wider mb-3 display-font" style={{ color: 'var(--accent-red)' }}>
                   2. PHƯƠNG THỨC THANH TOÁN
                 </h3>
-                
+
                 <div className="d-flex flex-column gap-2">
                   {/* Option 1: COD */}
-                  <label 
+                  <label
                     className={`p-3 rounded border text-start cursor-pointer d-flex flex-column transition-smooth ${paymentMethod === 'cod' ? 'border-danger bg-danger bg-opacity-5' : 'border-secondary'}`}
                     style={{ cursor: 'pointer' }}
                   >
                     <div className="d-flex align-items-center justify-content-between">
                       <div className="d-flex align-items-center gap-2">
-                        <input 
-                          type="radio" 
-                          name="payment" 
-                          checked={paymentMethod === 'cod'} 
-                          onChange={() => setPaymentMethod('cod')} 
+                        <input
+                          type="radio"
+                          name="payment"
+                          checked={paymentMethod === 'cod'}
+                          onChange={() => setPaymentMethod('cod')}
                           className="form-check-input"
                           style={{ accentColor: 'var(--accent-red)' }}
                         />
@@ -401,36 +401,36 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage, initialStep = 'cart' }) =
                   </label>
 
                   {/* Option 2: Visa/Mastercard */}
-                  <label 
+                  <label
                     className={`p-3 rounded border text-start cursor-pointer d-flex flex-column transition-smooth ${paymentMethod === 'visa' ? 'border-danger bg-danger bg-opacity-5' : 'border-secondary'}`}
                     style={{ cursor: 'pointer' }}
                   >
                     <div className="d-flex align-items-center justify-content-between">
                       <div className="d-flex align-items-center gap-2">
-                        <input 
-                          type="radio" 
-                          name="payment" 
-                          checked={paymentMethod === 'visa'} 
+                        <input
+                          type="radio"
+                          name="payment"
+                          checked={paymentMethod === 'visa'}
                           onChange={() => setPaymentMethod('visa')}
                           className="form-check-input"
                           style={{ accentColor: 'var(--accent-red)' }}
                         />
                         <span className="fs-7 fw-medium text-white">Thẻ Quốc Tế (Visa / Mastercard)</span>
                       </div>
-                      
+
                       {/* Credit Card SVGs Group */}
                       <div className="d-flex gap-1">
                         {/* Visa SVG */}
                         <svg width="24" height="16" viewBox="0 0 24 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <rect width="24" height="16" rx="2" fill="#0E1A63"/>
-                          <path d="M4.6 11.5L6.1 4.5H8.2L6.7 11.5H4.6ZM13.8 4.7C13.4 4.5 12.7 4.4 12.1 4.4C10.5 4.4 9.4 5.2 9.4 6.4C9.4 7.3 10.2 7.8 10.8 8.1C11.4 8.4 11.6 8.6 11.6 8.9C11.6 9.3 11.1 9.6 10.6 9.6C9.9 9.6 9.4 9.4 9.1 9.2L8.6 10.7C9.1 10.9 10.0 11.1 10.8 11.1C12.5 11.1 13.6 10.3 13.6 9.1C13.6 8.1 13.0 7.6 12.0 7.1C11.4 6.8 11.1 6.6 11.1 6.3C11.1 6.0 11.5 5.7 12.2 5.7C12.7 5.7 13.2 5.8 13.5 6.0L13.8 4.7ZM17.9 4.5H16.2C15.7 4.5 15.3 4.7 15.1 5.2L12.3 11.5H14.5L14.9 10.2H17.6L17.9 11.5H19.9L18.2 4.5H17.9ZM15.5 8.7L16.8 5.6L17.3 8.7H15.5ZM2.8 4.5L1.1 5.7C0.8 5.9 0.6 6.1 0.6 6.5L0.5 11.5H2.6L2.6 7.4L3.4 11.5H5.4L7.8 4.5H5.7L4.4 9.0L3.5 4.5H2.8Z" fill="#FFF"/>
+                          <rect width="24" height="16" rx="2" fill="#0E1A63" />
+                          <path d="M4.6 11.5L6.1 4.5H8.2L6.7 11.5H4.6ZM13.8 4.7C13.4 4.5 12.7 4.4 12.1 4.4C10.5 4.4 9.4 5.2 9.4 6.4C9.4 7.3 10.2 7.8 10.8 8.1C11.4 8.4 11.6 8.6 11.6 8.9C11.6 9.3 11.1 9.6 10.6 9.6C9.9 9.6 9.4 9.4 9.1 9.2L8.6 10.7C9.1 10.9 10.0 11.1 10.8 11.1C12.5 11.1 13.6 10.3 13.6 9.1C13.6 8.1 13.0 7.6 12.0 7.1C11.4 6.8 11.1 6.6 11.1 6.3C11.1 6.0 11.5 5.7 12.2 5.7C12.7 5.7 13.2 5.8 13.5 6.0L13.8 4.7ZM17.9 4.5H16.2C15.7 4.5 15.3 4.7 15.1 5.2L12.3 11.5H14.5L14.9 10.2H17.6L17.9 11.5H19.9L18.2 4.5H17.9ZM15.5 8.7L16.8 5.6L17.3 8.7H15.5ZM2.8 4.5L1.1 5.7C0.8 5.9 0.6 6.1 0.6 6.5L0.5 11.5H2.6L2.6 7.4L3.4 11.5H5.4L7.8 4.5H5.7L4.4 9.0L3.5 4.5H2.8Z" fill="#FFF" />
                         </svg>
                         {/* Mastercard SVG */}
                         <svg width="24" height="16" viewBox="0 0 24 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <rect width="24" height="16" rx="2" fill="#1E1E1E"/>
-                          <circle cx="9.5" cy="8" r="5" fill="#EB001B"/>
-                          <circle cx="14.5" cy="8" r="5" fill="#F79E1B"/>
-                          <path d="M12 5.2C12.8 6.0 13.2 7.0 13.2 8C13.2 9.0 12.8 10.0 12 10.8C11.2 10.0 10.8 9.0 10.8 8C10.8 7.0 11.2 6.0 12 5.2Z" fill="#FF5F00"/>
+                          <rect width="24" height="16" rx="2" fill="#1E1E1E" />
+                          <circle cx="9.5" cy="8" r="5" fill="#EB001B" />
+                          <circle cx="14.5" cy="8" r="5" fill="#F79E1B" />
+                          <path d="M12 5.2C12.8 6.0 13.2 7.0 13.2 8C13.2 9.0 12.8 10.0 12 10.8C11.2 10.0 10.8 9.0 10.8 8C10.8 7.0 11.2 6.0 12 5.2Z" fill="#FF5F00" />
                         </svg>
                       </div>
                     </div>
@@ -439,51 +439,51 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage, initialStep = 'cart' }) =
                       <div className="mt-3 p-3 rounded bg-black d-flex flex-column gap-2" style={{ border: '1px solid rgba(255,255,255,0.05)' }}>
                         <div className="row g-2">
                           <div className="col-12">
-                            <input 
-                              type="text" 
-                              required 
+                            <input
+                              type="text"
+                              required
                               name="number"
                               value={cardData.number}
                               onChange={handleCardInputChange}
-                              placeholder="Số thẻ Visa (16 chữ số)" 
+                              placeholder="Số thẻ Visa (16 chữ số)"
                               className={`form-control tech-input py-1 fs-8 ${cardErrors.number ? 'is-invalid border-danger' : ''}`}
                               maxLength="19"
                             />
                             {cardErrors.number && <span className="text-danger fs-8 mt-1 d-block">{cardErrors.number}</span>}
                           </div>
                           <div className="col-12">
-                            <input 
-                              type="text" 
-                              required 
+                            <input
+                              type="text"
+                              required
                               name="name"
                               value={cardData.name}
                               onChange={handleCardInputChange}
-                              placeholder="Tên in trên thẻ (Ví dụ: NGUYEN VAN A)" 
+                              placeholder="Tên in trên thẻ (Ví dụ: NGUYEN VAN A)"
                               className={`form-control tech-input py-1 fs-8 text-uppercase ${cardErrors.name ? 'is-invalid border-danger' : ''}`}
                             />
                             {cardErrors.name && <span className="text-danger fs-8 mt-1 d-block">{cardErrors.name}</span>}
                           </div>
                           <div className="col-6">
-                            <input 
-                              type="text" 
-                              required 
+                            <input
+                              type="text"
+                              required
                               name="expiry"
                               value={cardData.expiry}
                               onChange={handleCardInputChange}
-                              placeholder="Hạn dùng (MM/YY)" 
+                              placeholder="Hạn dùng (MM/YY)"
                               className={`form-control tech-input py-1 fs-8 ${cardErrors.expiry ? 'is-invalid border-danger' : ''}`}
                               maxLength="5"
                             />
                             {cardErrors.expiry && <span className="text-danger fs-8 mt-1 d-block">{cardErrors.expiry}</span>}
                           </div>
                           <div className="col-6">
-                            <input 
-                              type="password" 
-                              required 
+                            <input
+                              type="password"
+                              required
                               name="cvc"
                               value={cardData.cvc}
                               onChange={handleCardInputChange}
-                              placeholder="Mã bảo mật CVC/CVV" 
+                              placeholder="Mã bảo mật CVC/CVV"
                               className={`form-control tech-input py-1 fs-8 ${cardErrors.cvc ? 'is-invalid border-danger' : ''}`}
                               maxLength="3"
                             />
@@ -495,16 +495,16 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage, initialStep = 'cart' }) =
                   </label>
 
                   {/* Option 3: ATM / Local Bank */}
-                  <label 
+                  <label
                     className={`p-3 rounded border text-start cursor-pointer d-flex flex-column transition-smooth ${paymentMethod === 'atm' ? 'border-danger bg-danger bg-opacity-5' : 'border-secondary'}`}
                     style={{ cursor: 'pointer' }}
                   >
                     <div className="d-flex align-items-center justify-content-between">
                       <div className="d-flex align-items-center gap-2">
-                        <input 
-                          type="radio" 
-                          name="payment" 
-                          checked={paymentMethod === 'atm'} 
+                        <input
+                          type="radio"
+                          name="payment"
+                          checked={paymentMethod === 'atm'}
                           onChange={() => setPaymentMethod('atm')}
                           className="form-check-input"
                           style={{ accentColor: 'var(--accent-red)' }}
@@ -517,9 +517,9 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage, initialStep = 'cart' }) =
                     {paymentMethod === 'atm' && (
                       <div className="mt-3">
                         <label className="form-label text-muted fs-8 mb-1">Chọn Ngân hàng phát hành thẻ</label>
-                        <select 
-                          value={selectedBank} 
-                          onChange={e => setSelectedBank(e.target.value)} 
+                        <select
+                          value={selectedBank}
+                          onChange={e => setSelectedBank(e.target.value)}
                           className="form-select tech-input py-1 fs-8"
                         >
                           <option value="VCB">Vietcombank</option>
@@ -536,28 +536,28 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage, initialStep = 'cart' }) =
                   </label>
 
                   {/* Option 4: MoMo */}
-                  <label 
+                  <label
                     className={`p-3 rounded border text-start cursor-pointer d-flex flex-column transition-smooth ${paymentMethod === 'momo' ? 'border-danger bg-danger bg-opacity-5' : 'border-secondary'}`}
                     style={{ cursor: 'pointer' }}
                   >
                     <div className="d-flex align-items-center justify-content-between">
                       <div className="d-flex align-items-center gap-2">
-                        <input 
-                          type="radio" 
-                          name="payment" 
-                          checked={paymentMethod === 'momo'} 
+                        <input
+                          type="radio"
+                          name="payment"
+                          checked={paymentMethod === 'momo'}
                           onChange={() => setPaymentMethod('momo')}
                           className="form-check-input"
                           style={{ accentColor: 'var(--accent-red)' }}
                         />
                         <span className="fs-7 fw-medium text-white">Ví Điện Tử MoMo</span>
                       </div>
-                      
+
                       {/* MoMo Badge Logo SVG */}
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="24" height="24" rx="4" fill="#A50064"/>
-                        <path d="M12.062 14.77C12.87 14.77 13.525 14.116 13.525 13.308C13.525 12.502 12.871 11.846 12.062 11.846C11.254 11.846 10.598 12.502 10.598 13.308C10.598 14.116 11.254 14.77 12.062 14.77Z" fill="white"/>
-                        <path d="M6.35 15.35V8.65H8.32V13.88H8.38L10.35 8.65H12.35L14.32 13.88H14.38V8.65H16.35V15.35H14.35L12.35 10.12H12.29L10.29 15.35H6.35Z" fill="white"/>
+                        <rect width="24" height="24" rx="4" fill="#A50064" />
+                        <path d="M12.062 14.77C12.87 14.77 13.525 14.116 13.525 13.308C13.525 12.502 12.871 11.846 12.062 11.846C11.254 11.846 10.598 12.502 10.598 13.308C10.598 14.116 11.254 14.77 12.062 14.77Z" fill="white" />
+                        <path d="M6.35 15.35V8.65H8.32V13.88H8.38L10.35 8.65H12.35L14.32 13.88H14.38V8.65H16.35V15.35H14.35L12.35 10.12H12.29L10.29 15.35H6.35Z" fill="white" />
                       </svg>
                     </div>
 
@@ -603,16 +603,16 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage, initialStep = 'cart' }) =
                 </div>
 
                 <div className="d-flex gap-2">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="btn btn-outline-secondary flex-fill py-3 fs-7 text-white"
                     style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
                     onClick={() => setCheckoutStep('cart')}
                   >
                     Quay Lại
                   </button>
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     disabled={isOrdering}
                     className="btn btn-danger flex-fill py-3 glow-btn fs-7 d-flex align-items-center justify-content-center gap-2"
                   >
@@ -658,7 +658,7 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage, initialStep = 'cart' }) =
               </p>
             </div>
 
-            <button 
+            <button
               className="btn btn-danger w-100 py-3 glow-btn"
               onClick={handleSuccessClose}
             >

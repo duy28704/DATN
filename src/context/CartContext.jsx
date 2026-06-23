@@ -3,6 +3,7 @@ import { createContext, useState, useEffect, useContext, useCallback, useMemo } 
 import { ToastContext } from './ToastContext'
 import { AuthContext } from './AuthContext'
 import { ProductContext } from './ProductContext'
+import { apiService } from '../services/api'
 
 export const CartContext = createContext()
 
@@ -11,43 +12,35 @@ export const CartProvider = ({ children }) => {
   const { products } = useContext(ProductContext)
   const toastCtx = useContext(ToastContext)
 
-  // Initialize cart dynamically based on the currently logged-in user
-  const [cartItems, setCartItems] = useState(() => {
-    try {
-      const savedUserStr = localStorage.getItem('nexus_user')
-      if (savedUserStr) {
-        const savedUser = JSON.parse(savedUserStr)
-        if (savedUser && savedUser.email) {
-          const savedCart = localStorage.getItem(`nexus_cart_${savedUser.email}`)
-          return savedCart ? JSON.parse(savedCart) : []
-        }
-      }
-      return []
-    } catch (e) {
-      console.error('Error loading cart from localStorage', e)
-      return []
-    }
-  })
+  // Initialize cart as an empty list (will be populated from the API when logged in)
+  const [cartItems, setCartItems] = useState([])
 
-  // Load user-specific cart when user authentication state changes
+  // Load user-specific cart from API when user logs in
   useEffect(() => {
+    let active = true
     if (user && user.email) {
-      const savedCart = localStorage.getItem(`nexus_cart_${user.email}`)
-      setCartItems(savedCart ? JSON.parse(savedCart) : [])
+      apiService.cart.get()
+        .then(data => {
+          if (active) {
+            setCartItems(data || [])
+          }
+        })
+        .catch(err => {
+          console.error('[CartContext] Error fetching cart from API', err)
+          if (active) {
+            setCartItems([])
+          }
+        })
     } else {
       setCartItems([])
     }
+    return () => {
+      active = false
+    }
   }, [user])
 
-  // Save cart items to user-specific local storage when cart changes
-  useEffect(() => {
-    if (user && user.email) {
-      localStorage.setItem(`nexus_cart_${user.email}`, JSON.stringify(cartItems))
-    }
-  }, [cartItems, user])
-
   // Add item to cart with login check
-  const addToCart = useCallback((product, quantity = 1, selectedColor = 'Standard') => {
+  const addToCart = useCallback((product, quantity = 1, configuration = 'Standard') => {
     if (!user) {
       if (toastCtx?.showToast) {
         toastCtx.showToast({
@@ -60,9 +53,10 @@ export const CartProvider = ({ children }) => {
       return
     }
 
+    // Fast state update
     setCartItems((prevItems) => {
       const existingItemIndex = prevItems.findIndex(
-        (item) => item.id === product.id && item.selectedColor === selectedColor
+        (item) => item.id === product.id && item.configuration === configuration
       )
 
       if (existingItemIndex > -1) {
@@ -70,47 +64,81 @@ export const CartProvider = ({ children }) => {
         newItems[existingItemIndex].quantity += quantity
         return newItems
       } else {
-        return [...prevItems, { id: product.id, quantity, selectedColor }]
+        return [...prevItems, { id: product.id, quantity, configuration }]
       }
     })
+
+    // Async sync in background
+    apiService.cart.add(product.id, quantity, configuration)
+      .catch(err => {
+        console.error('[CartContext] Error adding item to database', err)
+      })
 
     // Show Toast notification
     if (toastCtx?.showToast) {
       toastCtx.showToast({
         type: 'cart',
         title: 'Đã thêm vào giỏ hàng',
-        message: `${product.name} — Màu: ${selectedColor}`,
+        message: `${product.name} — Cấu hình: ${configuration}`,
         image: product.image,
         duration: 3500
       })
     }
   }, [toastCtx, user])
 
-  const removeFromCart = (productId, selectedColor) => {
+  const removeFromCart = useCallback((productId, configuration) => {
+    // Fast state update
     setCartItems((prevItems) =>
       prevItems.filter(
-        (item) => !(item.id === productId && item.selectedColor === selectedColor)
+        (item) => !(item.id === productId && item.configuration === configuration)
       )
     )
-  }
 
-  const updateQuantity = (productId, selectedColor, amount) => {
+    // Async sync in background
+    apiService.cart.remove(productId, configuration)
+      .catch(err => {
+        console.error('[CartContext] Error removing item from database', err)
+      })
+  }, [])
+
+  const updateQuantity = useCallback((productId, configuration, amount) => {
+    // Fast state update & determine backend sync
     setCartItems((prevItems) => {
-      return prevItems
-        .map((item) => {
-          if (item.id === productId && item.selectedColor === selectedColor) {
-            const newQty = item.quantity + amount
-            return { ...item, quantity: newQty }
-          }
-          return item
-        })
-        .filter((item) => item.quantity > 0)
-    })
-  }
+      const item = prevItems.find(i => i.id === productId && i.configuration === configuration)
+      if (!item) return prevItems
 
-  const clearCart = () => {
+      const newQty = item.quantity + amount
+
+      // Async sync in background
+      if (newQty <= 0) {
+        apiService.cart.remove(productId, configuration)
+          .catch(err => console.error('[CartContext] Error removing quantity', err))
+      } else {
+        apiService.cart.updateQuantity(productId, configuration, newQty)
+          .catch(err => console.error('[CartContext] Error updating quantity', err))
+      }
+
+      return prevItems
+        .map((i) => {
+          if (i.id === productId && i.configuration === configuration) {
+            return { ...i, quantity: newQty }
+          }
+          return i
+        })
+        .filter((i) => i.quantity > 0)
+    })
+  }, [])
+
+  const clearCart = useCallback(() => {
+    // Fast state update
     setCartItems([])
-  }
+
+    // Async sync in background
+    apiService.cart.clear()
+      .catch(err => {
+        console.error('[CartContext] Error clearing database cart', err)
+      })
+  }, [])
 
   // Resolve cart item details and prices dynamically against catalog products
   const resolvedCartItems = useMemo(() => {

@@ -542,5 +542,71 @@ export const apiService = {
       }
       return resJson.data;
     }
+  },
+
+  // --- CART API ---
+  cart: {
+    get: async () => {
+      console.log(`[API] calling GET ${BASE_URL}/api/v1/cart`);
+      const response = await fetch(`${BASE_URL}/api/v1/cart`, {
+        headers: getAuthHeaders()
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi tải giỏ hàng');
+      }
+      return resJson.data;
+    },
+    add: async (productId, quantity, configuration) => {
+      console.log(`[API] calling POST ${BASE_URL}/api/v1/cart`);
+      const response = await fetch(`${BASE_URL}/api/v1/cart`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ productId, quantity, configuration })
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi thêm vào giỏ hàng');
+      }
+      return resJson.data;
+    },
+    updateQuantity: async (productId, configuration, quantity) => {
+      console.log(`[API] calling PUT ${BASE_URL}/api/v1/cart/items`);
+      const response = await fetch(`${BASE_URL}/api/v1/cart/items`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ productId, configuration, quantity })
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi cập nhật số lượng');
+      }
+      return resJson.data;
+    },
+    remove: async (productId, configuration) => {
+      console.log(`[API] calling DELETE ${BASE_URL}/api/v1/cart/items`);
+      const query = `productId=${productId}&configuration=${encodeURIComponent(configuration)}`;
+      const response = await fetch(`${BASE_URL}/api/v1/cart/items?${query}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi xóa khỏi giỏ hàng');
+      }
+      return resJson.data;
+    },
+    clear: async () => {
+      console.log(`[API] calling DELETE ${BASE_URL}/api/v1/cart`);
+      const response = await fetch(`${BASE_URL}/api/v1/cart`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi xóa sạch giỏ hàng');
+      }
+      return resJson.data;
+    }
   }
 };
