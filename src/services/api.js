@@ -547,8 +547,8 @@ export const apiService = {
   // --- CART API ---
   cart: {
     get: async () => {
-      console.log(`[API] calling GET ${BASE_URL}/api/v1/cart`);
-      const response = await fetch(`${BASE_URL}/api/v1/cart`, {
+      console.log(`[API] calling GET ${BASE_URL}/api/v1/cart/get`);
+      const response = await fetch(`${BASE_URL}/api/v1/cart/get`, {
         headers: getAuthHeaders()
       });
       const resJson = await response.json();
@@ -558,8 +558,8 @@ export const apiService = {
       return resJson.data;
     },
     add: async (productId, quantity, configuration) => {
-      console.log(`[API] calling POST ${BASE_URL}/api/v1/cart`);
-      const response = await fetch(`${BASE_URL}/api/v1/cart`, {
+      console.log(`[API] calling POST ${BASE_URL}/api/v1/cart/add`);
+      const response = await fetch(`${BASE_URL}/api/v1/cart/add`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({ productId, quantity, configuration })
@@ -571,8 +571,8 @@ export const apiService = {
       return resJson.data;
     },
     updateQuantity: async (productId, configuration, quantity) => {
-      console.log(`[API] calling PUT ${BASE_URL}/api/v1/cart/items`);
-      const response = await fetch(`${BASE_URL}/api/v1/cart/items`, {
+      console.log(`[API] calling PUT ${BASE_URL}/api/v1/cart/update`);
+      const response = await fetch(`${BASE_URL}/api/v1/cart/update`, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify({ productId, configuration, quantity })
@@ -584,9 +584,9 @@ export const apiService = {
       return resJson.data;
     },
     remove: async (productId, configuration) => {
-      console.log(`[API] calling DELETE ${BASE_URL}/api/v1/cart/items`);
+      console.log(`[API] calling DELETE ${BASE_URL}/api/v1/cart/remove`);
       const query = `productId=${productId}&configuration=${encodeURIComponent(configuration)}`;
-      const response = await fetch(`${BASE_URL}/api/v1/cart/items?${query}`, {
+      const response = await fetch(`${BASE_URL}/api/v1/cart/remove?${query}`, {
         method: 'DELETE',
         headers: getAuthHeaders()
       });
@@ -597,8 +597,8 @@ export const apiService = {
       return resJson.data;
     },
     clear: async () => {
-      console.log(`[API] calling DELETE ${BASE_URL}/api/v1/cart`);
-      const response = await fetch(`${BASE_URL}/api/v1/cart`, {
+      console.log(`[API] calling DELETE ${BASE_URL}/api/v1/cart/clear`);
+      const response = await fetch(`${BASE_URL}/api/v1/cart/clear`, {
         method: 'DELETE',
         headers: getAuthHeaders()
       });
