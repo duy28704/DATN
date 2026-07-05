@@ -3,6 +3,7 @@ import { apiService } from '../services/api'
 import { useToast } from './ToastContext'
 
 export const ProductContext = createContext()
+export const DEFAULT_LOW_STOCK_THRESHOLD = 10;
 
 const CATEGORIES = [
   { id: 'all', name: 'Tất cả Laptop' },
@@ -30,7 +31,7 @@ const extractBrand = (name) => {
 // Vì dữ liệu sản phẩm (đặc biệt là Laptop) có các trường thông số lưu dưới dạng cột riêng biệt trong database,
 // hàm này sẽ đọc các trường đó và chuyển chúng thành cặp khóa-giá trị (Key-Value) tiếng Việt trực quan,
 // sau đó gộp chung với các thông số bổ sung/tùy biến có sẵn từ trường `specsJson` để hiển thị đầy đủ trên giao diện.
-const buildSpecs = (item) => {
+export const buildSpecs = (item) => {
   let specs = {}
   try {
     // Phân tích cú pháp chuỗi JSON chứa các thông số tùy biến phụ trợ
@@ -105,6 +106,103 @@ const buildSpecs = (item) => {
   return specs;
 }
 
+export const transformDbProduct = (item) => {
+  let numPrice = 0;
+  if (item.price) {
+    // Trích xuất giá đầu tiên từ chuỗi giá (ví dụ: "21.090.000₫ * ...")
+    const match = String(item.price).match(/([0-9.,]+)\s*₫/);
+    if (match) {
+      const cleaned = match[1].replace(/[^0-9]/g, '');
+      numPrice = parseFloat(cleaned) || 0;
+    } else {
+      const matchOnlyDigits = String(item.price).match(/[0-9.]+/);
+      if (matchOnlyDigits) {
+        const cleaned = matchOnlyDigits[0].replace(/[^0-9]/g, '');
+        numPrice = parseFloat(cleaned) || 0;
+      }
+    }
+  }
+
+  let firstImage = '/assets/nexus-keyboard.png';
+  let imagesList = [];
+  if (item.images && item.images.trim()) {
+    imagesList = item.images.split(/[\n,]/).map(url => url.trim()).filter(Boolean);
+    if (imagesList.length > 0) {
+      firstImage = imagesList[0];
+    }
+  } else {
+    imagesList = ['/assets/nexus-keyboard.png'];
+  }
+
+  // Phân loại Laptop động dựa trên tên và thông số card đồ họa
+  let finalCategory = 'vanphong'; // Mặc định là Văn phòng
+  const nameLower = (item.name || '').toLowerCase();
+  const gpuLower = (item.gpuCard || '').toLowerCase();
+  const descLower = (item.description || item.shortDescription || '').toLowerCase();
+
+  if (
+    nameLower.includes('gaming') ||
+    nameLower.includes('tuf') ||
+    nameLower.includes('rog') ||
+    nameLower.includes('strix') ||
+    nameLower.includes('legion') ||
+    nameLower.includes('loq') ||
+    nameLower.includes('predator') ||
+    nameLower.includes('nitro') ||
+    nameLower.includes('cyborg') ||
+    nameLower.includes('katana') ||
+    nameLower.includes('victus') ||
+    nameLower.includes('omen') ||
+    gpuLower.includes('rtx') ||
+    gpuLower.includes('gtx') ||
+    gpuLower.includes('radeon rx')
+  ) {
+    finalCategory = 'gaming';
+  } else if (
+    nameLower.includes('creator') ||
+    nameLower.includes('studio') ||
+    nameLower.includes('proart') ||
+    nameLower.includes('oled') ||
+    descLower.includes('đồ họa') ||
+    descLower.includes('thiết kế đồ họa') ||
+    descLower.includes('render') ||
+    gpuLower.includes('arc graphics') ||
+    gpuLower.includes('geforce') ||
+    (gpuLower.includes('nvidia') && !gpuLower.includes('rtx') && !gpuLower.includes('gtx')) ||
+    item.ram === '32 GB' ||
+    item.ram === '64 GB'
+  ) {
+    finalCategory = 'doha';
+  }
+
+  return {
+    id: item.id,
+    name: item.name,
+    category: finalCategory,
+    price: numPrice,
+    displayPrice: numPrice > 0 ? '' : 'Chưa cập nhật',
+    rating: item.rating || 5.0,
+    reviewCount: item.reviewCount || 0,
+    tag: item.tag || (numPrice > 35000000 ? 'Hot' : (numPrice < 15000000 ? 'Sale' : 'New')),
+    image: firstImage,
+    imagesList: imagesList,
+    images: item.images || '',
+    shortDescription: item.shortDescription || item.description || '',
+    description: item.description || '',
+    specs: buildSpecs(item),
+    reviews: item.reviewsJson ? JSON.parse(item.reviewsJson) : [],
+    stockQuantity: item.stockQuantity != null ? item.stockQuantity : 50,
+    lowStockThreshold: item.lowStockThreshold != null ? item.lowStockThreshold : DEFAULT_LOW_STOCK_THRESHOLD,
+    brand: item.brand || '',
+    cpuTechnology: item.cpuTechnology || '',
+    gpuCard: item.gpuCard || '',
+    ram: item.ram || '',
+    storage: item.storage || '',
+    screenResolution: item.screenResolution || '',
+    refreshRate: item.refreshRate || ''
+  };
+};
+
 export const formatDisplayPrice = (price, displayPrice) => {
   const str = (displayPrice || String(price || '')).trim();
   if (!str) return 'Chưa cập nhật';
@@ -128,91 +226,7 @@ export const ProductProvider = ({ children }) => {
     try {
       const data = await apiService.products.getAll()
       if (data && data.length > 0) {
-        // Chuyển đổi cấu trúc thực thể từ database thành định dạng mà giao diện người dùng sử dụng
-        const transformed = data.map(item => {
-          let numPrice = 0;
-          if (item.price) {
-            const cleaned = String(item.price).replace(/[^0-9]/g, '');
-            numPrice = parseFloat(cleaned) || 0;
-          }
-
-          let firstImage = '/assets/nexus-keyboard.png';
-          let imagesList = [];
-          if (item.images && item.images.trim()) {
-            imagesList = item.images.split(/[\n,]/).map(url => url.trim()).filter(Boolean);
-            if (imagesList.length > 0) {
-              firstImage = imagesList[0];
-            }
-          } else {
-            imagesList = ['/assets/nexus-keyboard.png'];
-          }
-
-          // Phân loại Laptop động dựa trên tên và thông số card đồ họa
-          let finalCategory = 'vanphong'; // Mặc định là Văn phòng
-          const nameLower = (item.name || '').toLowerCase();
-          const gpuLower = (item.gpuCard || '').toLowerCase();
-          const descLower = (item.description || item.shortDescription || '').toLowerCase();
-
-          if (
-            nameLower.includes('gaming') || 
-            nameLower.includes('tuf') || 
-            nameLower.includes('rog') || 
-            nameLower.includes('strix') || 
-            nameLower.includes('legion') || 
-            nameLower.includes('loq') || 
-            nameLower.includes('predator') || 
-            nameLower.includes('nitro') || 
-            nameLower.includes('cyborg') || 
-            nameLower.includes('katana') || 
-            nameLower.includes('victus') || 
-            nameLower.includes('omen') ||
-            gpuLower.includes('rtx') ||
-            gpuLower.includes('gtx') ||
-            gpuLower.includes('radeon rx')
-          ) {
-            finalCategory = 'gaming';
-          } else if (
-            nameLower.includes('creator') || 
-            nameLower.includes('studio') || 
-            nameLower.includes('proart') || 
-            nameLower.includes('oled') ||
-            descLower.includes('đồ họa') ||
-            descLower.includes('thiết kế đồ họa') ||
-            descLower.includes('render') ||
-            gpuLower.includes('arc graphics') ||
-            gpuLower.includes('geforce') ||
-            (gpuLower.includes('nvidia') && !gpuLower.includes('rtx') && !gpuLower.includes('gtx')) ||
-            item.ram === '32 GB' ||
-            item.ram === '64 GB'
-          ) {
-            finalCategory = 'doha';
-          }
-
-          return {
-            id: item.id,
-            name: item.name,
-            category: finalCategory,
-            price: numPrice,
-            displayPrice: item.price || '',
-            rating: item.rating || 5.0,
-            reviewCount: item.reviewCount || 0,
-            tag: item.tag || (numPrice > 35000000 ? 'Hot' : (numPrice < 15000000 ? 'Sale' : 'New')),
-            image: firstImage,
-            imagesList: imagesList,
-            shortDescription: item.shortDescription || item.description || '',
-            description: item.description || '',
-            specs: buildSpecs(item), // Gọi hàm gộp thông số kỹ thuật đầy đủ đã bổ sung các trường cột riêng lẻ
-            reviews: item.reviewsJson ? JSON.parse(item.reviewsJson) : [],
-            // Các trường gốc phục vụ bộ lọc thông minh ở Trang danh sách sản phẩm
-            brand: item.brand || extractBrand(item.name),
-            cpuTechnology: item.cpuTechnology || '',
-            gpuCard: item.gpuCard || '',
-            ram: item.ram || '',
-            storage: item.storage || '',
-            screenResolution: item.screenResolution || '',
-            refreshRate: item.refreshRate || ''
-          };
-        })
+        const transformed = data.map(transformDbProduct)
         setProducts(transformed)
         setError(null)
       } else {
@@ -271,11 +285,11 @@ export const ProductProvider = ({ children }) => {
   const clearCompare = () => setCompareItems([])
 
   return (
-    <ProductContext.Provider value={{ 
-      products, 
-      categories, 
-      loading, 
-      error, 
+    <ProductContext.Provider value={{
+      products,
+      categories,
+      loading,
+      error,
       refreshProducts: fetchProducts,
       compareItems,
       toggleCompare,

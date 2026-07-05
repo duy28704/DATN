@@ -1,14 +1,17 @@
 import { useState, useMemo, useContext, useEffect } from 'react'
-import { ProductContext } from '../context/ProductContext'
+import { ProductContext, transformDbProduct } from '../context/ProductContext'
 import ProductCard from '../components/ProductCard'
 import SEO from '../components/SEO'
 import { Filter, RotateCcw, LayoutGrid, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { apiService } from '../services/api'
 
 const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
   const { products, categories } = useContext(ProductContext)
   const [sortOption, setSortOption] = useState('featured')
   const [loadingMore, setLoadingMore] = useState(false)
+  const [searchedProducts, setSearchedProducts] = useState([])
+  const [isSearching, setIsSearching] = useState(false)
 
   // Bộ lọc thông minh bổ sung
   const [filterCpu, setFilterCpu] = useState('all')
@@ -41,22 +44,62 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
     setVisibleCount(8)
   }, [selectedCat, searchQuery, sortOption, filterCpu, filterRam, filterGpu, filterPriceRange])
 
+  // Fetch search results from backend if search query is present
+  useEffect(() => {
+    if (!searchQuery) {
+      setSearchedProducts(products)
+      return
+    }
+
+    const fetchSearch = async () => {
+      setIsSearching(true)
+      try {
+        let minPrice = null
+        let maxPrice = null
+        if (filterPriceRange === 'under15m') maxPrice = 15000000
+        else if (filterPriceRange === '15to25m') { minPrice = 15000000; maxPrice = 25000000; }
+        else if (filterPriceRange === '25to40m') { minPrice = 25000000; maxPrice = 40000000; }
+        else if (filterPriceRange === 'over40m') minPrice = 40000000
+
+        const data = await apiService.search.query({
+          queryText: searchQuery,
+          category: selectedCat !== 'all' ? selectedCat : null,
+          minPrice,
+          maxPrice,
+          fuzzy: true
+        })
+        setSearchedProducts(data.map(transformDbProduct))
+      } catch (err) {
+        console.error('Lỗi khi gọi API tìm kiếm:', err)
+        // Fallback to client-side products if API fails
+        setSearchedProducts(products)
+      } finally {
+        setIsSearching(false)
+      }
+    }
+
+    fetchSearch()
+  }, [searchQuery, selectedCat, filterPriceRange, products])
+
   // Filter and sort mechanism
   const filteredProducts = useMemo(() => {
-    let result = [...products]
+    let result = [...searchedProducts]
 
-    // Category filter
-    if (selectedCat !== 'all') {
+    // Category filter (only apply client-side if we didn't search through backend)
+    if (!searchQuery && selectedCat !== 'all') {
       result = result.filter(item => item.category === selectedCat)
     }
 
-    // Search filter
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase()
-      result = result.filter(
-        item => item.name.toLowerCase().includes(q) || 
-                item.shortDescription.toLowerCase().includes(q)
-      )
+    // Price filter (only apply client-side if we didn't search through backend)
+    if (!searchQuery && filterPriceRange !== 'all') {
+      result = result.filter(item => {
+        const price = item.price
+        if (filterPriceRange === 'under15m') return price < 15000000
+        if (filterPriceRange === '15to25m') return price >= 15000000 && price <= 25000000
+        if (filterPriceRange === '25to40m') return price >= 25000000 && price <= 40000000
+        if (filterPriceRange === 'over40m') return price > 40000000
+        return true
+      })
     }
 
     // Lọc theo CPU
@@ -93,18 +136,6 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
       })
     }
 
-    // Lọc theo khoảng giá (VND)
-    if (filterPriceRange !== 'all') {
-      result = result.filter(item => {
-        const price = item.price
-        if (filterPriceRange === 'under15m') return price < 15000000
-        if (filterPriceRange === '15to25m') return price >= 15000000 && price <= 25000000
-        if (filterPriceRange === '25to40m') return price >= 25000000 && price <= 40000000
-        if (filterPriceRange === 'over40m') return price > 40000000
-        return true
-      })
-    }
-
     // Sorting
     if (sortOption === 'price-asc') {
       result.sort((a, b) => a.price - b.price)
@@ -115,7 +146,7 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
     }
 
     return result
-  }, [selectedCat, searchQuery, sortOption, products, filterCpu, filterRam, filterGpu, filterPriceRange])
+  }, [selectedCat, searchQuery, sortOption, searchedProducts, filterCpu, filterRam, filterGpu, filterPriceRange])
 
   const displayedProducts = useMemo(() => {
     return filteredProducts.slice(0, visibleCount)
@@ -298,7 +329,12 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
         </div>
 
         {/* Products Grid */}
-        {filteredProducts.length === 0 ? (
+        {isSearching ? (
+          <div className="py-5 text-center d-flex flex-column align-items-center justify-content-center gap-3">
+            <Loader2 size={36} className="spinner-border text-danger border-0" style={{ width: '36px', height: '36px' }} />
+            <span className="text-secondary fs-7">Đang tìm kiếm sản phẩm tối ưu...</span>
+          </div>
+        ) : filteredProducts.length === 0 ? (
           <div className="py-5 text-center d-flex flex-column align-items-center gap-3">
             <LayoutGrid size={48} className="text-secondary" />
             <h3 className="fs-5 text-white display-font">Không Tìm Thấy Sản Phẩm</h3>

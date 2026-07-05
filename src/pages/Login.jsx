@@ -18,16 +18,54 @@ import {
   Loader2, 
   Truck, 
   Smartphone,
-  Info
+  Info,
+  RotateCcw
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { apiService, validators } from '../services/api'
 
 const Login = ({ setCurrentPage }) => {
-  const { user, error, loading, login, register, updateUserProfile, logout, setError } = useContext(AuthContext)
+  const { user, error, loading, login, verifyOtp, register, updateUserProfile, logout, setError } = useContext(AuthContext)
   const [isLoginMode, setIsLoginMode] = useState(true)
   const [formData, setFormData] = useState({ name: '', email: '', password: '' })
   const [successMsg, setSuccessMsg] = useState('')
+
+  // CAPTCHA and OTP states
+  const [captchaData, setCaptchaData] = useState({ captchaId: '', question: '' })
+  const [captchaAnswer, setCaptchaAnswer] = useState('')
+  const [otpMode, setOtpMode] = useState(false)
+  const [otpCode, setOtpCode] = useState('')
+  const [otpTarget, setOtpTarget] = useState({ username: '', email: '' })
+  const [resendTimer, setResendTimer] = useState(0)
+
+  const fetchCaptcha = async () => {
+    try {
+      const data = await apiService.auth.getCaptcha()
+      setCaptchaData(data)
+      setCaptchaAnswer('')
+    } catch (err) {
+      console.error('Error fetching captcha:', err)
+    }
+  }
+
+  // Fetch captcha on login mode activation
+  useEffect(() => {
+    if (isLoginMode && !user) {
+      fetchCaptcha()
+      setOtpMode(false)
+      setOtpCode('')
+    }
+  }, [isLoginMode, user])
+
+  // Timer countdown for resending OTP
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const interval = setInterval(() => {
+        setResendTimer(prev => prev - 1)
+      }, 1000)
+      return () => clearInterval(interval)
+    }
+  }, [resendTimer])
 
   // Dashboard Tabs
   const [activeTab, setActiveTab] = useState('profile') // 'profile', 'orders', 'installments'
@@ -161,8 +199,19 @@ const Login = ({ setCurrentPage }) => {
     }
 
     if (isLoginMode) {
-      const ok = await login(formData.email, formData.password)
-      if (ok) {
+      if (!captchaAnswer) {
+        setError('Vui lòng nhập đáp án CAPTCHA.')
+        return
+      }
+
+      const res = await login(formData.email, formData.password, captchaData.captchaId, captchaAnswer)
+      if (res && res.otpRequired) {
+        setSuccessMsg('Thông tin đăng nhập hợp lệ! Mã OTP đã được gửi về email của bạn.')
+        setOtpTarget({ username: res.username, email: res.email })
+        setOtpMode(true)
+        setResendTimer(60)
+        setTimeout(() => setSuccessMsg(''), 4000)
+      } else if (res && res.success) {
         setSuccessMsg('Đăng nhập thành công! Đang chuyển hướng...')
         setTimeout(() => {
           setSuccessMsg('')
@@ -173,6 +222,9 @@ const Login = ({ setCurrentPage }) => {
             setCurrentPage('shop')
           }
         }, 1200)
+      } else {
+        // Clear captcha input and fetch new captcha on error
+        fetchCaptcha()
       }
     } else {
       const ok = await register(formData.name, formData.email, formData.password)
@@ -188,6 +240,46 @@ const Login = ({ setCurrentPage }) => {
           }
         }, 1200)
       }
+    }
+  }
+
+  const handleOtpSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    setSuccessMsg('')
+
+    if (!otpCode || otpCode.length !== 6) {
+      setError('Vui lòng nhập đúng mã OTP gồm 6 chữ số.')
+      return
+    }
+
+    const ok = await verifyOtp(otpTarget.username, otpCode)
+    if (ok) {
+      setSuccessMsg('Xác thực OTP thành công! Đang chuyển hướng...')
+      setTimeout(() => {
+        setSuccessMsg('')
+        const saved = JSON.parse(localStorage.getItem('nexus_user'))
+        if (saved && (saved.role === 'ADMIN' || saved.role === 'STAFF')) {
+          setCurrentPage('dashboard')
+        } else {
+          setCurrentPage('shop')
+        }
+      }, 1200)
+    }
+  }
+
+  const handleResendOtp = async () => {
+    if (resendTimer > 0) return
+    setError('')
+    setSuccessMsg('')
+    try {
+      await apiService.auth.resendOtp(otpTarget.username)
+      setSuccessMsg('Đã gửi lại mã OTP mới về email của bạn!')
+      setResendTimer(60)
+      setOtpCode('')
+      setTimeout(() => setSuccessMsg(''), 4000)
+    } catch (err) {
+      setError(err.message || 'Gửi lại mã OTP thất bại. Vui lòng thử lại.')
     }
   }
 
@@ -740,6 +832,93 @@ const Login = ({ setCurrentPage }) => {
                 </div>
               </div>
             </motion.div>
+          ) : otpMode ? (
+            /* OTP entry form view */
+            <motion.div
+              key="otp-form"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="w-100 p-4 p-md-5 rounded text-start"
+              style={{ maxWidth: '440px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
+            >
+              <h1 className="fs-3 text-white display-font mb-2 text-center">
+                XÁC THỰC OTP
+              </h1>
+              <p className="text-secondary text-center fs-7 mb-4">
+                Vui lòng nhập mã OTP 6 chữ số đã được gửi đến địa chỉ email <strong className="text-white">{otpTarget.email}</strong> để hoàn tất đăng nhập.
+              </p>
+
+              {/* Success Notification */}
+              {successMsg && (
+                <div className="alert alert-success d-flex align-items-center gap-2 fs-7 py-2 px-3 border-0 bg-success bg-opacity-10 text-success mb-4">
+                  <CheckCircle size={16} />
+                  <span>{successMsg}</span>
+                </div>
+              )}
+
+              {/* Error Notification */}
+              {error && (
+                <div className="alert alert-danger d-flex align-items-center gap-2 fs-7 py-2 px-3 border-0 bg-danger bg-opacity-10 text-danger mb-4">
+                  <ShieldAlert size={16} />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleOtpSubmit} className="d-flex flex-column gap-3">
+                <div>
+                  <label className="form-label text-secondary fs-7 mb-1">Mã xác thực OTP</label>
+                  <div className="position-relative">
+                    <Lock size={16} className="position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary" />
+                    <input
+                      type="text"
+                      required
+                      maxLength={6}
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
+                      className="form-control tech-input ps-5 text-center tracking-widest fw-bold fs-5"
+                      placeholder="______"
+                      style={{ letterSpacing: '0.5em' }}
+                    />
+                  </div>
+                </div>
+
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className="btn btn-danger w-100 py-3 mt-2 glow-btn d-flex align-items-center justify-content-center"
+                >
+                  {loading ? (
+                    <div className="spinner-border spinner-border-sm text-white" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                  ) : (
+                    'Xác Nhận Đăng Nhập'
+                  )}
+                </button>
+              </form>
+
+              <div className="mt-4 text-center d-flex flex-column gap-2 align-items-center">
+                <button
+                  className="btn btn-link text-secondary hover-red p-0 border-0 fs-7 text-decoration-none"
+                  onClick={handleResendOtp}
+                  disabled={resendTimer > 0}
+                >
+                  {resendTimer > 0 ? `Gửi lại mã OTP (${resendTimer}s)` : 'Gửi lại mã OTP'}
+                </button>
+                <button
+                  className="btn btn-link text-secondary hover-red p-0 border-0 fs-8 text-decoration-none mt-1"
+                  onClick={() => {
+                    setOtpMode(false);
+                    setError('');
+                    setSuccessMsg('');
+                    fetchCaptcha();
+                  }}
+                >
+                  Quay lại màn hình đăng nhập
+                </button>
+              </div>
+            </motion.div>
           ) : (
             /* Login Form view */
             <motion.div
@@ -795,17 +974,17 @@ const Login = ({ setCurrentPage }) => {
                 )}
 
                 <div>
-                  <label className="form-label text-secondary fs-7 mb-1">Địa chỉ Email</label>
+                  <label className="form-label text-secondary fs-7 mb-1">Địa chỉ Email hoặc Username</label>
                   <div className="position-relative">
                     <Mail size={16} className="position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary" />
                     <input
-                      type="email"
+                      type="text"
                       required
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
                       className={`form-control tech-input ps-5 ${fieldErrors.email ? 'is-invalid border-danger' : ''}`}
-                      placeholder="email@vidu.com"
+                      placeholder="email@vidu.com hoặc username"
                     />
                   </div>
                   {fieldErrors.email && <span className="text-danger fs-8 mt-1 d-block">{fieldErrors.email}</span>}
@@ -827,6 +1006,34 @@ const Login = ({ setCurrentPage }) => {
                   </div>
                   {fieldErrors.password && <span className="text-danger fs-8 mt-1 d-block">{fieldErrors.password}</span>}
                 </div>
+
+                {isLoginMode && (
+                  <div>
+                    <label className="form-label text-secondary fs-7 mb-1">Xác minh bảo mật (CAPTCHA)</label>
+                    <div className="d-flex gap-2 align-items-center">
+                      <div className="flex-grow-1 p-3 rounded text-center fw-bold tracking-wider display-font fs-5" style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--accent-red)', userSelect: 'none' }}>
+                        {captchaData.question}
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={fetchCaptcha} 
+                        className="btn btn-outline-secondary p-3 d-flex align-items-center justify-content-center"
+                        style={{ height: '48px', width: '48px', borderRadius: '6px', borderColor: 'var(--border-color)' }}
+                        title="Đổi phép tính khác"
+                      >
+                        <RotateCcw size={16} />
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      value={captchaAnswer}
+                      onChange={(e) => setCaptchaAnswer(e.target.value)}
+                      className="form-control tech-input mt-2"
+                      placeholder="Nhập kết quả phép tính"
+                    />
+                  </div>
+                )}
 
                 <button 
                   type="submit" 

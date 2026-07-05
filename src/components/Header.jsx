@@ -1,9 +1,11 @@
-import { useContext, useState } from 'react'
+import { useContext, useState, useEffect } from 'react'
 import { CartContext } from '../context/CartContext'
 import { AuthContext } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { ShoppingBag, User, Search, Menu, X, LogOut } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { apiService } from '../services/api'
+import { formatDisplayPrice, transformDbProduct } from '../context/ProductContext'
 
 const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
   const { cartCount } = useContext(CartContext)
@@ -12,6 +14,45 @@ const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [suggestions, setSuggestions] = useState([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [hoveredId, setHoveredId] = useState(null)
+
+  // Autocomplete fetch suggestions
+  useEffect(() => {
+    if (!searchQuery.trim() || searchQuery.trim().length < 2) {
+      setSuggestions([])
+      setShowSuggestions(false)
+      return
+    }
+
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const data = await apiService.search.query({
+          queryText: searchQuery.trim(),
+          autocomplete: true,
+          fuzzy: true
+        })
+        setSuggestions(data.slice(0, 5).map(transformDbProduct))
+        setShowSuggestions(true)
+      } catch (err) {
+        console.error('Lỗi khi lấy gợi ý tìm kiếm:', err)
+      }
+    }, 300)
+
+    return () => clearTimeout(delayDebounce)
+  }, [searchQuery])
+
+  // Close suggestions when click outside
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (!e.target.closest('.search-container')) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('click', handleOutsideClick)
+    return () => document.removeEventListener('click', handleOutsideClick)
+  }, [])
 
   const handleNav = (page) => {
     setCurrentPage(page)
@@ -22,9 +63,9 @@ const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
   const handleSearchSubmit = (e) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      // Pass search query through page state or similar
       setCurrentPage(`shop?search=${encodeURIComponent(searchQuery.trim())}`)
       setSearchOpen(false)
+      setShowSuggestions(false)
       setSearchQuery('')
     }
   }
@@ -88,7 +129,7 @@ const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
         {/* Right Section Actions */}
         <div className="d-flex align-items-center gap-3 gap-md-4">
           {/* Search Toggle */}
-          <div className="position-relative d-flex align-items-center">
+          <div className="position-relative d-flex align-items-center search-container">
             <AnimatePresence>
               {searchOpen && (
                 <motion.form 
@@ -110,6 +151,62 @@ const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
                 </motion.form>
               )}
             </AnimatePresence>
+
+            {/* Autocomplete Dropdown */}
+            {searchOpen && showSuggestions && suggestions.length > 0 && (
+              <div 
+                className="position-absolute rounded shadow p-2 mt-2" 
+                style={{ 
+                  top: '40px', 
+                  right: '100%', 
+                  marginRight: '8px', 
+                  width: '320px', 
+                  border: '1px solid var(--border-color)', 
+                  zIndex: 1100,
+                  maxHeight: '350px',
+                  overflowY: 'auto',
+                  backgroundColor: 'var(--bg-secondary)',
+                  backdropFilter: 'blur(10px)'
+                }}
+              >
+                <div className="text-secondary fs-9 uppercase mb-2 px-2 tracking-wider fw-bold" style={{ fontSize: '0.65rem' }}>Gợi ý sản phẩm</div>
+                {suggestions.map((p) => {
+                  const firstImage = p.image || '/assets/nexus-keyboard.png';
+                  const isOutOfStock = p.stockQuantity <= 0;
+                  const displayPriceStr = isOutOfStock ? 'Hết hàng' : formatDisplayPrice(p.price, p.displayPrice);
+                  const isHovered = hoveredId === p.id;
+                  
+                  return (
+                    <div 
+                      key={p.id}
+                      className="d-flex align-items-center gap-2 p-2 rounded cursor-pointer transition-smooth"
+                      style={{
+                        backgroundColor: isHovered ? 'rgba(15, 98, 254, 0.08)' : 'transparent',
+                        borderLeft: isHovered ? '2px solid var(--accent-red)' : '2px solid transparent'
+                      }}
+                      onMouseEnter={() => setHoveredId(p.id)}
+                      onMouseLeave={() => setHoveredId(null)}
+                      onClick={() => {
+                        setCurrentPage(`product/${p.id}`);
+                        setSearchOpen(false);
+                        setShowSuggestions(false);
+                        setSearchQuery('');
+                      }}
+                    >
+                      <div className="p-1 bg-light rounded flex-shrink-0 border d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
+                        <img src={firstImage} alt={p.name} className="img-fluid" style={{ maxHeight: '100%', objectFit: 'contain' }} />
+                      </div>
+                      <div className="flex-grow-1 min-w-0 text-start">
+                        <h6 className="fs-8 text-dark mb-0 text-truncate fw-semibold" style={{ fontSize: '0.75rem' }}>{p.name}</h6>
+                        <span className="text-secondary fs-9" style={{ fontSize: '0.65rem' }}>{p.brand}</span>
+                      </div>
+                      <div className="fw-bold fs-8 flex-shrink-0 display-font" style={{ fontSize: '0.75rem', color: isOutOfStock ? '#dc3545' : 'var(--accent-red)' }}>{displayPriceStr}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             <button 
               className="btn btn-link text-white p-0 border-0" 
               onClick={() => setSearchOpen(!searchOpen)}

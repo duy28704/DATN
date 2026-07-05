@@ -150,6 +150,15 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage, initialStep = 'cart' }) =
 
     try {
       const resultOrder = await apiService.orders.checkout(orderPayload)
+      if (resultOrder && resultOrder.paymentUrl) {
+        showToast({ type: 'success', title: 'Đang chuyển hướng', message: 'Hệ thống đang chuyển hướng quý khách sang cổng thanh toán VNPAY...' })
+        // Clear cart first so user doesn't double-order if they navigate back
+        clearCart()
+        setTimeout(() => {
+          window.location.href = resultOrder.paymentUrl
+        }, 1200)
+        return
+      }
       setPlacedOrder(resultOrder)
       setCheckoutStep('success')
     } catch (err) {
@@ -571,6 +580,37 @@ const CartDrawer = ({ isOpen, onClose, setCurrentPage, initialStep = 'cart' }) =
                           Mở ứng dụng MoMo của bạn và quét mã QR này để thanh toán hóa đơn tạm tính của đơn hàng.
                         </p>
                       </div>
+                    )}
+                  </label>
+
+                  {/* Option 5: VNPAY */}
+                  <label
+                    className={`p-3 rounded border text-start cursor-pointer d-flex flex-column transition-smooth ${paymentMethod === 'vnpay' ? 'border-danger bg-danger bg-opacity-5' : 'border-secondary'}`}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div className="d-flex align-items-center justify-content-between">
+                      <div className="d-flex align-items-center gap-2">
+                        <input
+                          type="radio"
+                          name="payment"
+                          checked={paymentMethod === 'vnpay'}
+                          onChange={() => setPaymentMethod('vnpay')}
+                          className="form-check-input"
+                          style={{ accentColor: 'var(--accent-red)' }}
+                        />
+                        <span className="fs-7 fw-medium text-white">Cổng thanh toán VNPAY (ATM / QR / Visa)</span>
+                      </div>
+                      
+                      {/* VNPAY text logo */}
+                      <span className="fw-bold fs-7 display-font" style={{ letterSpacing: '0.5px' }}>
+                        <span className="text-primary">VN</span><span className="text-danger">PAY</span>
+                      </span>
+                    </div>
+
+                    {paymentMethod === 'vnpay' && (
+                      <p className="text-muted fs-8 mt-2 mb-0" style={{ fontSize: '0.75rem' }}>
+                        Hệ thống sẽ chuyển hướng bạn đến cổng VNPAY. Vui lòng thanh toán để hoàn tất đơn hàng.
+                      </p>
                     )}
                   </label>
                 </div>

@@ -109,18 +109,19 @@ const getAuthHeaders = () => {
 
 export const apiService = {
   auth: {
-    login: async (email, password) => {
+    login: async (email, password, captchaId, captchaAnswer) => {
       console.log(`[API] calling ${BASE_URL}/api/v1/auth/login for ${email}`);
 
       if (!email) throw new Error('Email hoặc Tên đăng nhập không được để trống.');
       if (!password) throw new Error('Mật khẩu không được để trống.');
+      if (!captchaAnswer) throw new Error('Mã CAPTCHA không được để trống.');
 
       const response = await fetch(`${BASE_URL}/api/v1/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password, captchaId, captchaAnswer })
       });
 
       const resJson = await response.json();
@@ -129,6 +130,37 @@ export const apiService = {
       }
 
       return resJson.data;
+    },
+
+    getCaptcha: async () => {
+      const response = await fetch(`${BASE_URL}/api/v1/auth/captcha`);
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Không thể lấy mã CAPTCHA.');
+      }
+      return resJson.data;
+    },
+
+    verifyOtp: async (username, otp) => {
+      const response = await fetch(`${BASE_URL}/api/v1/auth/verify-otp?username=${encodeURIComponent(username)}&otp=${encodeURIComponent(otp)}`, {
+        method: 'POST'
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Xác thực OTP thất bại.');
+      }
+      return resJson.data;
+    },
+
+    resendOtp: async (username) => {
+      const response = await fetch(`${BASE_URL}/api/v1/auth/resend-otp?username=${encodeURIComponent(username)}`, {
+        method: 'POST'
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Gửi lại mã OTP thất bại.');
+      }
+      return resJson;
     },
 
     register: async (name, email, password) => {
@@ -317,7 +349,7 @@ export const apiService = {
       console.log(`[API] calling POST ${BASE_URL}/api/v1/products/import`);
       const formData = new FormData();
       formData.append('file', file);
-      
+
       const authHeaders = getAuthHeaders();
       const headers = { ...authHeaders };
       delete headers['Content-Type'];
@@ -472,6 +504,18 @@ export const apiService = {
         ...order,
         items: order.itemsJson ? JSON.parse(order.itemsJson) : []
       }));
+    },
+    getDashboardStats: async () => {
+      console.log(`[API] calling GET ${BASE_URL}/api/v1/orders/dashboard-stats`);
+      const response = await fetch(`${BASE_URL}/api/v1/orders/dashboard-stats`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi lấy thống kê doanh thu.');
+      }
+      return resJson.data;
     }
   },
 
@@ -605,6 +649,86 @@ export const apiService = {
       const resJson = await response.json();
       if (!response.ok) {
         throw new Error(resJson.message || 'Lỗi khi xóa sạch giỏ hàng');
+      }
+      return resJson.data;
+    }
+  },
+  inventory: {
+    createTransaction: async (productId, type, quantity, note) => {
+      console.log(`[API] calling POST ${BASE_URL}/api/v1/inventory/transaction`);
+      const response = await fetch(`${BASE_URL}/api/v1/inventory/transaction`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ productId: Number(productId), type, quantity: Number(quantity), note })
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi thực hiện nghiệp vụ kho');
+      }
+      return resJson.data;
+    },
+    getAllTransactions: async () => {
+      console.log(`[API] calling GET ${BASE_URL}/api/v1/inventory/transactions`);
+      const response = await fetch(`${BASE_URL}/api/v1/inventory/transactions`, {
+        headers: getAuthHeaders()
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi lấy nhật ký kho');
+      }
+      return resJson.data;
+    },
+    getTransactionsByProduct: async (productId) => {
+      console.log(`[API] calling GET ${BASE_URL}/api/v1/inventory/transactions/product/${productId}`);
+      const response = await fetch(`${BASE_URL}/api/v1/inventory/transactions/product/${productId}`, {
+        headers: getAuthHeaders()
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi lấy nhật ký kho của sản phẩm');
+      }
+      return resJson.data;
+    }
+  },
+
+  // --- SEARCH API ---
+  search: {
+    query: async ({ queryText, minPrice, maxPrice, brand, category, autocomplete = false, fuzzy = true }) => {
+      let url = `${BASE_URL}/api/v1/search?autocomplete=${autocomplete}&fuzzy=${fuzzy}`;
+      if (queryText) url += `&query=${encodeURIComponent(queryText)}`;
+      if (minPrice !== undefined && minPrice !== null) url += `&minPrice=${minPrice}`;
+      if (maxPrice !== undefined && maxPrice !== null) url += `&maxPrice=${maxPrice}`;
+      if (brand && brand !== 'all') url += `&brand=${encodeURIComponent(brand)}`;
+      if (category && category !== 'all') url += `&category=${encodeURIComponent(category)}`;
+
+      console.log(`[API] calling GET ${url}`);
+      const response = await fetch(url);
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi tìm kiếm sản phẩm');
+      }
+      return resJson.data;
+    },
+    getStats: async () => {
+      console.log(`[API] calling GET ${BASE_URL}/api/v1/search/stats`);
+      const response = await fetch(`${BASE_URL}/api/v1/search/stats`, {
+        headers: getAuthHeaders()
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi lấy thống kê tìm kiếm');
+      }
+      return resJson.data;
+    },
+    syncIndex: async () => {
+      console.log(`[API] calling POST ${BASE_URL}/api/v1/search/sync`);
+      const response = await fetch(`${BASE_URL}/api/v1/search/sync`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Lỗi khi đồng bộ chỉ mục tìm kiếm');
       }
       return resJson.data;
     }

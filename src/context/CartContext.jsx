@@ -1,5 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
-import { createContext, useState, useEffect, useContext, useCallback, useMemo } from 'react'
+import { createContext, useState, useEffect, useContext, useCallback, useMemo, useRef } from 'react'
 import { ToastContext } from './ToastContext'
 import { AuthContext } from './AuthContext'
 import { ProductContext } from './ProductContext'
@@ -14,6 +13,12 @@ export const CartProvider = ({ children }) => {
 
   // Initialize cart as an empty list (will be populated from the API when logged in)
   const [cartItems, setCartItems] = useState([])
+
+  // Keep a ref to cartItems to avoid stale closures in callbacks and prevent duplicate API calls
+  const cartItemsRef = useRef(cartItems)
+  useEffect(() => {
+    cartItemsRef.current = cartItems
+  }, [cartItems])
 
   // Load user-specific cart from API when user logs in
   useEffect(() => {
@@ -53,15 +58,35 @@ export const CartProvider = ({ children }) => {
       return
     }
 
+    // Check stock before updating state or calling API
+    const prevItems = cartItemsRef.current;
+    const existingItemIndex = prevItems.findIndex(
+      (item) => item.id === product.id && item.configuration === configuration
+    )
+    const currentQty = existingItemIndex > -1 ? prevItems[existingItemIndex].quantity : 0;
+    const newQty = currentQty + quantity;
+    const stock = product.stockQuantity != null ? product.stockQuantity : 50;
+
+    if (newQty > stock) {
+      if (toastCtx?.showToast) {
+        toastCtx.showToast({
+          type: 'error',
+          title: 'Vượt quá tồn kho',
+          message: `Sản phẩm này chỉ còn tối đa ${stock} cái trong kho!`
+        })
+      }
+      return;
+    }
+
     // Fast state update
     setCartItems((prevItems) => {
-      const existingItemIndex = prevItems.findIndex(
+      const idx = prevItems.findIndex(
         (item) => item.id === product.id && item.configuration === configuration
       )
 
-      if (existingItemIndex > -1) {
+      if (idx > -1) {
         const newItems = [...prevItems]
-        newItems[existingItemIndex].quantity += quantity
+        newItems[idx].quantity += quantity
         return newItems
       } else {
         return [...prevItems, { id: product.id, quantity, configuration }]
@@ -102,32 +127,49 @@ export const CartProvider = ({ children }) => {
   }, [])
 
   const updateQuantity = useCallback((productId, configuration, amount) => {
-    // Fast state update & determine backend sync
-    setCartItems((prevItems) => {
-      const item = prevItems.find(i => i.id === productId && i.configuration === configuration)
-      if (!item) return prevItems
+    const currentItems = cartItemsRef.current
+    const item = currentItems.find(i => String(i.id) === String(productId) && i.configuration === configuration)
+    if (!item) return
 
-      const newQty = item.quantity + amount
+    const newQty = item.quantity + amount
 
-      // Async sync in background
-      if (newQty <= 0) {
-        apiService.cart.remove(productId, configuration)
-          .catch(err => console.error('[CartContext] Error removing quantity', err))
-      } else {
-        apiService.cart.updateQuantity(productId, configuration, newQty)
-          .catch(err => console.error('[CartContext] Error updating quantity', err))
+    // Verify stock if increasing quantity
+    if (amount > 0) {
+      const catalogProd = products.find(p => String(p.id) === String(productId))
+      const stock = catalogProd ? (catalogProd.stockQuantity != null ? catalogProd.stockQuantity : 50) : 50
+      if (newQty > stock) {
+        if (toastCtx?.showToast) {
+          toastCtx.showToast({
+            type: 'error',
+            title: 'Vượt quá tồn kho',
+            message: `Sản phẩm này chỉ còn tối đa ${stock} cái trong kho!`
+          })
+        }
+        return
       }
+    }
 
+    // 1. Fast state update
+    setCartItems((prevItems) => {
       return prevItems
         .map((i) => {
-          if (i.id === productId && i.configuration === configuration) {
+          if (String(i.id) === String(productId) && i.configuration === configuration) {
             return { ...i, quantity: newQty }
           }
           return i
         })
         .filter((i) => i.quantity > 0)
     })
-  }, [])
+
+    // 2. Async sync in background (outside the React render phase!)
+    if (newQty <= 0) {
+      apiService.cart.remove(productId, configuration)
+        .catch(err => console.error('[CartContext] Error removing quantity', err))
+    } else {
+      apiService.cart.updateQuantity(productId, configuration, newQty)
+        .catch(err => console.error('[CartContext] Error updating quantity', err))
+    }
+  }, [products, toastCtx])
 
   const clearCart = useCallback(() => {
     // Fast state update
@@ -146,11 +188,19 @@ export const CartProvider = ({ children }) => {
       .map((item) => {
         const catalogProd = products.find((p) => String(p.id) === String(item.id))
         if (catalogProd) {
+          let price = (item.price !== undefined && item.price !== null) 
+            ? item.price 
+            : catalogProd.price;
+          
+          if ((item.price === undefined || item.price === null) && 
+              item.configuration && item.configuration.includes('Hiệu năng cao')) {
+            price += 2500000;
+          }
           return {
             ...item,
             name: catalogProd.name,
-            price: catalogProd.price,
-            displayPrice: catalogProd.displayPrice,
+            price: price,
+            displayPrice: String(price),
             image: catalogProd.image,
             imagesList: catalogProd.imagesList
           }

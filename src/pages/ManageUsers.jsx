@@ -1,7 +1,86 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { apiService, validators } from '../services/api';
 import { Loader2, Plus, Edit, Trash2, ShieldAlert, Search, X } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { AuthContext } from '../context/AuthContext';
+
+const ROLE_DEFAULT_PERMISSIONS = {
+  CUSTOMER: [
+    'product.view',
+    'order.checkout',
+    'order.view',
+    'installment.submit',
+    'installment.view'
+  ],
+  STAFF: [
+    'product.view',
+    'product.create',
+    'product.update',
+    'product.delete',
+    'product.import',
+    'inventory.view',
+    'inventory.manage',
+    'stats.view',
+    'order.view',
+    'order.manage',
+    'installment.view'
+  ],
+  ADMIN: [
+    'users.read',
+    'users.create',
+    'users.update',
+    'users.delete',
+    'product.view',
+    'product.create',
+    'product.update',
+    'product.delete',
+    'product.hard-delete',
+    'product.import',
+    'product.trash',
+    'product.restore',
+    'inventory.view',
+    'inventory.manage',
+    'stats.view',
+    'order.checkout',
+    'order.view',
+    'order.manage',
+    'installment.submit',
+    'installment.view',
+    'settings.manage'
+  ]
+};
+
+const ALL_PERMISSIONS = [
+  { id: 'users.read', label: 'Xem danh sách người dùng', category: 'Người dùng' },
+  { id: 'users.create', label: 'Tạo người dùng', category: 'Người dùng' },
+  { id: 'users.update', label: 'Sửa người dùng', category: 'Người dùng' },
+  { id: 'users.delete', label: 'Xóa người dùng', category: 'Người dùng' },
+  { id: 'product.view', label: 'Xem sản phẩm', category: 'Sản phẩm' },
+  { id: 'product.create', label: 'Thêm sản phẩm', category: 'Sản phẩm' },
+  { id: 'product.update', label: 'Sửa sản phẩm', category: 'Sản phẩm' },
+  { id: 'product.delete', label: 'Xóa tạm sản phẩm (Trash)', category: 'Sản phẩm' },
+  { id: 'product.hard-delete', label: 'Xóa vĩnh viễn sản phẩm', category: 'Sản phẩm' },
+  { id: 'product.import', label: 'Nhập Excel sản phẩm', category: 'Sản phẩm' },
+  { id: 'product.trash', label: 'Xem thùng rác sản phẩm', category: 'Sản phẩm' },
+  { id: 'product.restore', label: 'Khôi phục sản phẩm', category: 'Sản phẩm' },
+  { id: 'inventory.view', label: 'Xem lịch sử kho', category: 'Kho hàng' },
+  { id: 'inventory.manage', label: 'Tạo giao dịch kho', category: 'Kho hàng' },
+  { id: 'stats.view', label: 'Xem thống kê tìm kiếm/dashboard', category: 'Thống kê' },
+  { id: 'order.checkout', label: 'Thanh toán đơn hàng', category: 'Đơn hàng' },
+  { id: 'order.view', label: 'Xem lịch sử mua hàng', category: 'Đơn hàng' },
+  { id: 'order.manage', label: 'Xem thống kê doanh thu', category: 'Đơn hàng' },
+  { id: 'installment.submit', label: 'Đăng ký trả góp', category: 'Trả góp' },
+  { id: 'installment.view', label: 'Xem hồ sơ trả góp', category: 'Trả góp' },
+  { id: 'settings.manage', label: 'Quản lý cài đặt hệ thống', category: 'Hệ thống' }
+];
+
+const groupedPermissions = ALL_PERMISSIONS.reduce((acc, perm) => {
+  if (!acc[perm.category]) {
+    acc[perm.category] = [];
+  }
+  acc[perm.category].push(perm);
+  return acc;
+}, {});
 
 function ManageUsers() {
   const { showToast, showConfirm } = useToast();
@@ -13,6 +92,7 @@ function ManageUsers() {
   const [userModalMode, setUserModalMode] = useState('add'); // 'add' or 'edit'
   const [selectedUser, setSelectedUser] = useState(null);
   
+  const [checkedPermissions, setCheckedPermissions] = useState([]);
   const [userFormData, setUserFormData] = useState({
     name: '',
     email: '',
@@ -26,6 +106,21 @@ function ManageUsers() {
     enabled: true
   });
   const [userFormErrors, setUserFormErrors] = useState({});
+
+  const handlePermissionToggle = (permId) => {
+    setCheckedPermissions(prev => {
+      if (prev.includes(permId)) {
+        return prev.filter(p => p !== permId);
+      } else {
+        return [...prev, permId];
+      }
+    });
+  };
+
+  const handleRoleChange = (newRole) => {
+    setUserFormData({ ...userFormData, role: newRole });
+    setCheckedPermissions(ROLE_DEFAULT_PERMISSIONS[newRole] || []);
+  };
 
   const loadUsers = async () => {
     setUsersLoading(true);
@@ -59,6 +154,7 @@ function ManageUsers() {
     });
     setUserFormErrors({});
     setUserModalMode('add');
+    setCheckedPermissions(ROLE_DEFAULT_PERMISSIONS['CUSTOMER']);
     setShowUserModal(true);
   };
 
@@ -78,6 +174,10 @@ function ManageUsers() {
     });
     setUserFormErrors({});
     setUserModalMode('edit');
+    const activePerms = user.customPermissions
+      ? user.customPermissions.split(',').map(p => p.trim()).filter(Boolean)
+      : ROLE_DEFAULT_PERMISSIONS[user.role || 'CUSTOMER'];
+    setCheckedPermissions(activePerms);
     setShowUserModal(true);
   };
 
@@ -114,11 +214,16 @@ function ManageUsers() {
     }
 
     try {
+      const payload = {
+        ...userFormData,
+        customPermissions: checkedPermissions.join(',')
+      };
+
       if (userModalMode === 'add') {
-        await apiService.users.create(userFormData);
+        await apiService.users.create(payload);
         showToast({ type: 'success', title: 'Thêm thành công', message: 'Đã thêm người dùng mới thành công!' });
       } else {
-        await apiService.users.update(selectedUser.userId, userFormData);
+        await apiService.users.update(selectedUser.userId, payload);
         showToast({ type: 'success', title: 'Cập nhật thành công', message: 'Cập nhật thông tin người dùng thành công!' });
       }
       setShowUserModal(false);
@@ -366,13 +471,59 @@ function ManageUsers() {
                     <label className="form-label text-muted fs-7 mb-1">Vai trò</label>
                     <select
                       value={userFormData.role}
-                      onChange={(e) => setUserFormData({ ...userFormData, role: e.target.value })}
+                      onChange={(e) => handleRoleChange(e.target.value)}
                       className="form-select"
                     >
                       <option value="CUSTOMER">CUSTOMER (Khách hàng)</option>
                       <option value="STAFF">STAFF (Nhân viên)</option>
                       <option value="ADMIN">ADMIN (Quản trị viên)</option>
                     </select>
+                  </div>
+                </div>
+
+                {/* DYNAMIC PERMISSIONS GRID CHECKBOXES */}
+                <div className="mb-3 border rounded p-3 bg-light">
+                  <label className="form-label text-dark fw-bold fs-7 mb-2 d-block">
+                    Phân quyền chi tiết (Custom Permissions)
+                  </label>
+                  <span className="text-muted d-block mb-3" style={{ fontSize: '0.75rem' }}>
+                    Quyền được tự động điền theo vai trò đã chọn. Bạn có thể tick chọn/bỏ chọn để tinh chỉnh quyền chi tiết riêng cho người dùng này.
+                  </span>
+                  
+                  <div style={{ maxHeight: '250px', overflowY: 'auto' }} className="pe-1">
+                    {Object.entries(groupedPermissions).map(([category, perms]) => (
+                      <div key={category} className="mb-3">
+                        <span className="fw-bold text-primary border-bottom d-block pb-1 mb-2" style={{ fontSize: '0.8rem' }}>{category}</span>
+                        <div className="row g-2">
+                          {perms.map(perm => {
+                            const isChecked = checkedPermissions.includes(perm.id);
+                            return (
+                              <div key={perm.id} className="col-md-6">
+                                <div className="form-check">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    id={`perm-check-${perm.id}`}
+                                    checked={isChecked}
+                                    onChange={() => handlePermissionToggle(perm.id)}
+                                  />
+                                  <label 
+                                    className="form-check-label text-dark cursor-pointer fw-medium" 
+                                    htmlFor={`perm-check-${perm.id}`}
+                                    style={{ fontSize: '0.75rem' }}
+                                  >
+                                    {perm.label}
+                                    <span className="text-muted d-block font-monospace" style={{ fontSize: '0.625rem' }}>
+                                      {perm.id}
+                                    </span>
+                                  </label>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 

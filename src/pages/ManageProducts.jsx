@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { apiService } from '../services/api';
 import { Loader2, Plus, Edit, Trash2, ShieldAlert, Search, X, FileSpreadsheet, Eye } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { AuthContext } from '../context/AuthContext';
 import ReactPaginate from 'react-paginate';
-import { formatDisplayPrice } from '../context/ProductContext';
+import { formatDisplayPrice, DEFAULT_LOW_STOCK_THRESHOLD } from '../context/ProductContext';
 
 const resolveComponent = (obj) => {
   if (!obj) return null;
@@ -91,6 +92,8 @@ const buildSpecs = (item) => {
 
 function ManageProducts() {
   const { showToast, showConfirm } = useToast();
+  const { user } = useContext(AuthContext);
+  const userPermissions = user?.permissions || [];
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState('');
@@ -177,7 +180,9 @@ function ManageProducts() {
     operatingSystem: '',
     releaseTime: '',
     dimensionsWeight: '',
-    material: ''
+    material: '',
+    stockQuantity: 50,
+    lowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD
   });
   const [productFormErrors, setProductFormErrors] = useState({});
 
@@ -293,7 +298,9 @@ function ManageProducts() {
       operatingSystem: '',
       releaseTime: '',
       dimensionsWeight: '',
-      material: ''
+      material: '',
+      stockQuantity: 50,
+      lowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD
     });
     setProductFormErrors({});
     setProductModalMode('add');
@@ -349,6 +356,8 @@ function ManageProducts() {
       releaseTime: prod.releaseTime || '',
       dimensionsWeight: prod.dimensionsWeight || '',
       material: prod.material || '',
+      stockQuantity: prod.stockQuantity != null ? prod.stockQuantity : 50,
+      lowStockThreshold: prod.lowStockThreshold != null ? prod.lowStockThreshold : DEFAULT_LOW_STOCK_THRESHOLD,
       specsJson: prod.specsJson || '{}',
       reviewsJson: prod.reviewsJson || '[]',
       rating: prod.rating || 5.0,
@@ -493,6 +502,9 @@ function ManageProducts() {
   const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
   const currentProducts = sortedProducts.slice(indexOfFirstProduct, indexOfLastProduct);
 
+  // Trích xuất danh sách hãng độc nhất từ sản phẩm trong database phục vụ bộ lọc
+  const brands = [...new Set(products.map(p => p.brand))].filter(Boolean);
+
   return (
     <main id="main" className="main">
       <div className="pagetitle d-flex justify-content-between align-items-center mb-4">
@@ -513,22 +525,26 @@ function ManageProducts() {
             style={{ display: 'none' }}
             onChange={handleExcelImport}
           />
-          <button
-            className="btn btn-outline-success d-flex align-items-center gap-1 py-2 px-3"
-            onClick={() => document.getElementById('excel-file-input').click()}
-            disabled={importing}
-          >
-            {importing ? (
-              <Loader2 className="spinner-border border-0" style={{ width: '16px', height: '16px' }} />
-            ) : (
-              <FileSpreadsheet size={16} />
-            )}
-            {importing ? 'Đang nhập...' : 'Nhập Excel'}
-          </button>
+          {userPermissions.includes('product.import') && (
+            <button
+              className="btn btn-outline-success d-flex align-items-center gap-1 py-2 px-3"
+              onClick={() => document.getElementById('excel-file-input').click()}
+              disabled={importing}
+            >
+              {importing ? (
+                <Loader2 className="spinner-border border-0" style={{ width: '16px', height: '16px' }} />
+              ) : (
+                <FileSpreadsheet size={16} />
+              )}
+              {importing ? 'Đang nhập...' : 'Nhập Excel'}
+            </button>
+          )}
 
-          <button className="btn btn-primary d-flex align-items-center gap-1 py-2 px-3" onClick={openAddProduct}>
-            <Plus size={16} /> Thêm sản phẩm
-          </button>
+          {userPermissions.includes('product.create') && (
+            <button className="btn btn-primary d-flex align-items-center gap-1 py-2 px-3" onClick={openAddProduct}>
+              <Plus size={16} /> Thêm sản phẩm
+            </button>
+          )}
         </div>
       </div>
 
@@ -558,14 +574,9 @@ function ManageProducts() {
                   style={{ borderRadius: '8px' }}
                 >
                   <option value="All">Tất cả hãng</option>
-                  <option value="NEXUS">NEXUS</option>
-                  <option value="ASUS">ASUS</option>
-                  <option value="MSI">MSI</option>
-                  <option value="ACER">ACER</option>
-                  <option value="LENOVO">LENOVO</option>
-                  <option value="DELL">DELL</option>
-                  <option value="HP">HP</option>
-                  <option value="APPLE">APPLE</option>
+                  {brands.map(b => (
+                    <option key={b} value={b}>{b}</option>
+                  ))}
                 </select>
               </div>
 
@@ -654,6 +665,7 @@ function ManageProducts() {
                       <th scope="col">Hãng</th>
                       <th scope="col">Danh mục</th>
                       <th scope="col">Giá bán</th>
+                      <th scope="col">Tồn kho</th>
                       <th scope="col">Đánh giá</th>
                       <th scope="col">Nhãn</th>
                       <th scope="col" className="text-end">Hành động</th>
@@ -687,6 +699,18 @@ function ManageProducts() {
                           </td>
                           <td><strong className="text-danger">{formatDisplayPrice(p.price, p.displayPrice)}</strong></td>
                           <td>
+                            <div className="d-flex flex-column fs-7">
+                              <span><strong>{p.stockQuantity != null ? p.stockQuantity : 0}</strong> cái</span>
+                              {p.stockQuantity === 0 ? (
+                                <span className="badge bg-danger" style={{ fontSize: '0.65rem', padding: '2px 4px', width: 'fit-content' }}>Hết hàng</span>
+                              ) : p.stockQuantity <= (p.lowStockThreshold != null ? p.lowStockThreshold : DEFAULT_LOW_STOCK_THRESHOLD) ? (
+                                <span className="badge bg-warning text-dark" style={{ fontSize: '0.65rem', padding: '2px 4px', width: 'fit-content' }}>Sắp hết</span>
+                              ) : (
+                                <span className="badge bg-success" style={{ fontSize: '0.65rem', padding: '2px 4px', width: 'fit-content' }}>Còn hàng</span>
+                              )}
+                            </div>
+                          </td>
+                          <td>
                             <div className="d-flex align-items-center gap-1 fs-8 text-warning">
                               <span>★</span><span>{p.rating || '5.0'}</span>
                               <span className="text-muted">({p.reviewCount || 0})</span>
@@ -704,12 +728,16 @@ function ManageProducts() {
                               <button className="btn btn-sm btn-outline-info p-2" onClick={() => fetchAndShowDetail(p.id)} disabled={detailLoading} title="Xem chi tiết">
                                 <Eye size={14} />
                               </button>
-                              <button className="btn btn-sm btn-outline-primary p-2" onClick={() => openEditProduct(p)}>
-                                <Edit size={14} />
-                              </button>
-                              <button className="btn btn-sm btn-outline-danger p-2" onClick={() => deleteProduct(p.id)}>
-                                <Trash2 size={14} />
-                              </button>
+                              {userPermissions.includes('product.update') && (
+                                <button className="btn btn-sm btn-outline-primary p-2" onClick={() => openEditProduct(p)}>
+                                  <Edit size={14} />
+                                </button>
+                              )}
+                              {userPermissions.includes('product.delete') && (
+                                <button className="btn btn-sm btn-outline-danger p-2" onClick={() => deleteProduct(p.id)}>
+                                  <Trash2 size={14} />
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -798,6 +826,31 @@ function ManageProducts() {
                       type="text"
                       value={productFormData.brand}
                       onChange={(e) => setProductFormData({ ...productFormData, brand: e.target.value })}
+                      className="form-control"
+                    />
+                  </div>
+                </div>
+
+                <div className="row g-3 mb-3">
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1 fw-semibold">Số lượng tồn kho *</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={productFormData.stockQuantity}
+                      onChange={(e) => setProductFormData({ ...productFormData, stockQuantity: Number(e.target.value) })}
+                      className="form-control"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fs-7 mb-1 fw-semibold">Ngưỡng cảnh báo tồn *</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={productFormData.lowStockThreshold}
+                      onChange={(e) => setProductFormData({ ...productFormData, lowStockThreshold: Number(e.target.value) })}
                       className="form-control"
                     />
                   </div>

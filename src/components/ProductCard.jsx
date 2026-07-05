@@ -18,9 +18,11 @@ const ProductCard = ({ product, onSelectProduct, setCurrentPage }) => {
   const { addToCart } = useContext(CartContext)
   const { compareItems, toggleCompare } = useContext(ProductContext)
   const isCompared = compareItems.some(item => item.id === product.id)
+  const stock = product.stockQuantity != null ? product.stockQuantity : 50
 
   const handleQuickAdd = (e) => {
     e.stopPropagation() // Don't trigger card selection detail page
+    if (stock <= 0) return
     addToCart(product, 1)
   }
 
@@ -86,8 +88,8 @@ const ProductCard = ({ product, onSelectProduct, setCurrentPage }) => {
 
         {/* Price and Action Buttons */}
         <div className="mt-auto d-flex align-items-center justify-content-between pt-2" style={{ borderTop: '1px solid #f1f5f9' }}>
-          <span className="fs-6 fw-bold display-font" style={{ color: 'var(--accent-red)' }}>
-            {formatDisplayPrice(product.price, product.displayPrice)}
+          <span className="fs-6 fw-bold display-font" style={{ color: stock <= 0 ? '#dc3545' : 'var(--accent-red)' }}>
+            {stock <= 0 ? 'Hết hàng' : formatDisplayPrice(product.price, product.displayPrice)}
           </span>
           <div className="d-flex gap-2">
             <button 
@@ -116,7 +118,8 @@ const ProductCard = ({ product, onSelectProduct, setCurrentPage }) => {
               className="btn btn-sm btn-danger p-2 d-flex align-items-center justify-content-center"
               style={{ borderRadius: '6px', width: '34px', height: '34px' }}
               onClick={handleQuickAdd}
-              title="Thêm vào giỏ"
+              disabled={stock <= 0}
+              title={stock <= 0 ? "Hết hàng" : "Thêm vào giỏ"}
             >
               <ShoppingCart size={15} style={{ color: '#ffffff' }} />
             </button>

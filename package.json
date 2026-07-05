@@ -11,10 +11,12 @@
     "start": "serve -s dist -l $PORT"
   },
   "dependencies": {
+    "apexcharts": "^5.15.2",
     "bootstrap": "^5.3.8",
     "framer-motion": "^12.40.0",
     "lucide-react": "^1.17.0",
     "react": "^19.2.6",
+    "react-apexcharts": "^2.1.1",
     "react-dom": "^19.2.6",
     "react-paginate": "^8.3.0",
     "react-router-dom": "^7.16.0",

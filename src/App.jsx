@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react'
 import { CartProvider } from './context/CartContext'
 import { AuthContext, AuthProvider } from './context/AuthContext'
 import { ProductProvider } from './context/ProductContext'
-import { ToastProvider } from './context/ToastContext'
+import { ToastProvider, useToast } from './context/ToastContext'
 import ToastContainer from './components/ToastContainer'
 import Header from './components/Header'
 import Footer from './components/Footer'
@@ -19,6 +19,8 @@ import ManageUsers from './pages/ManageUsers'
 import ManageTrash from './pages/ManageTrash'
 import Profile from './pages/Profile'
 import Settings from './pages/Settings'
+import ManageInventory from './pages/ManageInventory'
+import ManageStats from './pages/ManageStats'
 import Headerdashboard from './components/Headerdashboard'
 import Sidebar from './components/Sidebar'
 import Footerdashboard from './components/Footerdashboard'
@@ -31,6 +33,47 @@ function AppContent() {
   const [cartOpen, setCartOpen] = useState(false)
   const [cartDrawerStep, setCartDrawerStep] = useState('cart')
   const { user } = useContext(AuthContext)
+  const { showToast } = useToast()
+
+  // Listen to VNPAY return URL callbacks in the hash
+  useEffect(() => {
+    const checkVnPayCallback = () => {
+      const hash = window.location.hash
+      if (hash.includes('vnpay=')) {
+        const urlParams = new URLSearchParams(hash.split('?')[1] || '')
+        const vnpayStatus = urlParams.get('vnpay')
+        const orderId = urlParams.get('orderId')
+        
+        if (vnpayStatus === 'success') {
+          showToast({
+            type: 'success',
+            title: 'Thanh toán thành công',
+            message: `Đơn hàng #${orderId} đã thanh toán thành công qua cổng VNPAY.`
+          })
+        } else if (vnpayStatus === 'fail') {
+          const errorCode = urlParams.get('errorCode')
+          showToast({
+            type: 'error',
+            title: 'Thanh toán không thành công',
+            message: `Giao dịch VNPAY cho đơn hàng #${orderId} bị hủy hoặc lỗi. Mã lỗi: ${errorCode || 'đã hủy'}.`
+          })
+        } else if (vnpayStatus === 'error') {
+          showToast({
+            type: 'error',
+            title: 'Lỗi xác minh',
+            message: `Không thể xác thực chữ ký bảo mật giao dịch VNPAY cho đơn hàng #${orderId}.`
+          })
+        }
+        
+        // Clean up hash parameters to avoid showing toast repeatedly on refresh
+        window.location.hash = hash.split('?')[0]
+      }
+    }
+
+    checkVnPayCallback()
+    window.addEventListener('hashchange', checkVnPayCallback)
+    return () => window.removeEventListener('hashchange', checkVnPayCallback)
+  }, [showToast])
 
   const handleOpenCart = (step = 'cart') => {
     setCartDrawerStep(step)
@@ -49,13 +92,33 @@ function AppContent() {
         setCurrentPage('dashboard')
       } else if (user.role === 'CUSTOMER' && currentPage.startsWith('dashboard')) {
         setCurrentPage('shop')
+      } else {
+        // Permission-based guards for dashboard screens
+        const permissions = user.permissions || []
+        let isAuthorized = true
+        if (currentPage === 'dashboard/trash' && !permissions.includes('product.trash')) {
+          isAuthorized = false
+        } else if (currentPage === 'dashboard/users' && !permissions.includes('users.read')) {
+          isAuthorized = false
+        } else if (currentPage === 'dashboard/settings' && !permissions.includes('settings.manage')) {
+          isAuthorized = false
+        }
+
+        if (!isAuthorized) {
+          setCurrentPage('dashboard')
+          showToast({
+            type: 'error',
+            title: 'Không có quyền truy cập',
+            message: 'Tài khoản của bạn không có quyền thực hiện chức năng này.'
+          })
+        }
       }
     } else {
       if (currentPage.startsWith('dashboard')) {
         setCurrentPage('login')
       }
     }
-  }, [user, currentPage])
+  }, [user, currentPage, showToast])
 
   // 2. Global Event Listener for sidebar toggle button
   useEffect(() => {
@@ -136,6 +199,12 @@ function AppContent() {
     }
     if (currentPage === 'dashboard/settings') {
       return <Settings />
+    }
+    if (currentPage === 'dashboard/inventory') {
+      return <ManageInventory />
+    }
+    if (currentPage === 'dashboard/stats') {
+      return <ManageStats />
     }
     return <Dashboard currentPage={currentPage} />
   }

@@ -2,14 +2,21 @@ import { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
 
 function Sidebar({ currentPage }) {
-  const { logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
+  const userPermissions = user?.permissions || [];
+
+  const canViewTrash = userPermissions.includes('product.trash');
+  const canViewUsers = userPermissions.includes('users.read');
+  const canViewSettings = userPermissions.includes('settings.manage');
 
   const isOverview = currentPage === 'dashboard';
   const isProducts = currentPage === 'dashboard/products';
+  const isInventory = currentPage === 'dashboard/inventory';
   const isTrash = currentPage === 'dashboard/trash';
   const isUsers = currentPage === 'dashboard/users';
   const isProfile = currentPage === 'dashboard/profile';
   const isSettings = currentPage === 'dashboard/settings';
+  const isStats = currentPage === 'dashboard/stats';
 
   const isProductsActive = isProducts || isTrash;
   const [isProductsOpen, setIsProductsOpen] = useState(isProductsActive);
@@ -50,21 +57,40 @@ function Sidebar({ currentPage }) {
                 <span>Danh sách sản phẩm</span>
               </a>
             </li>
-            <li>
-              <a className={isTrash ? 'active' : ''} href="#dashboard/trash">
-                <i className="bi bi-circle"></i>
-                <span>Thùng rác</span>
-              </a>
-            </li>
+            {canViewTrash && (
+              <li>
+                <a className={isTrash ? 'active' : ''} href="#dashboard/trash">
+                  <i className="bi bi-circle"></i>
+                  <span>Thùng rác</span>
+                </a>
+              </li>
+            )}
           </ul>
         </li>
 
         <li className="nav-item">
-          <a className={`nav-link ${isUsers ? '' : 'collapsed'}`} href="#dashboard/users">
-            <i className="bi bi-people"></i>
-            <span>Quản lý người dùng</span>
+          <a className={`nav-link ${isInventory ? '' : 'collapsed'}`} href="#dashboard/inventory">
+            <i className="bi bi-box-seam"></i>
+            <span>Quản lý kho hàng</span>
           </a>
         </li>
+
+
+        <li className="nav-item">
+          <a className={`nav-link ${isStats ? '' : 'collapsed'}`} href="#dashboard/stats">
+            <i className="bi bi-bar-chart-line"></i>
+            <span>Báo cáo thống kê</span>
+          </a>
+        </li>
+
+        {canViewUsers && (
+          <li className="nav-item">
+            <a className={`nav-link ${isUsers ? '' : 'collapsed'}`} href="#dashboard/users">
+              <i className="bi bi-people"></i>
+              <span>Quản lý người dùng</span>
+            </a>
+          </li>
+        )}
 
         <li className="nav-heading">Tài khoản</li>
 
@@ -75,12 +101,14 @@ function Sidebar({ currentPage }) {
           </a>
         </li>
 
-        <li className="nav-item">
-          <a className={`nav-link ${isSettings ? '' : 'collapsed'}`} href="#dashboard/settings">
-            <i className="bi bi-gear"></i>
-            <span>Cài đặt</span>
-          </a>
-        </li>
+        {canViewSettings && (
+          <li className="nav-item">
+            <a className={`nav-link ${isSettings ? '' : 'collapsed'}`} href="#dashboard/settings">
+              <i className="bi bi-gear"></i>
+              <span>Cài đặt</span>
+            </a>
+          </li>
+        )}
 
         <li className="nav-heading">Hành động</li>
 

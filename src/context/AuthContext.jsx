@@ -17,17 +17,37 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const login = async (email, password) => {
+  const login = async (email, password, captchaId, captchaAnswer) => {
     setLoading(true)
     setError('')
     try {
-      const fetchedUser = await apiService.auth.login(email, password)
+      const fetchedUser = await apiService.auth.login(email, password, captchaId, captchaAnswer)
+      if (fetchedUser && fetchedUser.message === 'OTP_REQUIRED') {
+        setLoading(false)
+        return { otpRequired: true, username: fetchedUser.username, email: fetchedUser.email }
+      }
+      setUser(fetchedUser)
+      localStorage.setItem('nexus_user', JSON.stringify(fetchedUser))
+      setLoading(false)
+      return { success: true }
+    } catch (err) {
+      setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.')
+      setLoading(false)
+      return { error: true }
+    }
+  }
+
+  const verifyOtp = async (username, otp) => {
+    setLoading(true)
+    setError('')
+    try {
+      const fetchedUser = await apiService.auth.verifyOtp(username, otp)
       setUser(fetchedUser)
       localStorage.setItem('nexus_user', JSON.stringify(fetchedUser))
       setLoading(false)
       return true
     } catch (err) {
-      setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.')
+      setError(err.message || 'Mã OTP không hợp lệ hoặc đã hết hạn.')
       setLoading(false)
       return false
     }
@@ -77,7 +97,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, error, loading, login, register, updateUserProfile, logout, setError }}>
+    <AuthContext.Provider value={{ user, error, loading, login, verifyOtp, register, updateUserProfile, logout, setError }}>
       {children}
     </AuthContext.Provider>
   )

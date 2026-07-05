@@ -1,5 +1,5 @@
 import { useState, useContext, useEffect } from 'react'
-import { ProductContext, formatDisplayPrice } from '../context/ProductContext'
+import { ProductContext, formatDisplayPrice, DEFAULT_LOW_STOCK_THRESHOLD } from '../context/ProductContext'
 import { CartContext } from '../context/CartContext'
 import ProductCard from '../components/ProductCard'
 import SEO from '../components/SEO'
@@ -35,6 +35,9 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow })
   const [selectedConfig, setSelectedConfig] = useState(() => getConfigurations(product)[0])
   const [activeTab, setActiveTab] = useState('specs') // 'specs', 'reviews'
   const [activeImage, setActiveImage] = useState(null)
+
+  const isUpgraded = selectedConfig === configurations[1]
+  const currentPrice = isUpgraded ? product.price + 2500000 : product.price
   
   useEffect(() => {
     if (product) {
@@ -58,9 +61,10 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow })
     .filter(p => p.category === product.category && String(p.id) !== String(product.id))
     .slice(0, 3)
 
+  const stock = product.stockQuantity != null ? product.stockQuantity : 50
   const handleQtyChange = (val) => {
     const newQty = quantity + val
-    if (newQty >= 1) setQuantity(newQty)
+    if (newQty >= 1 && newQty <= stock) setQuantity(newQty)
   }
 
   const handleAddToCart = () => {
@@ -96,8 +100,8 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow })
     'offers': {
       '@type': 'Offer',
       'url': window.location.href,
-      'priceCurrency': 'USD',
-      'price': product.price.toString(),
+      'priceCurrency': 'VND',
+      'price': currentPrice.toString(),
       'itemCondition': 'https://schema.org/NewCondition',
       'availability': 'https://schema.org/InStock'
     }
@@ -195,8 +199,25 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow })
                 <span className="text-secondary" style={{ fontSize: '0.8rem' }}>({product.reviewCount} Đánh giá khách hàng)</span>
               </div>
 
-              <div className="fs-3 text-white fw-bold mb-4 display-font">
-                {formatDisplayPrice(product.price, product.displayPrice)}
+              <div className="fs-3 text-white fw-bold mb-3 display-font">
+                {stock <= 0 ? <span className="text-danger">Hết hàng</span> : formatDisplayPrice(currentPrice)}
+              </div>
+
+              {/* Trạng thái tồn kho */}
+              <div className="mb-4">
+                {stock === 0 ? (
+                  <span className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 py-2 px-3 rounded fs-7 fw-semibold">
+                    Hết hàng (Out of stock)
+                  </span>
+                ) : stock <= (product.lowStockThreshold != null ? product.lowStockThreshold : DEFAULT_LOW_STOCK_THRESHOLD) ? (
+                  <span className="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 py-2 px-3 rounded fs-7 fw-semibold">
+                    Chỉ còn lại {stock} sản phẩm trong kho!
+                  </span>
+                ) : (
+                  <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 py-2 px-3 rounded fs-7 fw-semibold">
+                    Còn hàng ({stock} sản phẩm sẵn có)
+                  </span>
+                )}
               </div>
 
               {/* Description body */}
@@ -258,6 +279,7 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow })
                 <button 
                   className="btn btn-outline-danger py-3 d-flex align-items-center justify-content-center gap-2"
                   onClick={handleAddToCart}
+                  disabled={stock === 0}
                   style={{ flex: 1, borderRadius: '6px' }}
                 >
                   <ShoppingCart size={18} /> Thêm Vào Giỏ
@@ -265,9 +287,10 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow })
                 <button 
                   className="btn btn-danger py-3 glow-btn d-flex align-items-center justify-content-center gap-2 fw-bold"
                   onClick={handleBuyNow}
+                  disabled={stock === 0}
                   style={{ flex: 1.5, borderRadius: '6px' }}
                 >
-                  Mua Ngay
+                  {stock === 0 ? 'Hết hàng' : 'Mua Ngay'}
                 </button>
               </div>
               <div className="d-flex align-items-center gap-2 text-secondary fs-8 mt-2" style={{ fontSize: '0.8rem' }}>
