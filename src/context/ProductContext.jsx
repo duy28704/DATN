@@ -3,7 +3,7 @@ import { apiService } from '../services/api'
 import { useToast } from './ToastContext'
 
 export const ProductContext = createContext()
-export const DEFAULT_LOW_STOCK_THRESHOLD = 10;
+export const DEFAULT_LOW_STOCK_THRESHOLD = 0;
 
 const CATEGORIES = [
   { id: 'all', name: 'Tất cả Laptop' },
@@ -191,7 +191,7 @@ export const transformDbProduct = (item) => {
     description: item.description || '',
     specs: buildSpecs(item),
     reviews: item.reviewsJson ? JSON.parse(item.reviewsJson) : [],
-    stockQuantity: item.stockQuantity != null ? item.stockQuantity : 50,
+    stockQuantity: item.stockQuantity != null ? item.stockQuantity : 0,
     lowStockThreshold: item.lowStockThreshold != null ? item.lowStockThreshold : DEFAULT_LOW_STOCK_THRESHOLD,
     brand: item.brand || '',
     cpuTechnology: item.cpuTechnology || '',

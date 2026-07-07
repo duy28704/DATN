@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { apiService, validators } from '../services/api'
+import TurnstileWidget from '../components/TurnstileWidget'
 
 const Login = ({ setCurrentPage }) => {
   const { user, error, loading, login, verifyOtp, register, updateUserProfile, logout, setError } = useContext(AuthContext)
@@ -31,27 +32,16 @@ const Login = ({ setCurrentPage }) => {
   const [successMsg, setSuccessMsg] = useState('')
 
   // CAPTCHA and OTP states
-  const [captchaData, setCaptchaData] = useState({ captchaId: '', question: '' })
-  const [captchaAnswer, setCaptchaAnswer] = useState('')
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const [turnstileResetTrigger, setTurnstileResetTrigger] = useState(0)
   const [otpMode, setOtpMode] = useState(false)
   const [otpCode, setOtpCode] = useState('')
   const [otpTarget, setOtpTarget] = useState({ username: '', email: '' })
   const [resendTimer, setResendTimer] = useState(0)
 
-  const fetchCaptcha = async () => {
-    try {
-      const data = await apiService.auth.getCaptcha()
-      setCaptchaData(data)
-      setCaptchaAnswer('')
-    } catch (err) {
-      console.error('Error fetching captcha:', err)
-    }
-  }
-
-  // Fetch captcha on login mode activation
+  // Reset OTP state when mode changes
   useEffect(() => {
     if (isLoginMode && !user) {
-      fetchCaptcha()
       setOtpMode(false)
       setOtpCode('')
     }
@@ -199,12 +189,12 @@ const Login = ({ setCurrentPage }) => {
     }
 
     if (isLoginMode) {
-      if (!captchaAnswer) {
-        setError('Vui lòng nhập đáp án CAPTCHA.')
+      if (!turnstileToken) {
+        setError('Vui lòng hoàn tất xác minh bảo mật (Turnstile CAPTCHA).')
         return
       }
 
-      const res = await login(formData.email, formData.password, captchaData.captchaId, captchaAnswer)
+      const res = await login(formData.email, formData.password, null, null, turnstileToken)
       if (res && res.otpRequired) {
         setSuccessMsg('Thông tin đăng nhập hợp lệ! Mã OTP đã được gửi về email của bạn.')
         setOtpTarget({ username: res.username, email: res.email })
@@ -223,8 +213,9 @@ const Login = ({ setCurrentPage }) => {
           }
         }, 1200)
       } else {
-        // Clear captcha input and fetch new captcha on error
-        fetchCaptcha()
+        // Reset turnstile widget on error
+        setTurnstileResetTrigger(prev => prev + 1)
+        setTurnstileToken('')
       }
     } else {
       const ok = await register(formData.name, formData.email, formData.password)
@@ -370,7 +361,7 @@ const Login = ({ setCurrentPage }) => {
         keywords="đăng nhập nexus, tài khoản công nghệ, đăng ký tài khoản thương mại điện tử"
       />
 
-      <div className="container py-5 px-4 px-md-5">
+      <div className={`container py-5 px-4 px-md-5 ${!user ? 'd-flex flex-column align-items-center justify-content-center' : ''}`} style={{ minHeight: !user ? '70vh' : 'auto' }}>
         <AnimatePresence mode="wait">
           {user ? (
             /* Logged in state - Dashboard view */
@@ -839,7 +830,7 @@ const Login = ({ setCurrentPage }) => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="w-100 p-4 p-md-5 rounded text-start"
+              className="w-100 p-4 p-md-5 rounded text-start mx-auto"
               style={{ maxWidth: '440px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
             >
               <h1 className="fs-3 text-white display-font mb-2 text-center">
@@ -912,7 +903,6 @@ const Login = ({ setCurrentPage }) => {
                     setOtpMode(false);
                     setError('');
                     setSuccessMsg('');
-                    fetchCaptcha();
                   }}
                 >
                   Quay lại màn hình đăng nhập
@@ -926,7 +916,7 @@ const Login = ({ setCurrentPage }) => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="w-100 p-4 p-md-5 rounded text-start"
+              className="w-100 p-4 p-md-5 rounded text-start mx-auto"
               style={{ maxWidth: '440px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
             >
               <h1 className="fs-3 text-white display-font mb-2 text-center">
@@ -1009,28 +999,13 @@ const Login = ({ setCurrentPage }) => {
 
                 {isLoginMode && (
                   <div>
-                    <label className="form-label text-secondary fs-7 mb-1">Xác minh bảo mật (CAPTCHA)</label>
-                    <div className="d-flex gap-2 align-items-center">
-                      <div className="flex-grow-1 p-3 rounded text-center fw-bold tracking-wider display-font fs-5" style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--accent-red)', userSelect: 'none' }}>
-                        {captchaData.question}
-                      </div>
-                      <button 
-                        type="button" 
-                        onClick={fetchCaptcha} 
-                        className="btn btn-outline-secondary p-3 d-flex align-items-center justify-content-center"
-                        style={{ height: '48px', width: '48px', borderRadius: '6px', borderColor: 'var(--border-color)' }}
-                        title="Đổi phép tính khác"
-                      >
-                        <RotateCcw size={16} />
-                      </button>
-                    </div>
-                    <input
-                      type="text"
-                      required
-                      value={captchaAnswer}
-                      onChange={(e) => setCaptchaAnswer(e.target.value)}
-                      className="form-control tech-input mt-2"
-                      placeholder="Nhập kết quả phép tính"
+                    <label className="form-label text-secondary fs-7 mb-1 text-center d-block">Xác minh bảo mật (Cloud CAPTCHA)</label>
+                    <TurnstileWidget
+                      theme="light"
+                      onVerify={(token) => setTurnstileToken(token)}
+                      onExpire={() => setTurnstileToken('')}
+                      onError={() => setTurnstileToken('')}
+                      resetTrigger={turnstileResetTrigger}
                     />
                   </div>
                 )}

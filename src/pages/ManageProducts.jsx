@@ -95,6 +95,7 @@ function ManageProducts() {
   const { user } = useContext(AuthContext);
   const userPermissions = user?.permissions || [];
   const [products, setProducts] = useState([]);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState('');
   const [importing, setImporting] = useState(false);
@@ -181,7 +182,7 @@ function ManageProducts() {
     releaseTime: '',
     dimensionsWeight: '',
     material: '',
-    stockQuantity: 50,
+    stockQuantity: 0,
     lowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD
   });
   const [productFormErrors, setProductFormErrors] = useState({});
@@ -192,6 +193,7 @@ function ManageProducts() {
     try {
       const data = await apiService.products.getAll();
       setProducts(data);
+      setSelectedIds([]); // Clear selection when data reloads
     } catch (err) {
       setProductsError(err.message || 'Lỗi khi lấy danh sách sản phẩm.');
     } finally {
@@ -205,6 +207,7 @@ function ManageProducts() {
 
   useEffect(() => {
     setCurrentPageNum(1);
+    setSelectedIds([]); // Clear selection when filters change
   }, [productSearch, filterBrand, filterCategory, filterPrice, sortBy]);
 
   const handleExcelImport = async (e) => {
@@ -466,6 +469,22 @@ function ManageProducts() {
     }
   };
 
+  const handleBulkDelete = async () => {
+    const confirmed = await showConfirm({
+      title: 'Xác nhận xóa hàng loạt',
+      message: `Bạn có chắc chắn muốn xóa ${selectedIds.length} sản phẩm đã chọn? Các sản phẩm này sẽ được chuyển vào Thùng rác.`
+    });
+    if (!confirmed) return;
+    try {
+      await apiService.products.delete(selectedIds, false); // soft delete bulk
+      showToast({ type: 'success', title: 'Xóa thành công', message: `Đã chuyển ${selectedIds.length} sản phẩm vào Thùng rác.` });
+      setSelectedIds([]);
+      loadProducts();
+    } catch (err) {
+      showToast({ type: 'error', title: 'Xóa thất bại', message: err.message || 'Lỗi khi xóa hàng loạt sản phẩm.' });
+    }
+  };
+
   const filteredProducts = products.filter(p => {
     // 1. Text Search Filter
     const matchesSearch = p.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
@@ -537,6 +556,15 @@ function ManageProducts() {
                 <FileSpreadsheet size={16} />
               )}
               {importing ? 'Đang nhập...' : 'Nhập Excel'}
+            </button>
+          )}
+
+          {selectedIds.length > 0 && userPermissions.includes('product.delete') && (
+            <button
+              className="btn btn-danger d-flex align-items-center gap-1 py-2 px-3 animate-fade-in"
+              onClick={handleBulkDelete}
+            >
+              <Trash2 size={16} /> Xóa đã chọn ({selectedIds.length})
             </button>
           )}
 
@@ -659,6 +687,24 @@ function ManageProducts() {
                 <table className="table table-hover align-middle">
                   <thead>
                     <tr>
+                      {userPermissions.includes('product.delete') && (
+                        <th scope="col" style={{ width: '40px' }}>
+                          <input
+                            type="checkbox"
+                            className="form-check-input"
+                            checked={currentProducts.length > 0 && currentProducts.every(p => selectedIds.includes(p.id))}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                const pageIds = currentProducts.map(p => p.id);
+                                setSelectedIds(prev => [...new Set([...prev, ...pageIds])]);
+                              } else {
+                                const pageIds = currentProducts.map(p => p.id);
+                                setSelectedIds(prev => prev.filter(id => !pageIds.includes(id)));
+                              }
+                            }}
+                          />
+                        </th>
+                      )}
                       <th scope="col">ID</th>
                       <th scope="col">Ảnh</th>
                       <th scope="col">Tên sản phẩm</th>
@@ -674,11 +720,27 @@ function ManageProducts() {
                   <tbody>
                     {currentProducts.length === 0 ? (
                       <tr>
-                        <td colSpan="9" className="text-center py-4 text-muted">Không tìm thấy sản phẩm nào.</td>
+                        <td colSpan={userPermissions.includes('product.delete') ? 11 : 10} className="text-center py-4 text-muted">Không tìm thấy sản phẩm nào.</td>
                       </tr>
                     ) : (
                       currentProducts.map((p) => (
-                        <tr key={p.id}>
+                        <tr key={p.id} className={selectedIds.includes(p.id) ? 'table-active' : ''}>
+                          {userPermissions.includes('product.delete') && (
+                            <td>
+                              <input
+                                type="checkbox"
+                                className="form-check-input"
+                                checked={selectedIds.includes(p.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedIds(prev => [...prev, p.id]);
+                                  } else {
+                                    setSelectedIds(prev => prev.filter(id => id !== p.id));
+                                  }
+                                }}
+                              />
+                            </td>
+                          )}
                           <th scope="row">{p.id}</th>
                           <td>
                             <div className="p-1 rounded bg-light border d-flex align-items-center justify-content-center" style={{ width: '44px', height: '44px' }}>
@@ -758,7 +820,10 @@ function ManageProducts() {
                   previousLabel="Trước"
                   nextLabel="Sau"
                   pageCount={totalPages}
-                  onPageChange={({ selected }) => setCurrentPageNum(selected + 1)}
+                  onPageChange={({ selected }) => {
+                    setCurrentPageNum(selected + 1);
+                    setSelectedIds([]);
+                  }}
                   containerClassName="pagination mb-0"
                   pageClassName="page-item"
                   pageLinkClassName="page-link"

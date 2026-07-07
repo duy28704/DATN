@@ -17,11 +17,11 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const login = async (email, password, captchaId, captchaAnswer) => {
+  const login = async (email, password, captchaId, captchaAnswer, turnstileToken) => {
     setLoading(true)
     setError('')
     try {
-      const fetchedUser = await apiService.auth.login(email, password, captchaId, captchaAnswer)
+      const fetchedUser = await apiService.auth.login(email, password, captchaId, captchaAnswer, turnstileToken)
       if (fetchedUser && fetchedUser.message === 'OTP_REQUIRED') {
         setLoading(false)
         return { otpRequired: true, username: fetchedUser.username, email: fetchedUser.email }

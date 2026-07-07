@@ -92,6 +92,7 @@ const buildSpecs = (item) => {
 function ManageTrash() {
   const { showToast, showConfirm } = useToast();
   const [deletedProducts, setDeletedProducts] = useState([]);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [detailProduct, setDetailProduct] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -132,6 +133,7 @@ function ManageTrash() {
     try {
       const data = await apiService.products.getDeleted();
       setDeletedProducts(data);
+      setSelectedIds([]); // Clear selection when data reloads
     } catch (err) {
       setError(err.message || 'Lỗi khi lấy danh sách sản phẩm đã xóa.');
     } finally {
@@ -145,6 +147,7 @@ function ManageTrash() {
 
   useEffect(() => {
     setCurrentPageNum(1);
+    setSelectedIds([]); // Clear selection when filters change
   }, [searchQuery, filterBrand, filterCategory, filterPrice, sortBy]);
 
   const handleRestore = async (id, name) => {
@@ -171,6 +174,38 @@ function ManageTrash() {
     try {
       await apiService.products.delete(id, true); // hard delete
       showToast({ type: 'success', title: 'Đã xóa vĩnh viễn', message: `Sản phẩm "${name}" đã bị xóa vĩnh viễn khỏi hệ thống.` });
+      loadDeletedProducts();
+    } catch (err) {
+      showToast({ type: 'error', title: 'Xóa thất bại', message: err.message || 'Xóa vĩnh viễn sản phẩm thất bại.' });
+    }
+  };
+
+  const handleBulkRestore = async () => {
+    const confirmed = await showConfirm({
+      title: 'Khôi phục hàng loạt',
+      message: `Bạn có chắc muốn khôi phục ${selectedIds.length} sản phẩm đã chọn?`
+    });
+    if (!confirmed) return;
+    try {
+      await apiService.products.restore(selectedIds);
+      showToast({ type: 'success', title: 'Khôi phục thành công', message: `Đã khôi phục ${selectedIds.length} sản phẩm thành công!` });
+      setSelectedIds([]);
+      loadDeletedProducts();
+    } catch (err) {
+      showToast({ type: 'error', title: 'Lỗi khôi phục', message: err.message || 'Khôi phục sản phẩm thất bại.' });
+    }
+  };
+
+  const handleBulkPermanentDelete = async () => {
+    const confirmed = await showConfirm({
+      title: 'CẢNH BÁO: Xóa vĩnh viễn hàng loạt',
+      message: `Bạn có chắc chắn muốn XÓA VĨNH VIỄN ${selectedIds.length} sản phẩm đã chọn? Hành động này không thể hoàn tác!`
+    });
+    if (!confirmed) return;
+    try {
+      await apiService.products.delete(selectedIds, true); // hard delete bulk
+      showToast({ type: 'success', title: 'Đã xóa vĩnh viễn', message: `Đã xóa vĩnh viễn ${selectedIds.length} sản phẩm khỏi hệ thống.` });
+      setSelectedIds([]);
       loadDeletedProducts();
     } catch (err) {
       showToast({ type: 'error', title: 'Xóa thất bại', message: err.message || 'Xóa vĩnh viễn sản phẩm thất bại.' });
@@ -252,6 +287,22 @@ function ManageTrash() {
             </ol>
           </nav>
         </div>
+        {selectedIds.length > 0 && (
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-outline-success d-flex align-items-center gap-1 py-2 px-3"
+              onClick={handleBulkRestore}
+            >
+              <RotateCcw size={16} /> Khôi phục đã chọn ({selectedIds.length})
+            </button>
+            <button
+              className="btn btn-danger d-flex align-items-center gap-1 py-2 px-3"
+              onClick={handleBulkPermanentDelete}
+            >
+              <Trash2 size={16} /> Xóa vĩnh viễn đã chọn ({selectedIds.length})
+            </button>
+          </div>
+        )}
       </div>
 
       <section className="section">
@@ -375,6 +426,22 @@ function ManageTrash() {
                 <table className="table table-hover align-middle">
                   <thead>
                     <tr>
+                      <th scope="col" style={{ width: '40px' }}>
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          checked={currentProducts.length > 0 && currentProducts.every(p => selectedIds.includes(p.id))}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              const pageIds = currentProducts.map(p => p.id);
+                              setSelectedIds(prev => [...new Set([...prev, ...pageIds])]);
+                            } else {
+                              const pageIds = currentProducts.map(p => p.id);
+                              setSelectedIds(prev => prev.filter(id => !pageIds.includes(id)));
+                            }
+                          }}
+                        />
+                      </th>
                       <th scope="col">ID</th>
                       <th scope="col">Ảnh</th>
                       <th scope="col">Tên sản phẩm</th>
@@ -388,15 +455,30 @@ function ManageTrash() {
                   <tbody>
                     {currentProducts.length === 0 ? (
                       <tr>
-                        <td colSpan="8" className="text-center py-4 text-muted">Thùng rác trống.</td>
+                        <td colSpan="9" className="text-center py-4 text-muted">Thùng rác trống.</td>
                       </tr>
                     ) : (
                       currentProducts.map((p) => {
                         const daysLeft = getDaysRemaining(p.deletedAt);
                         const isNearingDeletion = daysLeft <= 3;
+                        const isSelected = selectedIds.includes(p.id);
 
                         return (
-                          <tr key={p.id} className={isNearingDeletion ? 'table-danger-light' : ''}>
+                          <tr key={p.id} className={`${isNearingDeletion ? 'table-danger-light' : ''} ${isSelected ? 'table-active' : ''}`}>
+                            <td>
+                              <input
+                                type="checkbox"
+                                className="form-check-input"
+                                checked={isSelected}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedIds(prev => [...prev, p.id]);
+                                  } else {
+                                    setSelectedIds(prev => prev.filter(id => id !== p.id));
+                                  }
+                                }}
+                              />
+                            </td>
                             <th scope="row">{p.id}</th>
                             <td>
                               <div className="p-1 rounded bg-light border d-flex align-items-center justify-content-center" style={{ width: '44px', height: '44px' }}>
@@ -477,7 +559,10 @@ function ManageTrash() {
                   previousLabel="Trước"
                   nextLabel="Sau"
                   pageCount={totalPages}
-                  onPageChange={({ selected }) => setCurrentPageNum(selected + 1)}
+                  onPageChange={({ selected }) => {
+                    setCurrentPageNum(selected + 1);
+                    setSelectedIds([]);
+                  }}
                   containerClassName="pagination mb-0"
                   pageClassName="page-item"
                   pageLinkClassName="page-link"

@@ -109,19 +109,19 @@ const getAuthHeaders = () => {
 
 export const apiService = {
   auth: {
-    login: async (email, password, captchaId, captchaAnswer) => {
+    login: async (email, password, captchaId, captchaAnswer, turnstileToken) => {
       console.log(`[API] calling ${BASE_URL}/api/v1/auth/login for ${email}`);
 
       if (!email) throw new Error('Email hoặc Tên đăng nhập không được để trống.');
       if (!password) throw new Error('Mật khẩu không được để trống.');
-      if (!captchaAnswer) throw new Error('Mã CAPTCHA không được để trống.');
+      if (!turnstileToken && !captchaAnswer) throw new Error('Vui lòng hoàn tất xác minh bảo mật (CAPTCHA).');
 
       const response = await fetch(`${BASE_URL}/api/v1/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ email, password, captchaId, captchaAnswer })
+        body: JSON.stringify({ email, password, captchaId, captchaAnswer, turnstileToken })
       });
 
       const resJson = await response.json();
@@ -286,9 +286,16 @@ export const apiService = {
       }
       return resJson.data;
     },
-    restore: async (id) => {
-      console.log(`[API] calling PUT ${BASE_URL}/api/v1/products/${id}/restore`);
-      const response = await fetch(`${BASE_URL}/api/v1/products/${id}/restore`, {
+    restore: async (idOrIds) => {
+      let url;
+      if (Array.isArray(idOrIds)) {
+        const queryParams = idOrIds.join(',');
+        url = `${BASE_URL}/api/v1/products/restore?ids=${queryParams}`;
+      } else {
+        url = `${BASE_URL}/api/v1/products/${idOrIds}/restore`;
+      }
+      console.log(`[API] calling PUT ${url}`);
+      const response = await fetch(url, {
         method: 'PUT',
         headers: getAuthHeaders()
       });
@@ -333,9 +340,16 @@ export const apiService = {
       }
       return resJson.data;
     },
-    delete: async (id, hard = false) => {
-      console.log(`[API] calling DELETE ${BASE_URL}/api/v1/products/${id}?hard=${hard}`);
-      const response = await fetch(`${BASE_URL}/api/v1/products/${id}?hard=${hard}`, {
+    delete: async (idOrIds, hard = false) => {
+      let url;
+      if (Array.isArray(idOrIds)) {
+        const queryParams = idOrIds.join(',');
+        url = `${BASE_URL}/api/v1/products?ids=${queryParams}&hard=${hard}`;
+      } else {
+        url = `${BASE_URL}/api/v1/products/${idOrIds}?hard=${hard}`;
+      }
+      console.log(`[API] calling DELETE ${url}`);
+      const response = await fetch(url, {
         method: 'DELETE',
         headers: getAuthHeaders()
       });
@@ -730,6 +744,108 @@ export const apiService = {
       if (!response.ok) {
         throw new Error(resJson.message || 'Lỗi khi đồng bộ chỉ mục tìm kiếm');
       }
+      return resJson.data;
+    }
+  },
+
+  // --- NOTIFICATIONS API ---
+  notifications: {
+    getAll: async ({ unreadOnly = false, page = 0, size = 20 } = {}) => {
+      const url = `${BASE_URL}/api/v1/notifications?unreadOnly=${unreadOnly}&page=${page}&size=${size}`;
+      const response = await fetch(url, { headers: getAuthHeaders() });
+      const resJson = await response.json();
+      if (!response.ok) throw new Error(resJson.message || 'Lỗi khi lấy danh sách thông báo');
+      return resJson.data;
+    },
+    getUnreadCount: async () => {
+      const response = await fetch(`${BASE_URL}/api/v1/notifications/unread-count`, { headers: getAuthHeaders() });
+      const resJson = await response.json();
+      if (!response.ok) throw new Error(resJson.message || 'Lỗi khi lấy số thông báo chưa đọc');
+      return resJson.data?.unreadCount || 0;
+    },
+    markAsRead: async (id) => {
+      const response = await fetch(`${BASE_URL}/api/v1/notifications/${id}/read`, {
+        method: 'PUT',
+        headers: getAuthHeaders()
+      });
+      const resJson = await response.json();
+      if (!response.ok) throw new Error(resJson.message || 'Lỗi khi đánh dấu đã đọc');
+      return resJson.data;
+    },
+    markAllAsRead: async () => {
+      const response = await fetch(`${BASE_URL}/api/v1/notifications/read-all`, {
+        method: 'PUT',
+        headers: getAuthHeaders()
+      });
+      const resJson = await response.json();
+      if (!response.ok) throw new Error(resJson.message || 'Lỗi khi đánh dấu tất cả đã đọc');
+      return resJson;
+    },
+    delete: async (id) => {
+      const response = await fetch(`${BASE_URL}/api/v1/notifications/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      const resJson = await response.json();
+      if (!response.ok) throw new Error(resJson.message || 'Lỗi khi xóa thông báo');
+      return resJson;
+    }
+  },
+
+  // --- ADMIN EMAIL MANAGEMENT API ---
+  adminEmails: {
+    getTemplates: async () => {
+      const response = await fetch(`${BASE_URL}/api/v1/admin/emails/templates`, { headers: getAuthHeaders() });
+      const resJson = await response.json();
+      if (!response.ok) throw new Error(resJson.message || 'Lỗi khi lấy mẫu email');
+      return resJson.data;
+    },
+    saveTemplate: async (templateData) => {
+      const response = await fetch(`${BASE_URL}/api/v1/admin/emails/templates`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(templateData)
+      });
+      const resJson = await response.json();
+      if (!response.ok) throw new Error(resJson.message || 'Lỗi khi lưu mẫu email');
+      return resJson.data;
+    },
+    getLogs: async ({ query = '', page = 0, size = 20 } = {}) => {
+      const url = `${BASE_URL}/api/v1/admin/emails/logs?query=${encodeURIComponent(query)}&page=${page}&size=${size}`;
+      const response = await fetch(url, { headers: getAuthHeaders() });
+      const resJson = await response.json();
+      if (!response.ok) throw new Error(resJson.message || 'Lỗi khi lấy nhật ký email');
+      return resJson.data;
+    },
+    resend: async (id) => {
+      const response = await fetch(`${BASE_URL}/api/v1/admin/emails/logs/${id}/resend`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+      const resJson = await response.json();
+      if (!response.ok) throw new Error(resJson.message || 'Lỗi khi gửi lại email');
+      return resJson;
+    },
+    getCampaigns: async ({ page = 0, size = 20 } = {}) => {
+      const response = await fetch(`${BASE_URL}/api/v1/admin/emails/campaigns?page=${page}&size=${size}`, { headers: getAuthHeaders() });
+      const resJson = await response.json();
+      if (!response.ok) throw new Error(resJson.message || 'Lỗi khi lấy danh sách chiến dịch');
+      return resJson.data;
+    },
+    createCampaign: async (campaignData) => {
+      const response = await fetch(`${BASE_URL}/api/v1/admin/emails/campaigns`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(campaignData)
+      });
+      const resJson = await response.json();
+      if (!response.ok) throw new Error(resJson.message || 'Lỗi khi tạo chiến dịch email');
+      return resJson.data;
+    },
+    getAnalytics: async () => {
+      const response = await fetch(`${BASE_URL}/api/v1/admin/emails/analytics`, { headers: getAuthHeaders() });
+      const resJson = await response.json();
+      if (!response.ok) throw new Error(resJson.message || 'Lỗi khi lấy thống kê email');
       return resJson.data;
     }
   }
