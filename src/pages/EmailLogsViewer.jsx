@@ -50,7 +50,7 @@ export default function EmailLogsViewer() {
   }
 
   return (
-    <div className="container-fluid py-4 text-start">
+    <main id="main" className="main">
       <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
         <div>
           <h1 className="fs-4 text-white display-font mb-1">QUẢN LÝ LỊCH SỬ GỬI EMAIL (EMAIL LOGS)</h1>
@@ -167,6 +167,6 @@ export default function EmailLogsViewer() {
           </div>
         )}
       </div>
-    </div>
+    </main>
   )
 }

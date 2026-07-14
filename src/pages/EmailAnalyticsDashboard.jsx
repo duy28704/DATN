@@ -23,11 +23,15 @@ export default function EmailAnalyticsDashboard() {
   }, [])
 
   if (loading) {
-    return <div className="text-center py-5 text-secondary fs-7">Đang tải báo cáo thống kê email...</div>
+    return (
+      <main id="main" className="main">
+        <div className="text-center py-5 text-secondary fs-7">Đang tải báo cáo thống kê email...</div>
+      </main>
+    )
   }
 
   return (
-    <div className="container-fluid py-4 text-start">
+    <main id="main" className="main">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h1 className="fs-4 text-white display-font mb-1">BÁO CÁO THỐNG KÊ EMAIL (EMAIL ANALYTICS)</h1>
@@ -123,6 +127,6 @@ export default function EmailAnalyticsDashboard() {
           </table>
         </div>
       </div>
-    </div>
+    </main>
   )
 }

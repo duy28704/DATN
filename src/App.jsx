@@ -26,6 +26,10 @@ import Sidebar from './components/Sidebar'
 import Footerdashboard from './components/Footerdashboard'
 import { motion, AnimatePresence } from 'framer-motion'
 import CompareBar from './components/CompareBar'
+import EmailCampaignsManager from './pages/EmailCampaignsManager'
+import EmailTemplatesManager from './pages/EmailTemplatesManager'
+import EmailLogsViewer from './pages/EmailLogsViewer'
+import EmailAnalyticsDashboard from './pages/EmailAnalyticsDashboard'
 
 function AppContent() {
   const [currentPage, setCurrentPageState] = useState('home')
@@ -101,6 +105,8 @@ function AppContent() {
         } else if (currentPage === 'dashboard/users' && !permissions.includes('users.read')) {
           isAuthorized = false
         } else if (currentPage === 'dashboard/settings' && !permissions.includes('settings.manage')) {
+          isAuthorized = false
+        } else if (currentPage.startsWith('dashboard/email-') && user.role !== 'ADMIN') {
           isAuthorized = false
         }
 
@@ -205,6 +211,18 @@ function AppContent() {
     }
     if (currentPage === 'dashboard/stats') {
       return <ManageStats />
+    }
+    if (currentPage === 'dashboard/email-campaigns') {
+      return <EmailCampaignsManager />
+    }
+    if (currentPage === 'dashboard/email-templates') {
+      return <EmailTemplatesManager />
+    }
+    if (currentPage === 'dashboard/email-logs') {
+      return <EmailLogsViewer />
+    }
+    if (currentPage === 'dashboard/email-analytics') {
+      return <EmailAnalyticsDashboard />
     }
     return <Dashboard currentPage={currentPage} />
   }

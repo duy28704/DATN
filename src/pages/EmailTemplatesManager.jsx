@@ -49,7 +49,7 @@ export default function EmailTemplatesManager() {
   }
 
   return (
-    <div className="container-fluid py-4 text-start">
+    <main id="main" className="main">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h1 className="fs-4 text-white display-font mb-1">QUẢN LÝ MẪU EMAIL (EMAIL TEMPLATES)</h1>
@@ -78,7 +78,7 @@ export default function EmailTemplatesManager() {
                 {templates.map((tmpl) => (
                   <div
                     key={tmpl.id}
-                    className={`p-3 rounded border cursor-pointer transition-smooth ${selectedTemplate?.id === tmpl.id ? 'border-danger bg-black bg-opacity-40' : 'border-secondary border-opacity-25 bg-primary bg-opacity-20'}`}
+                    className={`p-3 rounded border cursor-pointer transition-smooth ${selectedTemplate?.id === tmpl.id ? 'border-danger bg-primary bg-opacity-10' : 'border-secondary border-opacity-25 bg-white'}`}
                     onClick={() => handleEdit(tmpl)}
                   >
                     <div className="d-flex align-items-center justify-content-between mb-1">
@@ -187,6 +187,6 @@ export default function EmailTemplatesManager() {
           )}
         </div>
       </div>
-    </div>
+    </main>
   )
 }

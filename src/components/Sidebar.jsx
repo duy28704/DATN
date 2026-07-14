@@ -17,9 +17,16 @@ function Sidebar({ currentPage }) {
   const isProfile = currentPage === 'dashboard/profile';
   const isSettings = currentPage === 'dashboard/settings';
   const isStats = currentPage === 'dashboard/stats';
+  const isEmailCampaigns = currentPage === 'dashboard/email-campaigns';
+  const isEmailTemplates = currentPage === 'dashboard/email-templates';
+  const isEmailLogs = currentPage === 'dashboard/email-logs';
+  const isEmailAnalytics = currentPage === 'dashboard/email-analytics';
 
   const isProductsActive = isProducts || isTrash;
   const [isProductsOpen, setIsProductsOpen] = useState(isProductsActive);
+
+  const isEmailActive = isEmailCampaigns || isEmailTemplates || isEmailLogs || isEmailAnalytics;
+  const [isEmailOpen, setIsEmailOpen] = useState(isEmailActive);
 
   // Auto expand if current page is product list or trash
   useEffect(() => {
@@ -27,6 +34,13 @@ function Sidebar({ currentPage }) {
       setIsProductsOpen(true);
     }
   }, [currentPage, isProductsActive]);
+
+  // Auto expand if current page is email campaign management
+  useEffect(() => {
+    if (isEmailActive) {
+      setIsEmailOpen(true);
+    }
+  }, [currentPage, isEmailActive]);
 
   return (
     <aside id="sidebar" className="sidebar">
@@ -74,6 +88,46 @@ function Sidebar({ currentPage }) {
             <span>Quản lý kho hàng</span>
           </a>
         </li>
+
+        {user?.role === 'ADMIN' && (
+          <li className="nav-item">
+            <a 
+              className={`nav-link ${isEmailOpen ? '' : 'collapsed'}`} 
+              href="#" 
+              onClick={(e) => { e.preventDefault(); setIsEmailOpen(!isEmailOpen); }}
+            >
+              <i className="bi bi-envelope"></i>
+              <span>Quản lý thông báo</span>
+              <i className={`bi bi-chevron-${isEmailOpen ? 'up' : 'down'} ms-auto`} style={{ fontSize: '12px' }}></i>
+            </a>
+            <ul className={`nav-content collapse ${isEmailOpen ? 'show' : ''}`} style={{ listStyle: 'none', paddingLeft: '0' }}>
+              <li>
+                <a className={isEmailCampaigns ? 'active' : ''} href="#dashboard/email-campaigns">
+                  <i className="bi bi-circle"></i>
+                  <span>Chiến dịch Email</span>
+                </a>
+              </li>
+              <li>
+                <a className={isEmailTemplates ? 'active' : ''} href="#dashboard/email-templates">
+                  <i className="bi bi-circle"></i>
+                  <span>Mẫu Email</span>
+                </a>
+              </li>
+              <li>
+                <a className={isEmailLogs ? 'active' : ''} href="#dashboard/email-logs">
+                  <i className="bi bi-circle"></i>
+                  <span>Lịch sử gửi</span>
+                </a>
+              </li>
+              <li>
+                <a className={isEmailAnalytics ? 'active' : ''} href="#dashboard/email-analytics">
+                  <i className="bi bi-circle"></i>
+                  <span>Thống kê chiến dịch</span>
+                </a>
+              </li>
+            </ul>
+          </li>
+        )}
 
 
         <li className="nav-item">
