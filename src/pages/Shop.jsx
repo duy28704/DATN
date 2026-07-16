@@ -234,7 +234,7 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
                 <option value="rating">Đánh giá cao</option>
               </select>
             </div>
-            
+
             {(selectedCat !== 'all' || sortOption !== 'featured' || searchQuery || filterCpu !== 'all' || filterRam !== 'all' || filterGpu !== 'all' || filterPriceRange !== 'all') && (
               <button
                 className="btn btn-outline-danger p-2 d-flex align-items-center justify-content-center"
@@ -347,19 +347,19 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
           </div>
         ) : (
           <>
-            <motion.div 
-              layout 
+            <motion.div
+              layout
               className="row g-4"
             >
               <AnimatePresence mode="popLayout">
                 {displayedProducts.map((product) => (
-                  <motion.div 
+                  <motion.div
                     layout
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.4, ease: 'easeOut' }}
-                    key={product.id} 
+                    key={product.id}
                     className="col-12 col-sm-6 col-md-4"
                   >
                     <ProductCard
@@ -374,7 +374,7 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
 
             {visibleCount < filteredProducts.length && (
               <div className="text-center mt-5">
-                <button 
+                <button
                   className="btn btn-danger btn-lg px-5 py-3 glow-btn d-inline-flex align-items-center justify-content-center gap-2"
                   onClick={handleLoadMore}
                   disabled={loadingMore}

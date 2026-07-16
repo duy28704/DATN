@@ -1,22 +1,22 @@
 import { useState, useContext, useEffect } from 'react'
 import { AuthContext } from '../context/AuthContext'
 import SEO from '../components/SEO'
-import { 
-  ShieldAlert, 
-  CheckCircle, 
-  Mail, 
-  Lock, 
-  User, 
-  LogOut, 
-  Calendar, 
-  Package, 
-  Edit3, 
-  MapPin, 
-  CreditCard, 
-  ChevronDown, 
-  ChevronUp, 
-  Loader2, 
-  Truck, 
+import {
+  ShieldAlert,
+  CheckCircle,
+  Mail,
+  Lock,
+  User,
+  LogOut,
+  Calendar,
+  Package,
+  Edit3,
+  MapPin,
+  CreditCard,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  Truck,
   Smartphone,
   Info,
   RotateCcw
@@ -59,7 +59,7 @@ const Login = ({ setCurrentPage }) => {
 
   // Dashboard Tabs
   const [activeTab, setActiveTab] = useState('profile') // 'profile', 'orders', 'installments'
-  
+
   // Tab 1: Edit Profile states
   const [editMode, setEditMode] = useState(false)
   const [profileData, setProfileData] = useState({ name: '', phone: '', address: '', dob: '', gender: '' })
@@ -312,7 +312,7 @@ const Login = ({ setCurrentPage }) => {
       setProfileFieldErrors(errs)
       return
     }
-    
+
     const ok = await updateUserProfile(profileData)
     if (ok) {
       setProfileSuccess('Cập nhật thông tin cá nhân thành công!')
@@ -377,10 +377,10 @@ const Login = ({ setCurrentPage }) => {
               <div className="p-4 p-md-5 rounded-top d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4" style={{ background: 'linear-gradient(135deg, rgba(255,0,60,0.08) 0%, rgba(5,5,5,0) 100%)', borderBottom: '1px solid var(--border-color)' }}>
                 <div className="d-flex align-items-center gap-3">
                   <div className="p-1 rounded-circle border border-danger border-opacity-50" style={{ width: '68px', height: '68px', overflow: 'hidden' }}>
-                    <img 
-                      src={user.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150'} 
-                      alt="Avatar" 
-                      className="img-fluid rounded-circle w-100 h-100" 
+                    <img
+                      src={user.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150'}
+                      alt="Avatar"
+                      className="img-fluid rounded-circle w-100 h-100"
                       style={{ objectFit: 'cover' }}
                     />
                   </div>
@@ -391,7 +391,7 @@ const Login = ({ setCurrentPage }) => {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="d-flex align-items-center gap-3">
                   <div className="text-md-end text-secondary fs-8">
                     <div className="d-flex align-items-center gap-1">
@@ -399,7 +399,7 @@ const Login = ({ setCurrentPage }) => {
                       <span>Ngày tham gia: {user.joinedDate}</span>
                     </div>
                   </div>
-                  <button 
+                  <button
                     className="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 px-3 py-2"
                     onClick={logout}
                   >
@@ -449,7 +449,7 @@ const Login = ({ setCurrentPage }) => {
                         <div className="d-flex justify-content-between align-items-center mb-4">
                           <h2 className="fs-5 text-white display-font mb-0">THÔNG TIN TÀI KHOẢN</h2>
                           {!editMode && (
-                            <button 
+                            <button
                               className="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 px-3 py-2"
                               onClick={() => setEditMode(true)}
                             >
@@ -538,16 +538,16 @@ const Login = ({ setCurrentPage }) => {
                             </div>
 
                             <div className="d-flex gap-2 justify-content-end">
-                              <button 
-                                type="button" 
+                              <button
+                                type="button"
                                 className="btn btn-outline-secondary px-4 py-2 fs-7"
                                 onClick={() => { setEditMode(false); setProfileFieldErrors({ name: '', phone: '', dob: '', address: '' }); }}
                                 style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
                               >
                                 Hủy bỏ
                               </button>
-                              <button 
-                                type="submit" 
+                              <button
+                                type="submit"
                                 className="btn btn-danger px-4 py-2 glow-btn fs-7"
                                 disabled={loading}
                               >
@@ -577,7 +577,7 @@ const Login = ({ setCurrentPage }) => {
                               <div className="row g-2 align-items-start">
                                 <div className="col-4 col-sm-3 text-secondary fs-7">Địa chỉ nhận hàng:</div>
                                 <div className="col-8 col-sm-9 text-white fw-medium d-flex align-items-start gap-2 fs-7">
-                                  <MapPin size={14} className="text-secondary mt-1 flex-shrink-0" /> 
+                                  <MapPin size={14} className="text-secondary mt-1 flex-shrink-0" />
                                   <span>{user.address || 'Chưa cập nhật địa chỉ giao hàng mặc định'}</span>
                                 </div>
                               </div>
@@ -617,16 +617,16 @@ const Login = ({ setCurrentPage }) => {
                             {orders.map((order) => {
                               const isExpanded = expandedOrder === order.id
                               return (
-                                <div 
-                                  key={order.id} 
+                                <div
+                                  key={order.id}
                                   className="rounded overflow-hidden transition-smooth"
-                                  style={{ 
-                                    backgroundColor: 'var(--bg-primary)', 
-                                    border: isExpanded ? '1px solid var(--accent-red)' : '1px solid var(--border-color)' 
+                                  style={{
+                                    backgroundColor: 'var(--bg-primary)',
+                                    border: isExpanded ? '1px solid var(--accent-red)' : '1px solid var(--border-color)'
                                   }}
                                 >
                                   {/* Order Header Summary Row */}
-                                  <div 
+                                  <div
                                     className="p-3 d-flex flex-wrap align-items-center justify-content-between gap-3 cursor-pointer"
                                     onClick={() => toggleOrder(order.id)}
                                   >
@@ -668,15 +668,15 @@ const Login = ({ setCurrentPage }) => {
                                             <div className="d-flex align-items-center justify-content-between position-relative py-2">
                                               {/* Connection line background */}
                                               <div className="position-absolute top-50 start-0 w-100 bg-secondary" style={{ height: '2px', transform: 'translateY(-50%)', zIndex: 1, opacity: 0.1 }}></div>
-                                              
+
                                               {/* Colored Progress Line */}
-                                              <div 
-                                                className="position-absolute top-50 start-0 bg-danger transition-smooth" 
-                                                style={{ 
-                                                  height: '2px', 
-                                                  transform: 'translateY(-50%)', 
-                                                  zIndex: 2, 
-                                                  width: order.status === 'Đã giao' ? '100%' : order.status === 'Đang vận chuyển' ? '50%' : '0%' 
+                                              <div
+                                                className="position-absolute top-50 start-0 bg-danger transition-smooth"
+                                                style={{
+                                                  height: '2px',
+                                                  transform: 'translateY(-50%)',
+                                                  zIndex: 2,
+                                                  width: order.status === 'Đã giao' ? '100%' : order.status === 'Đang vận chuyển' ? '50%' : '0%'
                                                 }}
                                               ></div>
 
@@ -723,8 +723,8 @@ const Login = ({ setCurrentPage }) => {
                                           <div className="d-flex flex-column gap-2">
                                             <p className="text-danger fw-semibold fs-8 mb-2 uppercase tracking-wider">Sản phẩm đã mua</p>
                                             {order.items.map((item, idx) => (
-                                              <div 
-                                                key={idx} 
+                                              <div
+                                                key={idx}
                                                 className="d-flex align-items-center justify-content-between p-2 rounded bg-black bg-opacity-40"
                                                 style={{ border: '1px solid rgba(255,255,255,0.01)' }}
                                               >
@@ -777,8 +777,8 @@ const Login = ({ setCurrentPage }) => {
                         ) : (
                           <div className="d-flex flex-column gap-3">
                             {installments.map((req) => (
-                              <div 
-                                key={req.id} 
+                              <div
+                                key={req.id}
                                 className="p-4 rounded bg-black text-start"
                                 style={{ border: '1px solid var(--border-color)' }}
                               >
@@ -808,7 +808,7 @@ const Login = ({ setCurrentPage }) => {
                                     <p className="mb-0 text-white">Số tiền trả hàng tháng: <span className="text-danger fw-bold display-font fs-7">{req.monthlyEstimate.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} ₫</span></p>
                                   </div>
                                 </div>
-                                
+
                                 <div className="mt-3 p-2 bg-dark bg-opacity-40 rounded fs-8 text-secondary d-flex align-items-center gap-2">
                                   <Info size={14} className="text-danger" />
                                   <span>Thời gian đề xuất liên hệ: <strong className="text-white">{req.preferredContactTime === 'morning' ? 'Buổi sáng (8h-12h)' : req.preferredContactTime === 'afternoon' ? 'Buổi chiều (13h30-17h30)' : 'Buổi tối (18h-21h)'}</strong>.</span>
@@ -874,8 +874,8 @@ const Login = ({ setCurrentPage }) => {
                   </div>
                 </div>
 
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={loading}
                   className="btn btn-danger w-100 py-3 mt-2 glow-btn d-flex align-items-center justify-content-center"
                 >
@@ -1010,8 +1010,8 @@ const Login = ({ setCurrentPage }) => {
                   </div>
                 )}
 
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={loading}
                   className="btn btn-danger w-100 py-3 mt-3 glow-btn d-flex align-items-center justify-content-center"
                 >

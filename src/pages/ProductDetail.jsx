@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect } from 'react'
+import { useState, useContext, useEffect, useMemo } from 'react'
 import { ProductContext, formatDisplayPrice, DEFAULT_LOW_STOCK_THRESHOLD } from '../context/ProductContext'
 import { CartContext } from '../context/CartContext'
 import ProductCard from '../components/ProductCard'
@@ -8,42 +8,50 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow }) => {
   const { addToCart } = useContext(CartContext)
-  const { products } = useContext(ProductContext)
-  
-  const product = products.find(p => String(p.id) === String(productId))
+  const { products, loading } = useContext(ProductContext)
+
+  const product = products.find(p => String(p.id) === String(productId) || p.slug === productId)
   const [quantity, setQuantity] = useState(1)
-  
+
   const getConfigurations = (p) => {
     if (!p) return ['Standard Configuration']
     const ram = p.ram || '16 GB'
     const storage = p.storage || '512 GB'
-    
+
     // Calculate upgraded RAM
     let upgradedRam = '32 GB'
     if (ram.includes('8')) upgradedRam = '16 GB'
     else if (ram.includes('16')) upgradedRam = '32 GB'
     else if (ram.includes('32')) upgradedRam = '64 GB'
     else upgradedRam = ram
-    
+
     return [
       `${ram} RAM / ${storage}`,
       `${upgradedRam} RAM / 1 TB SSD (Hiệu năng cao)`
     ]
   }
-  
-  const [configurations] = useState(() => getConfigurations(product))
-  const [selectedConfig, setSelectedConfig] = useState(() => getConfigurations(product)[0])
+
+  const configurations = useMemo(() => getConfigurations(product), [product])
+  const [selectedConfig, setSelectedConfig] = useState(null)
   const [activeTab, setActiveTab] = useState('specs') // 'specs', 'reviews'
   const [activeImage, setActiveImage] = useState(null)
 
-  const isUpgraded = selectedConfig === configurations[1]
-  const currentPrice = isUpgraded ? product.price + 2500000 : product.price
-  
   useEffect(() => {
     if (product) {
       setActiveImage(product.image)
+      setSelectedConfig(getConfigurations(product)[0])
     }
   }, [product])
+
+  if (loading && products.length === 0) {
+    return (
+      <div className="container py-5 text-center text-white d-flex align-items-center justify-content-center" style={{ minHeight: '60vh' }}>
+        <div className="spinner-border text-danger" role="status">
+          <span className="visually-hidden">Đang tải thông tin sản phẩm...</span>
+        </div>
+      </div>
+    )
+  }
 
   if (!product) {
     return (
@@ -55,6 +63,9 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow })
       </div>
     )
   }
+
+  const isUpgraded = selectedConfig === configurations[1]
+  const currentPrice = isUpgraded ? product.price + 2500000 : product.price
 
   // Related products (same category or others, exclude current)
   const relatedProducts = products
@@ -121,7 +132,7 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow })
       <div className="container py-5 px-4 px-md-5">
         {/* Back navigation link */}
         <div className="text-start mb-4">
-          <button 
+          <button
             className="btn btn-link text-secondary hover-red p-0 border-0 d-flex align-items-center gap-1 text-decoration-none"
             onClick={() => {
               setCurrentPage('shop')
@@ -137,13 +148,13 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow })
           {/* Left Column: Image view */}
           <div className="col-12 col-lg-6">
             <div className="p-4 rounded text-center d-flex align-items-center justify-content-center bg-black" style={{ border: '1px solid var(--border-color)', minHeight: '380px' }}>
-              <motion.img 
+              <motion.img
                 key={activeImage || product.image}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3 }}
-                src={activeImage || product.image} 
-                alt={product.name} 
+                src={activeImage || product.image}
+                alt={product.name}
                 className="img-fluid"
                 style={{ maxHeight: '350px', objectFit: 'contain', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.5))' }}
               />
@@ -152,15 +163,15 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow })
             {product.imagesList && product.imagesList.length > 1 && (
               <div className="d-flex gap-2 justify-content-center mt-3 flex-wrap">
                 {product.imagesList.map((imgUrl, idx) => (
-                  <div 
+                  <div
                     key={idx}
                     onClick={() => setActiveImage(imgUrl)}
-                    className="p-1 rounded bg-secondary bg-opacity-25" 
-                    style={{ 
-                      width: '60px', 
-                      height: '60px', 
-                      border: (activeImage || product.image) === imgUrl ? '2px solid var(--accent-red)' : '1px solid var(--border-color)', 
-                      cursor: 'pointer' 
+                    className="p-1 rounded bg-secondary bg-opacity-25"
+                    style={{
+                      width: '60px',
+                      height: '60px',
+                      border: (activeImage || product.image) === imgUrl ? '2px solid var(--accent-red)' : '1px solid var(--border-color)',
+                      cursor: 'pointer'
                     }}
                   >
                     <img src={imgUrl} alt={`Thumbnail ${idx + 1}`} className="img-fluid h-100 w-100 object-fit-contain" />
@@ -177,7 +188,7 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow })
               <span className="text-uppercase text-danger fw-bold mb-2 d-block tracking-wider" style={{ fontSize: '0.75rem' }}>
                 NEXUS / {product.category}
               </span>
-              
+
               {/* Main product heading (H1 SEO) */}
               <h1 className="fs-2 text-white display-font mb-2 fw-bold" style={{ lineHeight: '1.2' }}>
                 {product.name}
@@ -187,10 +198,10 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow })
               <div className="d-flex align-items-center gap-2 mb-4">
                 <div className="d-flex text-warning">
                   {[...Array(5)].map((_, i) => (
-                    <Star 
-                      key={i} 
-                      size={14} 
-                      fill={i < Math.floor(product.rating) ? 'currentColor' : 'none'} 
+                    <Star
+                      key={i}
+                      size={14}
+                      fill={i < Math.floor(product.rating) ? 'currentColor' : 'none'}
                       className={i < Math.floor(product.rating) ? 'text-warning' : 'text-secondary'}
                     />
                   ))}
@@ -256,15 +267,15 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow })
               <div className="d-flex align-items-center gap-3 mb-5">
                 <span className="text-secondary fs-7">Số lượng:</span>
                 <div className="d-flex align-items-center border border-secondary rounded" style={{ overflow: 'hidden', width: '120px', height: '40px' }}>
-                  <button 
-                    className="btn btn-link text-white flex-grow-1 h-100 d-flex align-items-center justify-content-center p-0 border-0" 
+                  <button
+                    className="btn btn-link text-white flex-grow-1 h-100 d-flex align-items-center justify-content-center p-0 border-0"
                     onClick={() => handleQtyChange(-1)}
                   >
                     <Minus size={14} />
                   </button>
                   <span className="px-2 text-white fw-bold">{quantity}</span>
-                  <button 
-                    className="btn btn-link text-white flex-grow-1 h-100 d-flex align-items-center justify-content-center p-0 border-0" 
+                  <button
+                    className="btn btn-link text-white flex-grow-1 h-100 d-flex align-items-center justify-content-center p-0 border-0"
                     onClick={() => handleQtyChange(1)}
                   >
                     <Plus size={14} />
@@ -276,7 +287,7 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow })
             {/* CTA action buttons */}
             <div className="d-flex flex-column gap-3">
               <div className="d-flex gap-3">
-                <button 
+                <button
                   className="btn btn-outline-danger py-3 d-flex align-items-center justify-content-center gap-2"
                   onClick={handleAddToCart}
                   disabled={stock === 0}
@@ -284,7 +295,7 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow })
                 >
                   <ShoppingCart size={18} /> Thêm Vào Giỏ
                 </button>
-                <button 
+                <button
                   className="btn btn-danger py-3 glow-btn d-flex align-items-center justify-content-center gap-2 fw-bold"
                   onClick={handleBuyNow}
                   disabled={stock === 0}
@@ -369,10 +380,10 @@ const ProductDetail = ({ productId, setCurrentPage, onSelectProduct, onBuyNow })
                       </div>
                       <div className="d-flex text-warning">
                         {[...Array(5)].map((_, i) => (
-                          <Star 
-                            key={i} 
-                            size={12} 
-                            fill={i < rev.rating ? 'currentColor' : 'none'} 
+                          <Star
+                            key={i}
+                            size={12}
+                            fill={i < rev.rating ? 'currentColor' : 'none'}
                             className={i < rev.rating ? 'text-warning' : 'text-secondary'}
                           />
                         ))}

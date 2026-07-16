@@ -177,6 +177,7 @@ export const transformDbProduct = (item) => {
 
   return {
     id: item.id,
+    slug: item.link || String(item.id),
     name: item.name,
     category: finalCategory,
     price: numPrice,

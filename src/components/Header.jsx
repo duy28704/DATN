@@ -82,42 +82,42 @@ const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
 
         {/* Desktop Navigation Links */}
         <nav className="d-none d-md-flex align-items-center gap-4">
-          <a 
-            href="#home" 
+          <a
+            href="#home"
             className={`fw-medium text-uppercase text-decoration-none fs-7 ${currentPage === 'home' ? 'text-white' : 'text-secondary'}`}
             style={{ fontSize: '0.85rem', letterSpacing: '0.05em', borderBottom: currentPage === 'home' ? '2px solid var(--accent-red)' : '2px solid transparent', paddingBottom: '4px' }}
             onClick={(e) => { e.preventDefault(); handleNav('home'); }}
           >
             Trang Chủ
           </a>
-          <a 
-              href="#shop" 
-              className={`fw-medium text-uppercase text-decoration-none fs-7 ${currentPage.startsWith('shop') ? 'text-white' : 'text-secondary'}`}
-              style={{ fontSize: '0.85rem', letterSpacing: '0.05em', borderBottom: currentPage.startsWith('shop') ? '2px solid var(--accent-red)' : '2px solid transparent', paddingBottom: '4px' }}
-              onClick={(e) => { e.preventDefault(); handleNav('shop'); }}
-            >
-              Sản Phẩm
-            </a>
-            {/* Installments link */}
-            <a 
-              href="#installments" 
-              className={`fw-medium text-uppercase text-decoration-none fs-7 ${currentPage === 'installments' ? 'text-white' : 'text-secondary'}`}
-              style={{ fontSize: '0.85rem', letterSpacing: '0.05em', borderBottom: currentPage === 'installments' ? '2px solid var(--accent-red)' : '2px solid transparent', paddingBottom: '4px' }}
-              onClick={(e) => { e.preventDefault(); handleNav('installments'); }}
-            >
-              Trả góp
-            </a>
-            {/* Compare link */}
-            <a 
-              href="#compare" 
-              className={`fw-medium text-uppercase text-decoration-none fs-7 ${currentPage === 'compare' ? 'text-white' : 'text-secondary'}`}
-              style={{ fontSize: '0.85rem', letterSpacing: '0.05em', borderBottom: currentPage === 'compare' ? '2px solid var(--accent-red)' : '2px solid transparent', paddingBottom: '4px' }}
-              onClick={(e) => { e.preventDefault(); handleNav('compare'); }}
-            >
-              So sánh
-            </a>
-          <a 
-            href="#about" 
+          <a
+            href="#shop"
+            className={`fw-medium text-uppercase text-decoration-none fs-7 ${currentPage.startsWith('shop') ? 'text-white' : 'text-secondary'}`}
+            style={{ fontSize: '0.85rem', letterSpacing: '0.05em', borderBottom: currentPage.startsWith('shop') ? '2px solid var(--accent-red)' : '2px solid transparent', paddingBottom: '4px' }}
+            onClick={(e) => { e.preventDefault(); handleNav('shop'); }}
+          >
+            Sản Phẩm
+          </a>
+          {/* Installments link */}
+          <a
+            href="#installments"
+            className={`fw-medium text-uppercase text-decoration-none fs-7 ${currentPage === 'installments' ? 'text-white' : 'text-secondary'}`}
+            style={{ fontSize: '0.85rem', letterSpacing: '0.05em', borderBottom: currentPage === 'installments' ? '2px solid var(--accent-red)' : '2px solid transparent', paddingBottom: '4px' }}
+            onClick={(e) => { e.preventDefault(); handleNav('installments'); }}
+          >
+            Trả góp
+          </a>
+          {/* Compare link */}
+          <a
+            href="#compare"
+            className={`fw-medium text-uppercase text-decoration-none fs-7 ${currentPage === 'compare' ? 'text-white' : 'text-secondary'}`}
+            style={{ fontSize: '0.85rem', letterSpacing: '0.05em', borderBottom: currentPage === 'compare' ? '2px solid var(--accent-red)' : '2px solid transparent', paddingBottom: '4px' }}
+            onClick={(e) => { e.preventDefault(); handleNav('compare'); }}
+          >
+            So sánh
+          </a>
+          <a
+            href="#about"
             className="fw-medium text-uppercase text-decoration-none fs-7 text-secondary"
             style={{ fontSize: '0.85rem', letterSpacing: '0.05em', paddingBottom: '4px' }}
             onClick={(e) => { e.preventDefault(); showToast({ type: 'info', title: 'Sắp ra mắt', message: 'Trang Về Chúng Tôi sẽ được cập nhật sớm nhất!' }) }}
@@ -132,7 +132,7 @@ const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
           <div className="position-relative d-flex align-items-center search-container">
             <AnimatePresence>
               {searchOpen && (
-                <motion.form 
+                <motion.form
                   initial={{ width: 0, opacity: 0 }}
                   animate={{ width: 200, opacity: 1 }}
                   exit={{ width: 0, opacity: 0 }}
@@ -154,14 +154,14 @@ const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
 
             {/* Autocomplete Dropdown */}
             {searchOpen && showSuggestions && suggestions.length > 0 && (
-              <div 
-                className="position-absolute rounded shadow p-2 mt-2" 
-                style={{ 
-                  top: '40px', 
-                  right: '100%', 
-                  marginRight: '8px', 
-                  width: '320px', 
-                  border: '1px solid var(--border-color)', 
+              <div
+                className="position-absolute rounded shadow p-2 mt-2"
+                style={{
+                  top: '40px',
+                  right: '100%',
+                  marginRight: '8px',
+                  width: '320px',
+                  border: '1px solid var(--border-color)',
                   zIndex: 1100,
                   maxHeight: '350px',
                   overflowY: 'auto',
@@ -175,9 +175,9 @@ const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
                   const isOutOfStock = p.stockQuantity <= 0;
                   const displayPriceStr = isOutOfStock ? 'Hết hàng' : formatDisplayPrice(p.price, p.displayPrice);
                   const isHovered = hoveredId === p.id;
-                  
+
                   return (
-                    <div 
+                    <div
                       key={p.id}
                       className="d-flex align-items-center gap-2 p-2 rounded cursor-pointer transition-smooth"
                       style={{
@@ -207,8 +207,8 @@ const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
               </div>
             )}
 
-            <button 
-              className="btn btn-link text-white p-0 border-0" 
+            <button
+              className="btn btn-link text-white p-0 border-0"
               onClick={() => setSearchOpen(!searchOpen)}
               aria-label="Tìm kiếm sản phẩm"
             >
@@ -219,11 +219,11 @@ const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
           {/* Account Icon / User Menu */}
           {user ? (
             <div className="dropdown d-none d-md-block">
-              <button 
-                className="btn btn-link text-white p-0 border-0 d-flex align-items-center gap-1 dropdown-toggle text-decoration-none" 
-                type="button" 
-                id="userMenu" 
-                data-bs-toggle="dropdown" 
+              <button
+                className="btn btn-link text-white p-0 border-0 d-flex align-items-center gap-1 dropdown-toggle text-decoration-none"
+                type="button"
+                id="userMenu"
+                data-bs-toggle="dropdown"
                 aria-expanded="false"
                 onClick={() => handleNav('login')} // Simple click to page for layout compatibility
               >
@@ -232,8 +232,8 @@ const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
               </button>
             </div>
           ) : (
-            <button 
-              className="btn btn-link text-white p-0 border-0" 
+            <button
+              className="btn btn-link text-white p-0 border-0"
               onClick={() => handleNav('login')}
               aria-label="Đăng nhập"
             >
@@ -242,15 +242,15 @@ const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
           )}
 
           {/* Cart Icon with Motion Badge */}
-          <button 
-            className="btn btn-link text-white p-0 border-0 position-relative" 
+          <button
+            className="btn btn-link text-white p-0 border-0 position-relative"
             onClick={onCartOpen}
             aria-label="Mở giỏ hàng"
           >
             <ShoppingBag size={20} />
             <AnimatePresence>
               {cartCount > 0 && (
-                <motion.span 
+                <motion.span
                   key={cartCount}
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
@@ -266,8 +266,8 @@ const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
           </button>
 
           {/* Hamburger Mobile Menu Toggle */}
-          <button 
-            className="btn btn-link text-white p-0 border-0 d-md-none" 
+          <button
+            className="btn btn-link text-white p-0 border-0 d-md-none"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Menu"
           >
@@ -279,7 +279,7 @@ const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
       {/* Mobile Menu Panel */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -287,38 +287,38 @@ const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
             className="glass-panel position-fixed w-100 d-md-none p-4 d-flex flex-column gap-3"
             style={{ top: '65px', left: 0, zIndex: 1010, borderBottom: '1px solid var(--border-color)' }}
           >
-            <a 
-              href="#home" 
+            <a
+              href="#home"
               className={`fs-5 fw-medium text-decoration-none ${currentPage === 'home' ? 'text-white' : 'text-secondary'}`}
               onClick={(e) => { e.preventDefault(); handleNav('home'); }}
             >
               Trang Chủ
             </a>
-            <a 
-            href="#shop" 
-            className={`fs-5 fw-medium text-decoration-none ${currentPage.startsWith('shop') ? 'text-white' : 'text-secondary'}`}
-            onClick={(e) => { e.preventDefault(); handleNav('shop'); }}
-          >
-            Sản Phẩm
-          </a>
-          {/* Installments link */}
-          <a 
-            href="#installments" 
-            className={`fs-5 fw-medium text-decoration-none ${currentPage === 'installments' ? 'text-white' : 'text-secondary'}`}
-            onClick={(e) => { e.preventDefault(); handleNav('installments'); }}
-          >
-            Trả góp
-          </a>
-          {/* Compare link */}
-          <a 
-            href="#compare" 
-            className={`fs-5 fw-medium text-decoration-none ${currentPage === 'compare' ? 'text-white' : 'text-secondary'}`}
-            onClick={(e) => { e.preventDefault(); handleNav('compare'); }}
-          >
-            So sánh
-          </a>
-            <a 
-              href="#about" 
+            <a
+              href="#shop"
+              className={`fs-5 fw-medium text-decoration-none ${currentPage.startsWith('shop') ? 'text-white' : 'text-secondary'}`}
+              onClick={(e) => { e.preventDefault(); handleNav('shop'); }}
+            >
+              Sản Phẩm
+            </a>
+            {/* Installments link */}
+            <a
+              href="#installments"
+              className={`fs-5 fw-medium text-decoration-none ${currentPage === 'installments' ? 'text-white' : 'text-secondary'}`}
+              onClick={(e) => { e.preventDefault(); handleNav('installments'); }}
+            >
+              Trả góp
+            </a>
+            {/* Compare link */}
+            <a
+              href="#compare"
+              className={`fs-5 fw-medium text-decoration-none ${currentPage === 'compare' ? 'text-white' : 'text-secondary'}`}
+              onClick={(e) => { e.preventDefault(); handleNav('compare'); }}
+            >
+              So sánh
+            </a>
+            <a
+              href="#about"
               className="fs-5 fw-medium text-decoration-none text-secondary"
               onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); showToast({ type: 'info', title: 'Sắp ra mắt', message: 'Trang Về Chúng Tôi sẽ được cập nhật sớm nhất!' }) }}
             >
@@ -333,8 +333,8 @@ const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
                 </button>
               </div>
             ) : (
-              <a 
-                href="#login" 
+              <a
+                href="#login"
                 className="btn btn-danger w-100 py-2 glow-btn text-center text-decoration-none"
                 onClick={(e) => { e.preventDefault(); handleNav('login'); }}
               >

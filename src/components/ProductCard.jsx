@@ -48,11 +48,11 @@ const ProductCard = ({ product, onSelectProduct, setCurrentPage }) => {
         {product.tag && (
           <span className="tech-card-tag">{product.tag}</span>
         )}
-        
+
         {/* Product Image */}
-        <img 
-          src={product.image} 
-          alt={product.name} 
+        <img
+          src={product.image}
+          alt={product.name}
           className="tech-card-img img-fluid"
           loading="lazy"
         />
@@ -63,7 +63,7 @@ const ProductCard = ({ product, onSelectProduct, setCurrentPage }) => {
         <span className="text-uppercase fw-bold mb-1" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--accent-red)' }}>
           {categoryNames[product.category] || product.category}
         </span>
-        
+
         {/* Title */}
         <h3 className="fs-6 text-dark text-truncate-2 mb-2" style={{ fontWeight: '600', height: '42px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', lineHeight: '1.3' }}>
           {product.name}
@@ -73,10 +73,10 @@ const ProductCard = ({ product, onSelectProduct, setCurrentPage }) => {
         <div className="d-flex align-items-center gap-1 mb-3">
           <div className="d-flex text-warning">
             {[...Array(5)].map((_, i) => (
-              <Star 
-                key={i} 
-                size={12} 
-                fill={i < Math.floor(product.rating) ? 'currentColor' : 'none'} 
+              <Star
+                key={i}
+                size={12}
+                fill={i < Math.floor(product.rating) ? 'currentColor' : 'none'}
                 className={i < Math.floor(product.rating) ? 'text-warning' : 'text-secondary'}
               />
             ))}
@@ -92,7 +92,7 @@ const ProductCard = ({ product, onSelectProduct, setCurrentPage }) => {
             {stock <= 0 ? 'Hết hàng' : formatDisplayPrice(product.price, product.displayPrice)}
           </span>
           <div className="d-flex gap-2">
-            <button 
+            <button
               className={`btn btn-sm p-2 d-flex align-items-center justify-content-center ${isCompared ? 'btn-danger' : 'btn-outline-secondary'}`}
               style={{ borderRadius: '6px', width: '34px', height: '34px' }}
               onClick={(e) => {
@@ -103,7 +103,7 @@ const ProductCard = ({ product, onSelectProduct, setCurrentPage }) => {
             >
               <GitCompare size={15} style={{ color: isCompared ? '#ffffff' : 'inherit' }} />
             </button>
-            <button 
+            <button
               className="btn btn-sm btn-outline-secondary p-2 d-flex align-items-center justify-content-center"
               style={{ borderRadius: '6px', width: '34px', height: '34px' }}
               onClick={(e) => {
@@ -114,7 +114,7 @@ const ProductCard = ({ product, onSelectProduct, setCurrentPage }) => {
             >
               <Eye size={15} />
             </button>
-            <button 
+            <button
               className="btn btn-sm btn-danger p-2 d-flex align-items-center justify-content-center"
               style={{ borderRadius: '6px', width: '34px', height: '34px' }}
               onClick={handleQuickAdd}
