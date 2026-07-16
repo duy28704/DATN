@@ -168,7 +168,7 @@ const Shop = ({ currentPage, onSelectProduct, setCurrentPage }) => {
     'itemListElement': filteredProducts.map((p, index) => ({
       '@type': 'ListItem',
       'position': index + 1,
-      'url': `${window.location.origin}/#product/${p.id}`,
+      'url': `${window.location.origin}/#product/${p.slug || p.id}`,
       'name': p.name
     }))
   }

@@ -27,9 +27,10 @@ const ProductCard = ({ product, onSelectProduct, setCurrentPage }) => {
   }
 
   const handleCardClick = () => {
-    onSelectProduct(product.id)
+    const slugOrId = product.slug || String(product.id)
+    onSelectProduct(slugOrId)
     // Directly update hash to trigger router
-    window.location.hash = `product/${product.id}`
+    window.location.hash = `product/${slugOrId}`
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 

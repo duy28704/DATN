@@ -187,7 +187,8 @@ const Header = ({ currentPage, setCurrentPage, onCartOpen }) => {
                       onMouseEnter={() => setHoveredId(p.id)}
                       onMouseLeave={() => setHoveredId(null)}
                       onClick={() => {
-                        setCurrentPage(`product/${p.id}`);
+                        const slugOrId = p.slug || String(p.id);
+                        setCurrentPage(`product/${slugOrId}`);
                         setSearchOpen(false);
                         setShowSuggestions(false);
                         setSearchQuery('');
